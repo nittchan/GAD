@@ -1,0 +1,20 @@
+id: kenya_regional
+name: Central Kenya Drought (regional, spatial average)
+peril: drought
+location:
+  lat: -0.52
+  lon: 37.27
+variable: rainfall_mm
+trigger_logic:
+  kind: threshold_below
+  threshold: 48.0
+  aggregation: monthly
+date_range:
+  start: "2018-01-01"
+  end: "2022-12-31"
+bounding_box:
+  min_lat: -0.65
+  max_lat: -0.35
+  min_lon: 37.15
+  max_lon: 37.45
+payout_formula_summary: Payout when area-averaged monthly rainfall over the defined box falls below 48mm.

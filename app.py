@@ -15,12 +15,15 @@ from pydantic import ValidationError
 from gad.engine import compute_basis_risk
 from gad.io import discover_triggers, load_data_manifest, load_trigger_def
 from gad.models import BasisRiskReport, TriggerDef
+from gad.pdf_export import build_pdf
+from gad.pipeline import build_chirps_series_for_trigger, make_live_manifest
 from gad.registry import Registry, get_report, get_trigger, list_trigger_ids_with_reports, save_report, upsert_trigger
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 TRIGGERS_DIR = DATA_DIR / "triggers"
 MANIFEST_PATH = DATA_DIR / "manifest.yaml"
 REGISTRY_PATH = DATA_DIR / "gad_registry.db"
+CHIRPS_CACHE_DIR = DATA_DIR / "cache" / "chirps"
 
 # Bloomberg-ish dark tokens
 CSS = """
@@ -232,6 +235,12 @@ def render_panel(path: Path | None = None, report: BasisRiskReport | None = None
         config={"displayModeBar": False},
     )
     render_lloyds(report)
+    st.download_button(
+        "Download PDF report",
+        data=build_pdf(report, trigger),
+        file_name=f"gad_report_{trigger.id}.pdf",
+        mime="application/pdf",
+    )
     with st.expander("Methodology (Phase 1)", expanded=False):
         st.markdown(
             """
@@ -322,7 +331,33 @@ def main():
 
     if source == "YAML files":
         if len(choice) == 1:
-            render_panel(path=id_to_path[choice[0]])
+            data_source = st.radio(
+                "Data source",
+                ["Preset", "Live CHIRPS"],
+                horizontal=True,
+                help="Preset uses bundled CSVs; Live CHIRPS fetches from CHIRPS 2.0 and computes basis risk.",
+            )
+            if data_source == "Preset":
+                render_panel(path=id_to_path[choice[0]])
+            else:
+                trigger = load_trigger_def(id_to_path[choice[0]])
+                try:
+                    with st.spinner("Fetching CHIRPS…"):
+                        series_path = build_chirps_series_for_trigger(
+                            trigger, cache_dir=CHIRPS_CACHE_DIR
+                        )
+                    manifest = make_live_manifest(trigger.id, series_path, DATA_DIR)
+                    with st.spinner("Computing basis risk…"):
+                        report = compute_basis_risk(trigger, manifest, DATA_DIR)
+                    st.caption(
+                        "Live CHIRPS: spatial ref = index (no regional mean). "
+                        "Loss proxy = 0 (not from CHIRPS)."
+                    )
+                    render_panel(report=report, trigger=trigger)
+                except Exception as e:
+                    st.error(f"Live data failed: {e}")
+                    st.info("Showing preset data instead.")
+                    render_panel(path=id_to_path[choice[0]])
         else:
             a, b = choice[0], choice[1]
             col1, col2 = st.columns(2)

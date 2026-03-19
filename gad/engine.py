@@ -20,6 +20,29 @@ from gad.models import (
 )
 
 
+def _aggregate_regional(df: pd.DataFrame, trigger: TriggerDef) -> pd.DataFrame:
+    """Filter by bounding_box and aggregate to one row per period (spatial average)."""
+    bbox = trigger.bounding_box
+    if bbox is None or "lat" not in df.columns or "lon" not in df.columns:
+        return df
+    mask = (
+        (df["lat"] >= bbox.min_lat)
+        & (df["lat"] <= bbox.max_lat)
+        & (df["lon"] >= bbox.min_lon)
+        & (df["lon"] <= bbox.max_lon)
+    )
+    df = df.loc[mask]
+    if df.empty:
+        raise ValueError("No rows inside bounding box")
+    agg = df.groupby("period", as_index=False).agg(
+        index_value=("index_value", "mean"),
+        spatial_ref=("spatial_ref", "mean"),
+        loss_proxy=("loss_proxy", "mean"),
+        loss_event=("loss_event", "max"),
+    )
+    return agg
+
+
 def _fires(index: np.ndarray, kind: TriggerKind, threshold: float) -> np.ndarray:
     if kind is TriggerKind.threshold_above:
         return index > threshold
@@ -91,6 +114,8 @@ def compute_basis_risk(
     if "loss_proxy" not in df.columns:
         df = df.copy()
         df["loss_proxy"] = df["loss_event"].astype(float)
+
+    df = _aggregate_regional(df, trigger)
 
     df = df.copy()
     df["pdate"] = pd.to_datetime(df["period"], errors="coerce")

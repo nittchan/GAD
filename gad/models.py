@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Literal
 
@@ -26,6 +26,21 @@ class TriggerKind(str, Enum):
 class LocationPoint(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
     lon: float = Field(..., ge=-180, le=180)
+
+
+class BoundingBox(BaseModel):
+    """Geographic bounding box for regional triggers (Phase 2)."""
+
+    min_lat: float = Field(..., ge=-90, le=90)
+    max_lat: float = Field(..., ge=-90, le=90)
+    min_lon: float = Field(..., ge=-180, le=180)
+    max_lon: float = Field(..., ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def ordered(self) -> BoundingBox:
+        if self.min_lat >= self.max_lat or self.min_lon >= self.max_lon:
+            raise ValueError("min_* must be strictly less than max_*")
+        return self
 
 
 class DateRange(BaseModel):
@@ -54,6 +69,43 @@ class TriggerLogic(BaseModel):
     aggregation: AggregationPeriod = AggregationPeriod.monthly
 
 
+class PolicyBinding(BaseModel):
+    """
+    Oracle extension: bind trigger to a specific policy at issuance.
+    Monitoring loop (v0.2) uses this to track policy_id + trigger_def_id.
+    """
+
+    policy_id: str = Field(..., description="Policy UUID string")
+    coverage_start: datetime = Field(..., description="Coverage start (ISO)")
+    coverage_end_inclusive: datetime = Field(
+        ...,
+        description="Coverage end inclusive (ISO); naming avoids boundary ambiguity",
+    )
+    flight_id: str | None = Field(default=None, description="Optional flight identifier for flight_delay peril")
+    payout_inr: int | None = Field(default=None, description="Optional payout amount in INR")
+    settlement_upi: str | None = Field(default=None, description="Optional UPI id for settlement")
+
+
+class DataSourceProvenance(BaseModel):
+    """
+    Lloyd's treaty-ready: named primary/fallback source, latency, historical availability.
+    """
+
+    primary_source_name: str = Field(..., description="Named primary data source")
+    primary_source_url: str | None = Field(default=None, description="URL of primary source")
+    primary_source_version: str = Field(..., description="e.g. CHIRPS v2.0")
+    fallback_source_name: str | None = Field(default=None)
+    fallback_source_url: str | None = Field(default=None)
+    max_data_latency_seconds: int | None = Field(
+        default=None,
+        description="How stale data can be before determination is invalid",
+    )
+    historical_availability_years: tuple[int, int] | None = Field(
+        default=None,
+        description="e.g. (1981, 2025) for CHIRPS",
+    )
+
+
 class TriggerDef(BaseModel):
     """Parametric trigger definition (insurance logic only)."""
 
@@ -67,6 +119,18 @@ class TriggerDef(BaseModel):
     payout_formula_summary: str = Field(
         default="Fixed payout when trigger condition is met for the period.",
         min_length=1,
+    )
+    bounding_box: BoundingBox | None = Field(
+        default=None,
+        description="Optional region for spatial averaging; when set, data must include lat/lon or be pre-aggregated.",
+    )
+    policy_binding: PolicyBinding | None = Field(
+        default=None,
+        description="Oracle extension: bind to specific policy; required for settlement. Monitoring in v0.2.",
+    )
+    data_source_provenance: DataSourceProvenance | None = Field(
+        default=None,
+        description="Lloyd's treaty-ready: primary/fallback source, latency, historical availability.",
     )
 
     @field_validator("id")
