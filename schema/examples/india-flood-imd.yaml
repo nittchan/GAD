@@ -1,0 +1,13 @@
+name: India Flood (IMD Patna)
+peril: flood
+threshold: 150
+threshold_unit: mm_rainfall_24h
+data_source: IMD gridded rainfall
+geography:
+  type: Point
+  coordinates: [85.1376, 25.5941]
+provenance:
+  primary_source: IMD gridded rainfall v2023
+  primary_url: https://www.imd.gov.in/
+  max_data_latency_seconds: 3600
+  historical_years_available: 30

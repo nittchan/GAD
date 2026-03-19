@@ -1,0 +1,13 @@
+name: IndiGo Flight Delay (Kempegowda)
+peril: flight_delay
+threshold: 60
+threshold_unit: minutes
+data_source: DGCA API + OpenSky
+geography:
+  type: Point
+  coordinates: [77.5946, 12.9716]
+provenance:
+  primary_source: DGCA API v2.1
+  primary_url: https://dgca.gov.in/
+  max_data_latency_seconds: 300
+  historical_years_available: 5

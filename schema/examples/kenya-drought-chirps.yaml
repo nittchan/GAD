@@ -1,0 +1,14 @@
+name: Kenya Drought (CHIRPS Marsabit)
+peril: drought
+threshold: 50
+threshold_unit: mm_rainfall_30d
+data_source: CHIRPS v2.0
+trigger_fires_when_above: false
+geography:
+  type: Point
+  coordinates: [37.9899, 2.3284]
+provenance:
+  primary_source: CHIRPS v2.0
+  primary_url: https://www.chc.ucsb.edu/data/chirps
+  max_data_latency_seconds: 86400
+  historical_years_available: 40

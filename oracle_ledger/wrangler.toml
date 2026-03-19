@@ -1,0 +1,13 @@
+name = "gad-oracle"
+main = "worker.js"
+compatibility_date = "2026-03-19"
+
+[[r2_buckets]]
+binding = "ORACLE_BUCKET"
+bucket_name = "gad-oracle-determinations"
+
+[env.production]
+routes = [
+  { pattern = "oracle.gad.dev/determination/*", zone_name = "gad.dev" },
+  { pattern = "oracle.gad.dev/.well-known/oracle-keys.json", zone_name = "gad.dev" }
+]

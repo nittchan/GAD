@@ -1,0 +1,19 @@
+# Fly.io — GAD dashboard (oracle.gad.dev)
+# Deploy: fly deploy
+
+app = "gad-dashboard"
+primary_region = "bom"
+
+[build]
+  dockerfile = "dashboard/Dockerfile"
+
+[http_service]
+  internal_port = 8501
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

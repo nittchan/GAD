@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GAD Trigger Definition",
+  "description": "Parametric trigger definition (MIT schema).",
+  "type": "object",
+  "required": ["name", "peril", "threshold", "threshold_unit", "data_source", "geography", "provenance"],
+  "properties": {
+    "trigger_id": { "type": "string", "format": "uuid" },
+    "name": { "type": "string" },
+    "peril": {
+      "type": "string",
+      "enum": ["flight_delay", "drought", "flood", "earthquake", "wind"]
+    },
+    "threshold": { "type": "number" },
+    "threshold_unit": { "type": "string" },
+    "data_source": { "type": "string" },
+    "geography": {
+      "type": "object",
+      "description": "GeoJSON point (v0.1 point-only)"
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["primary_source", "primary_url", "max_data_latency_seconds", "historical_years_available"],
+      "properties": {
+        "primary_source": { "type": "string" },
+        "primary_url": { "type": "string" },
+        "fallback_source": { "type": "string" },
+        "max_data_latency_seconds": { "type": "integer" },
+        "historical_years_available": { "type": "integer" }
+      }
+    },
+    "policy_binding": {
+      "type": "object",
+      "properties": {
+        "policy_id": { "type": "string", "format": "uuid" },
+        "coverage_start": { "type": "string", "format": "date-time" },
+        "coverage_end_inclusive": { "type": "string", "format": "date-time" },
+        "flight_id": { "type": "string" },
+        "payout_inr": { "type": "number" },
+        "settlement_upi": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}
