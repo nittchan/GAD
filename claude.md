@@ -65,6 +65,7 @@ Resolution applied:
   - Not aligned with dashboard, oracle models, or Supabase-oriented UUID contracts.
 
 Migration status: retirement is complete in the current working tree; delete *_legacy.py files in the follow-up cleanup commit after one safety cycle.
+Retirement landing commit: a21e66f4c19ae37561cc44bd552d3edf450f55a2
 
 ## Option A migration checklist (engine canonicalization)
 
@@ -129,7 +130,7 @@ Expected: zero lines of `from gad.models import` or `from gad.io import` outside
 
 - [x] Move Highest-Risk Blocker section to resolved status after retirement lands.
 - [x] Update Alternate manifest path section to Legacy path (retired).
-- [ ] Note the git commit hash where retirement landed (pending commit).
+- [x] Note the git commit hash where retirement landed: a21e66f4c19ae37561cc44bd552d3edf450f55a2.
 
 Migration note: `data/manifest.yaml` is not retired by this migration. The manifest format remains valid input through `load_from_manifest()` in `gad/engine/loader.py`; only direct legacy Python module usage is retired.
 

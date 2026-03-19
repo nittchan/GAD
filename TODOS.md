@@ -2,6 +2,13 @@
 
 ## Phase 2
 
+### Legacy Engine Cleanup (Scheduled)
+**What:** Delete `gad/_engine_legacy.py`, `gad/_models_legacy.py`, and `gad/_io_legacy.py` after one safety cycle.
+**Why:** Legacy modules are a short-lived migration safety net; keeping them too long risks accidental new imports.
+**When:** Next PR or next commit after 24h with no regressions.
+**Verification before delete:** `pytest tests/ -v` and legacy import sweep remains clean.
+**Depends on:** Option A engine canonicalization commit `a21e66f4c19ae37561cc44bd552d3edf450f55a2`.
+
 ### SQLite Registry Layer
 **What:** Add SQLite registry to persist trigger definitions and basis risk reports.
 **Why:** Global trigger registry is the 10x vision (CVE for insurance). Flat YAML files won't scale past ~50 triggers. Schema intentionally deferred until Phase 1 proves computation output shape.
