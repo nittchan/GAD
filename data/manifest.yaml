@@ -1,0 +1,8 @@
+version: "1"
+triggers:
+  kenya_drought:
+    primary_series_csv: series/kenya_drought.csv
+  vietnam_flood:
+    primary_series_csv: series/vietnam_flood.csv
+  japan_earthquake:
+    primary_series_csv: series/japan_earthquake.csv

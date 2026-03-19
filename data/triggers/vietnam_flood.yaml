@@ -1,0 +1,15 @@
+id: vietnam_flood
+name: Mekong Delta Pluvial Flood Index (demo)
+peril: flood
+location:
+  lat: 10.03
+  lon: 105.78
+variable: rainfall_mm
+trigger_logic:
+  kind: threshold_above
+  threshold: 118.0
+  aggregation: monthly
+date_range:
+  start: "2018-01-01"
+  end: "2022-12-31"
+payout_formula_summary: Stepped payout based on cumulative exceedance above the hydrological index threshold for the contract month.

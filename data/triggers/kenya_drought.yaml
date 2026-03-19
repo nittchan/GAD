@@ -1,0 +1,15 @@
+id: kenya_drought
+name: Kenya Agricultural Drought (CHIRPS-style demo)
+peril: drought
+location:
+  lat: -0.52
+  lon: 37.27
+variable: rainfall_mm
+trigger_logic:
+  kind: threshold_below
+  threshold: 48.0
+  aggregation: monthly
+date_range:
+  start: "2018-01-01"
+  end: "2022-12-31"
+payout_formula_summary: Fixed indemnity when monthly rainfall at the index station falls below 48mm for the covered month.

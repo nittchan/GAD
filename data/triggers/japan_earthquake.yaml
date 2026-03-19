@@ -1,0 +1,15 @@
+id: japan_earthquake
+name: Japan Shallow MMI Parametric (demo)
+peril: earthquake
+location:
+  lat: 35.68
+  lon: 139.76
+variable: shaking_mmi
+trigger_logic:
+  kind: threshold_above
+  threshold: 4.2
+  aggregation: monthly
+date_range:
+  start: "2018-01-01"
+  end: "2022-12-31"
+payout_formula_summary: Parametric payout when peak MMI at the index location exceeds the contract threshold in a covered month (open seismic catalog proxy).
