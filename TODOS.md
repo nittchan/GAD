@@ -37,17 +37,9 @@
 ## Design
 
 ### Full Design System (DESIGN.md)
+**Completed:** v0.1.0 (2026-03-19)
 **What:** Run /design-consultation to create DESIGN.md with complete color palette, typography scale, spacing grid, motion system, and component library.
-**Why:** Phase 1 uses minimum viable design tokens. A full design system ensures visual consistency as GAD grows and prevents design drift.
-**Pros:** Professional polish. Faster Phase 2 UI work. Consistent visual language.
-**Cons:** ~30 min to run. Not blocking for Phase 1 demo.
-**Context:** GAD targets developers who value trust and rigor. Visual language should feel "Bloomberg terminal meets modern data tool" — not generic SaaS. Run /design-consultation after Phase 1 ships.
-**Depends on:** Nothing — can run anytime.
 
 ### PDF/Export for Basis Risk Reports
-**What:** Add ability to export a trigger's full basis risk profile as a PDF report.
-**Why:** Devs need to share audit results with non-technical stakeholders (underwriters, regulators). PDF is how actuarial reports are consumed in the insurance industry.
-**Pros:** Makes GAD useful beyond the dashboard. Aligns with Lloyd's workflow. Professional credibility.
-**Cons:** PDF generation dependency (reportlab or weasyprint). Print layout work.
-**Context:** PDF includes: trigger definition, score card numbers, back-test timeline, scatter plot, Lloyd's checklist, methodology notes. One trigger = one page.
-**Depends on:** Phase 1 dashboard completion (need visualizations first).
+**Completed:** v0.1.0 (2026-03-19)
+**What:** Export a trigger's full basis risk profile as a PDF report. Implemented in `gad/engine/pdf_export.py` using reportlab. Includes trigger definition, score card, back-test timeline, scatter plot, Lloyd's checklist, and methodology notes.

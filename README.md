@@ -76,7 +76,13 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for DNS (gad.dev), Cloudflare Worke
 - `supabase/migrations/` — Initial schema (profiles, trigger_defs, basis_risk_reports, saved_triggers, gad_events, etc.)
 - `oracle_ledger/` — Cloudflare Worker for `/determination/{uuid}` and `/.well-known/oracle-keys.json`
 - `registry/determinations/` — Local oracle log (flat JSON); production uses R2
-- `docs/` — Gap analysis, key registry, webhook and OracleLog contracts
+- `docs/` — [Gap analysis](docs/GAP_ANALYSIS_ORACLE.md), [key registry](docs/ORACLE_KEY_REGISTRY.md), [webhook and OracleLog contracts](docs/ORACLE_WEBHOOK_AND_LOG.md), [deployment](docs/DEPLOYMENT.md)
+
+## Documentation
+
+- [DESIGN.md](DESIGN.md) — Design system (colors, typography, spacing, components)
+- [TODOS.md](TODOS.md) — Roadmap and deferred work
+- [GAD-design.md](GAD-design.md) — Original design document from /office-hours
 
 ## v0.1 must-have checklist
 
