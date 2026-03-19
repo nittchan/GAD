@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from gad.models import BasisRiskReport, TriggerDef
+from gad._models_legacy import BasisRiskReport, TriggerDef
 
 
 def _utc_now() -> str:

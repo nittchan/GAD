@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import yaml
 
 
 def load_weather_data_from_csv(
@@ -40,3 +41,39 @@ def load_weather_data_from_csv(
             "loss_proxy": float(row["loss_proxy"]),
         })
     return out
+
+
+def load_from_manifest(
+    manifest_path: str | Path,
+    trigger_key: str,
+    data_root: str | Path,
+) -> list[dict]:
+    """
+    Compatibility adapter for legacy manifest-driven datasets.
+    Reads data/manifest.yaml-style mapping and returns weather_data list
+    suitable for gad.engine.compute_basis_risk(trigger, weather_data).
+    """
+    manifest_file = Path(manifest_path)
+    if not manifest_file.is_file():
+        raise FileNotFoundError(str(manifest_file))
+
+    raw = yaml.safe_load(manifest_file.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("Manifest YAML root must be a mapping")
+
+    triggers = raw.get("triggers")
+    if not isinstance(triggers, dict):
+        raise ValueError("Manifest must include a 'triggers' mapping")
+
+    ref = triggers.get(trigger_key)
+    if not isinstance(ref, dict):
+        raise KeyError(f"Trigger key {trigger_key!r} not found in manifest")
+
+    primary_series_csv = ref.get("primary_series_csv")
+    if not isinstance(primary_series_csv, str) or not primary_series_csv.strip():
+        raise ValueError(
+            f"Manifest trigger {trigger_key!r} must define non-empty primary_series_csv"
+        )
+
+    csv_path = Path(data_root) / primary_series_csv
+    return load_weather_data_from_csv(csv_path)

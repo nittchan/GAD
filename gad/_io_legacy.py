@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from gad.models import DataManifest, TriggerDef
+from gad._models_legacy import DataManifest, TriggerDef
 
 
 def load_trigger_def(path: str | Path) -> TriggerDef:

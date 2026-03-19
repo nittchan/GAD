@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     import pandas as pd
-    from gad.models import TriggerDef
+    from gad._models_legacy import TriggerDef
 
 try:
     import requests
@@ -204,7 +204,7 @@ def build_chirps_series_for_trigger(
 
     Raises ValueError if lat/lon outside CHIRPS extent (50°S–50°N) or on fetch/conversion errors.
     """
-    from gad.models import TriggerDef
+    from gad._models_legacy import TriggerDef
 
     cache = get_cache_dir(cache_dir)
     series_dir = cache / "series"
@@ -225,7 +225,7 @@ def make_live_manifest(trigger_id: str, series_csv_path: Path, data_root: Path) 
     Build a one-off DataManifest that maps trigger_id to the generated series CSV.
     data_root must be the root under which series_csv_path lives (e.g. project data dir).
     """
-    from gad.models import DataManifest, SeriesRef
+    from gad._models_legacy import DataManifest, SeriesRef
 
     try:
         rel = series_csv_path.resolve().relative_to(Path(data_root).resolve())

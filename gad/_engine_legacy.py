@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from gad.models import (
+from gad._models_legacy import (
     BacktestResult,
     BacktestRow,
     BasisRiskReport,

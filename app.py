@@ -2,6 +2,8 @@
 GAD — Global Actuarial Dashboard (Streamlit Phase 1).
 """
 
+# DEPRECATED: use dashboard/app.py
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,9 +14,9 @@ import yaml
 from plotly.subplots import make_subplots
 from pydantic import ValidationError
 
-from gad.engine import compute_basis_risk
-from gad.io import discover_triggers, load_data_manifest, load_trigger_def
-from gad.models import BasisRiskReport, TriggerDef
+from gad._engine_legacy import compute_basis_risk
+from gad._io_legacy import discover_triggers, load_data_manifest, load_trigger_def
+from gad._models_legacy import BasisRiskReport, TriggerDef
 from gad.pdf_export import build_pdf
 from gad.pipeline import build_chirps_series_for_trigger, make_live_manifest
 from gad.registry import Registry, get_report, get_trigger, list_trigger_ids_with_reports, save_report, upsert_trigger

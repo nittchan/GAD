@@ -12,7 +12,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from gad.models import BasisRiskReport, TriggerDef
+from gad._models_legacy import BasisRiskReport, TriggerDef
 
 
 def build_pdf(report: BasisRiskReport, trigger: TriggerDef) -> bytes:
