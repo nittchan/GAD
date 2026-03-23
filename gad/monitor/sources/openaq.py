@@ -38,7 +38,10 @@ def fetch_aqi(lat: float, lon: float, trigger_id: str) -> dict | None:
 
 
 def _try_openaq(lat: float, lon: float) -> dict | None:
-    """Try OpenAQ v3 API for nearest station."""
+    """Try OpenAQ v3 API for nearest station (requires API key)."""
+    api_key = os.environ.get("OPENAQ_API_KEY", "")
+    if not api_key:
+        return None
     try:
         params = {
             "coordinates": f"{lat},{lon}",
@@ -46,7 +49,8 @@ def _try_openaq(lat: float, lon: float) -> dict | None:
             "limit": 1,
             "order_by": "distance",
         }
-        resp = httpx.get(OPENAQ_V3_URL, params=params, timeout=TIMEOUT)
+        headers = {"X-API-Key": api_key}
+        resp = httpx.get(OPENAQ_V3_URL, params=params, headers=headers, timeout=TIMEOUT)
         resp.raise_for_status()
         data = resp.json()
 
