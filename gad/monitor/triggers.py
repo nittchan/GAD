@@ -34,51 +34,44 @@ class MonitorTrigger:
 # ──────────────────────────────────────────────────────────────
 
 GLOBAL_TRIGGERS: list[MonitorTrigger] = [
-    # ── Flight Delay ──
-    MonitorTrigger(
-        id="flight-delay-blr",
-        name="IndiGo BLR Delays",
-        peril="flight_delay",
-        lat=13.1986, lon=77.7066,
-        location_label="Kempegowda Intl, Bengaluru",
-        threshold=60, threshold_unit="minutes",
-        fires_when_above=True,
-        data_source="opensky",
-        description="Parametric trigger fires when average departure delay exceeds 60 minutes at BLR.",
-    ),
-    MonitorTrigger(
-        id="flight-delay-del",
-        name="Delhi IGI Delays",
-        peril="flight_delay",
-        lat=28.5562, lon=77.1000,
-        location_label="Indira Gandhi Intl, Delhi",
-        threshold=60, threshold_unit="minutes",
-        fires_when_above=True,
-        data_source="opensky",
-        description="Parametric trigger fires when average departure delay exceeds 60 minutes at DEL.",
-    ),
-    MonitorTrigger(
-        id="flight-delay-jfk",
-        name="JFK Airport Delays",
-        peril="flight_delay",
-        lat=40.6413, lon=-73.7781,
-        location_label="JFK International, New York",
-        threshold=45, threshold_unit="minutes",
-        fires_when_above=True,
-        data_source="opensky",
-        description="Parametric trigger fires when average departure delay exceeds 45 minutes at JFK.",
-    ),
-    MonitorTrigger(
-        id="flight-delay-lhr",
-        name="Heathrow Delays",
-        peril="flight_delay",
-        lat=51.4700, lon=-0.4543,
-        location_label="Heathrow, London",
-        threshold=45, threshold_unit="minutes",
-        fires_when_above=True,
-        data_source="opensky",
-        description="Parametric trigger fires when average departure delay exceeds 45 minutes at LHR.",
-    ),
+    # ── Flight Delay — 30 Tier-1 Airports ──
+    # Asia
+    MonitorTrigger(id="flight-delay-del", name="Delhi IGI", peril="flight_delay", lat=28.5562, lon=77.1000, location_label="Indira Gandhi Intl, Delhi", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    MonitorTrigger(id="flight-delay-bom", name="Mumbai CSIA", peril="flight_delay", lat=19.0896, lon=72.8656, location_label="Chhatrapati Shivaji Intl, Mumbai", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    MonitorTrigger(id="flight-delay-blr", name="Bengaluru KIA", peril="flight_delay", lat=13.1986, lon=77.7066, location_label="Kempegowda Intl, Bengaluru", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    MonitorTrigger(id="flight-delay-sin", name="Singapore Changi", peril="flight_delay", lat=1.3644, lon=103.9915, location_label="Changi Airport, Singapore", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-hkg", name="Hong Kong Intl", peril="flight_delay", lat=22.3080, lon=113.9185, location_label="Hong Kong International", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-nrt", name="Tokyo Narita", peril="flight_delay", lat=35.7647, lon=140.3864, location_label="Narita International, Tokyo", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-icn", name="Seoul Incheon", peril="flight_delay", lat=37.4602, lon=126.4407, location_label="Incheon International, Seoul", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-bkk", name="Bangkok Suvarnabhumi", peril="flight_delay", lat=13.6900, lon=100.7501, location_label="Suvarnabhumi, Bangkok", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-pek", name="Beijing Capital", peril="flight_delay", lat=40.0799, lon=116.6031, location_label="Capital International, Beijing", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    MonitorTrigger(id="flight-delay-pvg", name="Shanghai Pudong", peril="flight_delay", lat=31.1443, lon=121.8083, location_label="Pudong International, Shanghai", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    # Middle East
+    MonitorTrigger(id="flight-delay-dxb", name="Dubai Intl", peril="flight_delay", lat=25.2532, lon=55.3657, location_label="Dubai International", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-doh", name="Doha Hamad", peril="flight_delay", lat=25.2731, lon=51.6081, location_label="Hamad International, Doha", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-auh", name="Abu Dhabi", peril="flight_delay", lat=24.4330, lon=54.6511, location_label="Zayed International, Abu Dhabi", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    # Europe
+    MonitorTrigger(id="flight-delay-lhr", name="London Heathrow", peril="flight_delay", lat=51.4700, lon=-0.4543, location_label="Heathrow, London", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-cdg", name="Paris CDG", peril="flight_delay", lat=49.0097, lon=2.5479, location_label="Charles de Gaulle, Paris", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-fra", name="Frankfurt", peril="flight_delay", lat=50.0379, lon=8.5622, location_label="Frankfurt Airport", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-ams", name="Amsterdam Schiphol", peril="flight_delay", lat=52.3105, lon=4.7683, location_label="Schiphol, Amsterdam", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-ist", name="Istanbul", peril="flight_delay", lat=41.2753, lon=28.7519, location_label="Istanbul Airport", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-mad", name="Madrid Barajas", peril="flight_delay", lat=40.4983, lon=-3.5676, location_label="Barajas, Madrid", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    # North America
+    MonitorTrigger(id="flight-delay-jfk", name="New York JFK", peril="flight_delay", lat=40.6413, lon=-73.7781, location_label="JFK International, New York", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-lax", name="Los Angeles LAX", peril="flight_delay", lat=33.9416, lon=-118.4085, location_label="LAX, Los Angeles", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-ord", name="Chicago O'Hare", peril="flight_delay", lat=41.9742, lon=-87.9073, location_label="O'Hare International, Chicago", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-atl", name="Atlanta Hartsfield", peril="flight_delay", lat=33.6407, lon=-84.4277, location_label="Hartsfield-Jackson, Atlanta", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-dfw", name="Dallas/Fort Worth", peril="flight_delay", lat=32.8998, lon=-97.0403, location_label="DFW International, Dallas", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-yyz", name="Toronto Pearson", peril="flight_delay", lat=43.6777, lon=-79.6248, location_label="Pearson International, Toronto", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-mex", name="Mexico City", peril="flight_delay", lat=19.4363, lon=-99.0721, location_label="Benito Juárez, Mexico City", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    # South America
+    MonitorTrigger(id="flight-delay-gru", name="São Paulo Guarulhos", peril="flight_delay", lat=-23.4356, lon=-46.4731, location_label="Guarulhos, São Paulo", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    # Africa
+    MonitorTrigger(id="flight-delay-jnb", name="Johannesburg OR Tambo", peril="flight_delay", lat=-26.1392, lon=28.2460, location_label="OR Tambo, Johannesburg", threshold=60, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 60 minutes."),
+    # Oceania
+    MonitorTrigger(id="flight-delay-syd", name="Sydney Kingsford", peril="flight_delay", lat=-33.9461, lon=151.1772, location_label="Kingsford Smith, Sydney", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
+    MonitorTrigger(id="flight-delay-mel", name="Melbourne Tullamarine", peril="flight_delay", lat=-37.6690, lon=144.8410, location_label="Tullamarine, Melbourne", threshold=45, threshold_unit="minutes", fires_when_above=True, data_source="opensky", description="Parametric trigger fires when average departure delay exceeds 45 minutes."),
 
     # ── Air Quality ──
     MonitorTrigger(

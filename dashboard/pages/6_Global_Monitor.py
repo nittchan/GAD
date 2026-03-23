@@ -259,44 +259,72 @@ if map_rows:
 else:
     st.info("No triggers match the selected filters.")
 
-# ── Trigger Cards ──
+# ── Trigger Display ──
 for peril in selected_perils:
     peril_triggers = [(tid, t, d, r, s) for tid, (t, d, r, s) in trigger_results.items() if t.peril == peril]
     if not peril_triggers:
         continue
 
-    st.markdown(f'<div class="peril-header">{PERIL_LABELS[peril]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="peril-header">{PERIL_LABELS[peril]} ({len(peril_triggers)})</div>', unsafe_allow_html=True)
 
-    cols = st.columns(min(len(peril_triggers), 3))
-    for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers):
-        with cols[i % len(cols)]:
-            value = result.get("value")
-            unit = result.get("unit", trigger.threshold_unit)
+    # Flight delay: compact table (30 airports is too many for cards)
+    if peril == "flight_delay":
+        table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
+        table_html += '<tr style="border-bottom:1px solid #30363d;color:#8b949e;text-align:left;">'
+        table_html += '<th style="padding:8px 12px;">Airport</th><th style="padding:8px;">Location</th>'
+        table_html += '<th style="padding:8px;text-align:right;">Flights</th>'
+        table_html += '<th style="padding:8px;text-align:right;">Avg Delay</th><th style="padding:8px;">Status</th></tr>'
+
+        for tid, trigger, data, result, is_stale in peril_triggers:
             status = result.get("status", "no_data")
-
-            value_display = f"{value}" if value is not None else "—"
+            value = result.get("value")
+            total_flights = result.get("total_flights", data.get("total_flights", 0) if data else 0)
+            value_str = f"{value} min" if value is not None else "—"
             color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
 
-            st.markdown(f"""
-            <div class="trigger-card">
-                <h4>{trigger.name} {_status_badge(status)}</h4>
-                <div class="location">{trigger.location_label}</div>
-                <div class="value-large" style="color: {color}">{value_display}</div>
-                <div class="value-unit">{unit} (threshold: {trigger.threshold})</div>
-            </div>
-            """, unsafe_allow_html=True)
+            table_html += f'<tr style="border-bottom:1px solid #21262d;">'
+            table_html += f'<td style="padding:8px 12px;color:#e6edf3;font-weight:600;">{trigger.name}</td>'
+            table_html += f'<td style="padding:8px;color:#8b949e;font-size:12px;">{trigger.location_label}</td>'
+            table_html += f'<td style="padding:8px;text-align:right;color:#8b949e;">{total_flights}</td>'
+            table_html += f'<td style="padding:8px;text-align:right;color:{color};font-weight:700;">{value_str}</td>'
+            table_html += f'<td style="padding:8px;">{_status_badge(status)}</td>'
+            table_html += '</tr>'
 
-            with st.expander("Details"):
-                st.markdown(f"**Description:** {trigger.description}")
-                st.markdown(f"**Data source:** {trigger.data_source}")
-                st.markdown(f"**Threshold:** {trigger.threshold} {trigger.threshold_unit}")
-                st.markdown(f"**Fires when:** {'above' if trigger.fires_when_above else 'below'} threshold")
-                if data:
-                    st.json(data)
-                if is_stale:
-                    st.warning("Data is stale — background fetch in progress.")
-                if status == "no_data":
-                    st.info("No data yet. Run `python -m gad.monitor.fetcher` to fetch.")
+        table_html += '</table>'
+        st.markdown(table_html, unsafe_allow_html=True)
+
+    # Other perils: card layout (fewer items, richer display)
+    else:
+        cols = st.columns(min(len(peril_triggers), 3))
+        for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers):
+            with cols[i % len(cols)]:
+                value = result.get("value")
+                unit = result.get("unit", trigger.threshold_unit)
+                status = result.get("status", "no_data")
+
+                value_display = f"{value}" if value is not None else "—"
+                color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
+
+                st.markdown(f"""
+                <div class="trigger-card">
+                    <h4>{trigger.name} {_status_badge(status)}</h4>
+                    <div class="location">{trigger.location_label}</div>
+                    <div class="value-large" style="color: {color}">{value_display}</div>
+                    <div class="value-unit">{unit} (threshold: {trigger.threshold})</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                with st.expander("Details"):
+                    st.markdown(f"**Description:** {trigger.description}")
+                    st.markdown(f"**Data source:** {trigger.data_source}")
+                    st.markdown(f"**Threshold:** {trigger.threshold} {trigger.threshold_unit}")
+                    st.markdown(f"**Fires when:** {'above' if trigger.fires_when_above else 'below'} threshold")
+                    if data:
+                        st.json(data)
+                    if is_stale:
+                        st.warning("Data is stale — background fetch in progress.")
+                    if status == "no_data":
+                        st.info("No data yet. Run `python -m gad.monitor.fetcher` to fetch.")
 
 # ── Footer ──
 st.markdown("---")
