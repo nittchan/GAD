@@ -8,7 +8,7 @@ Fast context file for agents and contributors who need the essentials in under a
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 5 peril categories (flights, AQI, wildfire, drought, weather) using free open data.
+1. **Global Monitor** — live risk map across 6 peril categories (flights, AQI, wildfire, drought, weather, earthquake) using free open data.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -16,9 +16,9 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 426 triggers, 144 airports, multi-source data (8 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 436 triggers, 144 airports, multi-source data (8 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
-- v0.3: New perils (earthquake, shipping, health, solar), enterprise tier.
+- v0.3: New perils (shipping, health, solar), enterprise tier.
 
 ## Development Workflow
 
@@ -82,7 +82,7 @@ Compute engine: gad/engine/ package
 
 ## Near-Term Priorities
 
-1. Historical basis risk for all 426 triggers (needs data download pipeline).
+1. Historical basis risk for all 436 triggers (needs data download pipeline).
 2. Oracle signing (v0.2.2) wired to live monitor.
-3. New perils: earthquake (USGS), shipping, health, solar.
+3. New perils: shipping, health, solar.
 4. Parametric Data Pro (enterprise tier).

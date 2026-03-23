@@ -1,6 +1,6 @@
 """
 GAD Global Monitor — live parametric insurance risk map.
-Shows real-time trigger status across 5 peril categories using cached open data.
+Shows real-time trigger status across 6 peril categories using cached open data.
 
 Security: This page reads ONLY from the local cache. It NEVER calls external APIs.
 All data is pre-fetched by the background fetcher (gad.monitor.fetcher).
@@ -154,7 +154,7 @@ st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 st.markdown(
     '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
     '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
-    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports and 5 peril categories. All data from open sources.</p>',
+    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports and 6 peril categories. All data from open sources.</p>',
     unsafe_allow_html=True,
 )
 
@@ -275,7 +275,7 @@ if map_rows:
         pickable=False,
     ) if len(triggered) > 0 else None
 
-    # No text labels — too dense with 426 triggers. Info shown via hover tooltip.
+    # No text labels — too dense with 436 triggers. Info shown via hover tooltip.
 
     view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.8, pitch=0)
 

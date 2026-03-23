@@ -106,8 +106,8 @@ st.markdown(
 )
 st.markdown(
     '<p class="hero-sub">'
-    '426 parametric triggers across 144 airports (50 Indian + 94 global), '
-    'air quality, wildfire, drought, and extreme weather — '
+    '436 parametric triggers across 144 airports (50 Indian + 94 global), '
+    'air quality, wildfire, drought, extreme weather, and earthquake — '
     'all scored with Spearman basis risk, Lloyd\'s alignment, and '
     'cryptographic attestation. Open-source. Free forever.'
     '</p>',
@@ -129,7 +129,7 @@ with col2:
 st.markdown("""
 <div class="stats-row">
     <div class="stat-item">
-        <div class="stat-number">426</div>
+        <div class="stat-number">436</div>
         <div class="stat-label">Live triggers</div>
     </div>
     <div class="stat-item">

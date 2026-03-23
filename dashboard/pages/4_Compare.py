@@ -1,4 +1,4 @@
-"""Compare any two triggers from the 426-trigger registry side-by-side."""
+"""Compare any two triggers from the 436-trigger registry side-by-side."""
 
 from __future__ import annotations
 

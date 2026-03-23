@@ -2,10 +2,10 @@
 
 ## v0.2 — Remaining
 
-### Pre-built historical basis risk for all 426 triggers
+### Pre-built historical basis risk for all 436 triggers
 **What:** For each trigger, pre-compute historical basis risk (Spearman rho, back-test) using the engine. Show scores on the map alongside live status.
 **Why:** Live status shows "is the trigger firing now." Basis risk shows "how good is this trigger design." Both together make the dashboard valuable.
-**Context:** Use `compute_basis_risk()` with historical series data. Currently only 2 legacy triggers (Kenya drought, IndiGo flights) have CSVs. Need to generate historical series from the data source APIs for all 426 triggers.
+**Context:** Use `compute_basis_risk()` with historical series data. Currently only 2 legacy triggers (Kenya drought, IndiGo flights) have CSVs. Need to generate historical series from the data source APIs for all 436 triggers.
 **Effort:** Large — needs historical data download pipeline per source.
 **Depends on:** Multi-source data connectors (done).
 

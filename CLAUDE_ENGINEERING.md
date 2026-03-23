@@ -8,7 +8,7 @@ Engineering-focused scope summary for implementation, debugging, and refactor de
 
 GAD operates as four integrated layers:
 
-1. **Global Monitor** — live risk dashboard with 5 peril categories, background data fetching, cache-based reads.
+1. **Global Monitor** — live risk dashboard with 6 peril categories, background data fetching, cache-based reads.
 2. **Basis risk engine** — Spearman correlation, bootstrap CI, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — Ed25519 signed determinations, hash-chained log, Cloudflare Worker read surface.
 4. **Account/telemetry** — Supabase-backed auth, saved triggers, activity events.
@@ -34,7 +34,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 
 ### gad/monitor/ — Global Monitor
 - airports.py: Master airport registry (50 Indian + 94 global = 144 airports)
-- triggers.py: Auto-generates flight delay, weather, and AQI triggers for all airports (426 triggers across 5 perils)
+- triggers.py: Auto-generates flight delay, weather, AQI, and earthquake triggers for all airports (436 triggers across 6 perils)
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
@@ -66,7 +66,7 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 
 ### Monitor triggers (gad/monitor/triggers.py)
 Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
-426 triggers across 5 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather). Add new airports to the registry to expand coverage.
+436 triggers across 6 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake). Add new airports to the registry to expand coverage.
 
 ### Monitor cache (data/monitor_cache/)
 JSON files with: source, key, data, cached_at, expires_at. Gitignored. Created by fetcher.
@@ -128,8 +128,8 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. Historical basis risk for all 426 triggers (download historical series, pre-compute).
+1. Historical basis risk for all 436 triggers (download historical series, pre-compute).
 2. NOAA data sources: HRRR Smoke (wildfire), GFS (weather), SPI (drought).
 3. Oracle signing (v0.2.2): wire Ed25519 to live monitor, determination status page.
-4. New perils: earthquake (USGS API — easy), shipping, health, solar.
+4. New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
 5. Parametric Data Pro: premium data sources, API access, enterprise features.

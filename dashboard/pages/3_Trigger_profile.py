@@ -1,5 +1,5 @@
 """
-Trigger profile — full view of any trigger from the 426-trigger registry.
+Trigger profile — full view of any trigger from the 436-trigger registry.
 Shows live data, trigger details, and basis risk analysis when available.
 
 Accessed via:
