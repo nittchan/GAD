@@ -334,6 +334,14 @@ for peril in selected_perils:
         table_html += '</table>'
         st.markdown(table_html, unsafe_allow_html=True)
 
+        # View buttons for flight triggers (Streamlit can't put buttons in HTML tables)
+        flight_cols = st.columns(6)
+        for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers[:6]):
+            with flight_cols[i % 6]:
+                if st.button(f"View {trigger.name}", key=f"view_{tid}", use_container_width=True):
+                    st.session_state["selected_trigger_id"] = tid
+                    st.switch_page("pages/3_Trigger_profile.py")
+
     # Other perils: card layout (fewer items, richer display)
     else:
         cols = st.columns(min(len(peril_triggers), 3))
@@ -355,17 +363,9 @@ for peril in selected_perils:
                 </div>
                 """, unsafe_allow_html=True)
 
-                with st.expander("Details"):
-                    st.markdown(f"**Description:** {trigger.description}")
-                    st.markdown(f"**Data source:** {trigger.data_source}")
-                    st.markdown(f"**Threshold:** {trigger.threshold} {trigger.threshold_unit}")
-                    st.markdown(f"**Fires when:** {'above' if trigger.fires_when_above else 'below'} threshold")
-                    if data:
-                        st.json(data)
-                    if is_stale:
-                        st.warning("Data is stale — background fetch in progress.")
-                    if status == "no_data":
-                        st.info("No data yet. Run `python -m gad.monitor.fetcher` to fetch.")
+                if st.button("View profile →", key=f"view_{tid}", use_container_width=True):
+                    st.session_state["selected_trigger_id"] = tid
+                    st.switch_page("pages/3_Trigger_profile.py")
 
 # ── Footer ──
 from dashboard.components.footer import render_footer
