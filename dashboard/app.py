@@ -5,6 +5,11 @@ GAD Dashboard — oracle.gad.dev. Home: hero + two CTAs (Try sample / Build your
 from __future__ import annotations
 
 import streamlit as st
+from dotenv import load_dotenv
+
+from dashboard.components.auth import handle_oauth_callback
+
+load_dotenv()
 
 COLORS = {"bg": "#0a0e1a", "surface": "#111827", "text": "#f9fafb", "muted": "#6b7280", "teal": "#00a8a8"}
 CSS = f"""
@@ -17,6 +22,7 @@ CSS = f"""
 
 def main() -> None:
     st.set_page_config(page_title="GAD — Get Actuary Done", layout="wide", initial_sidebar_state="expanded")
+    handle_oauth_callback()
     st.markdown(CSS, unsafe_allow_html=True)
     st.markdown(
         '<p style="font-size:0.75rem;color:#6b7280;margin-bottom:0;">Get Actuary Done</p>'

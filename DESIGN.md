@@ -86,6 +86,15 @@ Source of truth for UI and export visuals. Target: developers who value trust an
 - Reuse semantic intent (e.g. pass/fail) via table styling, not only color.
 - One report per trigger: definition, score card, confusion matrix, Lloyd's checklist, short methodology note.
 
-## Oracle / settlement (v0.2+)
+## Global Monitor (v0.2)
 
-Architecture for signed trigger determinations and the oracle standard is documented in **docs/GAP_ANALYSIS_ORACLE.md**. Data structures: **gad/oracle_models.py** (TriggerEvent, TriggerDetermination). Public key registry: **docs/ORACLE_KEY_REGISTRY.md**. Review at each version milestone.
+The Global Monitor page (`dashboard/pages/6_Global_Monitor.py`) uses the same design system:
+- **Map:** PyDeck ScatterplotLayer on `mapbox://styles/mapbox/dark-v11`. Marker colors use semantic tokens: `red` for triggered, `green` for normal, `amber` for stale, `muted` for no data.
+- **Trigger cards:** Use `bg-card` background, `border` border, same 6px rounded corners as score cards. Large value in monospace (`JetBrains Mono`), color by semantic status.
+- **Status badges:** Inline monospace badges — `TRIGGERED` (red), `NORMAL` (green), `NO DATA` (muted), `UPDATING` (amber).
+- **Layout:** Full-width map (450px height) above trigger cards in 3-column grid per peril category.
+- **Data:** All data from local cache. Zero external API calls. Footer credits data sources.
+
+## Oracle / settlement (v0.2.2+)
+
+Architecture for signed trigger determinations and the oracle standard is documented in **docs/GAP_ANALYSIS_ORACLE.md**. Data structures: **gad/oracle_models.py** (TriggerEvent, TriggerDetermination). Public key registry: **docs/ORACLE_KEY_REGISTRY.md**. Oracle status page uses a separate palette: `#0a0e1a` background, `#00d4d4` accent (deliberate divergence from dashboard). Review at each version milestone.

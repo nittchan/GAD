@@ -8,6 +8,23 @@ from plotly.subplots import make_subplots
 from gad.engine.models import BasisRiskReport
 
 
+def rho_label(rho: float) -> str:
+    if rho >= 0.7:
+        return "Strong"
+    if rho >= 0.4:
+        return "Moderate"
+    return "Weak"
+
+
+def chart_summary(report: BasisRiskReport) -> str:
+    return (
+        f"Chart summary: Spearman rho = {report.spearman_rho:.2f} "
+        f"({rho_label(report.spearman_rho)} correlation). "
+        f"False positive rate {report.false_positive_rate:.1%}, "
+        f"false negative rate {report.false_negative_rate:.1%}."
+    )
+
+
 def timeline_fig(report: BasisRiskReport) -> go.Figure:
     rows = report.backtest_rows or []
     periods = [r.period for r in rows]

@@ -2,103 +2,97 @@
 
 ## What This Project Is
 
-GAD (Get Actuary Done) helps teams design and evaluate parametric insurance triggers, then publish oracle-style trigger determinations that can be independently verified.
+GAD (Global Actuarial Dashboard) is an open-source parametric insurance platform — think "WorldMonitor for parametric insurance." It monitors real-world risks (flight delays, air quality, wildfire, drought, extreme weather) and evaluates how well parametric insurance triggers would perform against those risks.
 
-Today, the strongest production-ready capability is trigger analysis and reporting. Oracle runtime pieces exist as contracts and partial implementations.
+The strongest production-ready capability is the Global Monitor (live risk map) and basis risk analysis. Oracle signing infrastructure exists as contracts and partial implementations.
 
 ## First 15 Minutes
 
 1. Create and activate a Python virtual environment.
 2. Install dependencies from requirements.txt.
-3. Run the dashboard app at dashboard/app.py.
-4. Open Guided mode and compute a sample report.
-5. Run tests with pytest.
+3. Fetch live data: `python -m gad.monitor.fetcher`
+4. Run the dashboard: `streamlit run dashboard/app.py`
+5. Navigate to **Global Monitor** to see the live risk map.
+6. Try **Guided mode** to build a custom trigger and compute basis risk.
+7. Run tests with `pytest`.
 
 ## Where To Start In The Codebase
 
-### Product UI
-
+### Product UI (dashboard/)
 - dashboard/app.py: home page and navigation.
-- dashboard/pages/: main user flows.
+- dashboard/pages/6_Global_Monitor.py: live risk map — the main public-facing page.
+- dashboard/pages/1-5: guided mode, expert mode, trigger profile, compare, account.
 - dashboard/components/: score cards, charts, checklist, auth helpers.
 
-### Compute and Models
+### Global Monitor (gad/monitor/)
+- gad/monitor/triggers.py: 17 pre-built triggers across 5 perils with real coordinates.
+- gad/monitor/cache.py: local JSON cache — dashboard reads from here, never from APIs.
+- gad/monitor/fetcher.py: background worker that fetches data from external APIs on a schedule.
+- gad/monitor/sources/: API connectors (OpenSky, OpenAQ, NASA FIRMS, Open-Meteo).
+- gad/monitor/security.py: rate limiting, input sanitization.
 
-- gad/engine/: package-style compute, models, lloyds, oracle helpers.
-- gad/engine.py + gad/models.py + gad/io.py: alternate manifest-based compute path.
+### Compute Engine (gad/engine/)
+- gad/engine/: canonical compute package — models, basis_risk, lloyds, oracle, loader, analytics, pdf_export.
+- Single compute stack. No legacy alternatives.
 
 ### Data and Schemas
-
 - schema/trigger.schema.json: trigger schema contract.
 - schema/examples/: example triggers used in dashboard flows.
 - data/series/: sample historical time series.
-- data/manifest.yaml: mapping for manifest-driven compute.
+- data/monitor_cache/: cached live data from the fetcher (gitignored).
 
 ### Oracle Layer
-
-- gad/oracle_models.py: settlement-oriented model definitions.
+- gad/engine/oracle.py: Ed25519 signing, verification, hash chain.
 - oracle_ledger/worker.js: public determination/key endpoints.
-- docs/ORACLE_KEY_REGISTRY.md: key publication format.
-- docs/ORACLE_WEBHOOK_AND_LOG.md: webhook and append log contracts.
+- docs/: oracle architecture docs.
 
 ### Persistence and Auth
-
 - supabase/migrations/001_initial_schema.sql: DB schema and RLS.
 - dashboard/components/auth.py: sign-in and session handling.
-- gad/engine/analytics.py: activity event writes.
 
-## Main User Journeys
+## Key Concepts
 
-1. Guided mode: build trigger in plain English and compute basis risk.
-2. Expert mode: edit YAML directly and compute.
-3. Trigger profile: inspect one sample trigger in depth.
-4. Compare: side-by-side trigger comparison.
-5. Account: view saved triggers and notification subscriptions.
-
-## Key Concepts You Need To Know
-
-- Basis risk is quantified with Spearman correlation and back-test mismatch rates.
-- Lloyds-style checklist is deterministic and explicit; pass/fail criteria are visible.
-- Trigger determinations are designed to be cryptographically signed and hash-chained.
-- Independent verifiability depends on stable schemas, pinned data snapshots, and published keys.
-
-## Known Nuance Before You Change Anything
-
-There are two active compute/model paths in the repo. Before refactoring or adding shared functionality, decide which path your change should target and verify affected tests.
-
-If you touch imports named gad.engine, confirm whether callers expect the package path or the module path behavior.
+- **Parametric insurance** pays when a trigger fires (e.g., rainfall below 50mm), not when damage is assessed.
+- **Basis risk** is the gap between "trigger fired" and "actual loss occurred." Measured with Spearman correlation.
+- **Global Monitor** shows live trigger status using real data from free public APIs.
+- **Background fetcher** pre-fetches all data — users never trigger API calls (security/cost protection).
+- **Oracle determinations** are cryptographically signed attestations that a trigger fired (v0.2.2+).
 
 ## Safe Contribution Workflow
 
-1. Pick one runtime surface (dashboard or root app) and keep scope local.
+1. Compute code: target gad/engine/. Monitor code: target gad/monitor/.
 2. Update or add tests nearest to the behavior you changed.
-3. Run pytest before opening a PR.
-4. If you change contracts, update docs in docs/ and main claude.md.
+3. Run `pytest` before opening a PR.
+4. If you change contracts, update docs in docs/ and claude.md.
 
 ## Testing Map
 
-- tests/test_basis_risk.py: core compute shape and guardrails.
+- tests/test_basis_risk.py: core compute.
 - tests/test_lloyds.py: checklist behavior.
-- tests/test_oracle.py: sign/verify and tamper checks.
-- tests/test_reproducibility.py: deterministic manifest-based outputs.
+- tests/test_oracle.py: sign/verify.
+- tests/test_reproducibility.py: deterministic outputs.
+- tests/test_import_hygiene.py: no legacy imports.
 
 ## Environment Variables
 
-- SUPABASE_URL
-- SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_KEY
+Required for full functionality:
+- SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 
-Without these, authentication and event logging features are limited.
+Optional (improve Global Monitor data quality):
+- NASA_FIRMS_MAP_KEY — wildfire data (free at firms.modaps.eosdis.nasa.gov)
+- WAQI_API_TOKEN — air quality (free at aqicn.org/api)
+- OPENSKY_USERNAME, OPENSKY_PASSWORD — flight data (free at opensky-network.org)
 
-## Deployment Surfaces
+## Deployment
 
 - Dashboard: Fly.io (fly.toml, dashboard/Dockerfile).
-- Oracle read endpoints: Cloudflare Worker + R2 (oracle_ledger/wrangler.toml).
-- DNS/TLS expectations: docs/DEPLOYMENT.md.
+- Oracle endpoints: Cloudflare Worker + R2 (oracle_ledger/wrangler.toml).
+- DNS/DDoS: Cloudflare proxy recommended.
 
 ## Good First Tasks
 
-1. Add integration tests for one dashboard page flow.
-2. Add contract tests for oracle worker response behavior.
-3. Improve auth/session error handling in account page.
-4. Document one canonical compute path and align imports incrementally.
+1. Add a new peril category (earthquake via USGS API).
+2. Wire CHIRPS drought data to the monitor fetcher.
+3. Add integration tests for the Global Monitor page.
+4. Add contract tests for oracle worker response behavior.
+5. Add more pre-built triggers to gad/monitor/triggers.py.

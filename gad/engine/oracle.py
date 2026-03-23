@@ -19,6 +19,20 @@ from gad.engine.models import TriggerDetermination
 ORACLE_LOG_PATH = "registry/determinations"
 
 
+def _load_private_key() -> bytes | None:
+    hex_key = os.getenv("GAD_ORACLE_PRIVATE_KEY_HEX")
+    if not hex_key:
+        return None
+    return bytes.fromhex(hex_key)
+
+
+def _load_public_key() -> bytes | None:
+    hex_key = os.getenv("GAD_ORACLE_PUBLIC_KEY_HEX")
+    if not hex_key:
+        return None
+    return bytes.fromhex(hex_key)
+
+
 def data_snapshot_hash(raw_bytes: bytes) -> str:
     """SHA-256 of the raw API response. Pin this before any parsing."""
     return hashlib.sha256(raw_bytes).hexdigest()

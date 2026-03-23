@@ -9,5 +9,5 @@ bucket_name = "gad-oracle-determinations"
 [env.production]
 routes = [
   { pattern = "oracle.gad.dev/determination/*", zone_name = "gad.dev" },
-  { pattern = "oracle.gad.dev/.well-known/oracle-keys.json", zone_name = "gad.dev" }
+  { pattern = "oracle.gad.dev/.well-known/*", zone_name = "gad.dev" }
 ]

@@ -30,7 +30,7 @@ def render_score_card(report: BasisRiskReport) -> None:
     st.markdown(
         f'<div style="background:#111827;border:1px solid #1f2937;border-radius:6px;padding:1rem 1.25rem;margin-bottom:0.75rem;">'
         f'<div style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:#6b7280;">HEADLINE SPEARMAN</div>'
-        f'<div style="font-family:JetBrains Mono,monospace;font-size:2rem;font-weight:600;color:{color};">ρ = {rho:.3f}</div>'
+        f'<div title="Spearman correlation headline value" style="font-family:JetBrains Mono,monospace;font-size:2rem;font-weight:600;color:{color};">ρ = {rho:.3f}</div>'
         f'<div style="font-family:JetBrains Mono,monospace;color:#6b7280;">95% CI [{report.spearman_ci_lower:.3f}, {report.spearman_ci_upper:.3f}]</div>'
         f'<div style="font-family:JetBrains Mono,monospace;margin-top:8px;">Lloyd\'s {passing}/{total}</div>'
         f"</div>",

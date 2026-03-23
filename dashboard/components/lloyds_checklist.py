@@ -11,15 +11,29 @@ def render_lloyds_checklist(report: BasisRiskReport) -> None:
     st.subheader("Lloyd's checklist")
     detail = report.lloyds_detail
     for criterion, data in detail.items():
-        if data.get("pass") is None:
-            continue
-        passed = data.get("pass") is True
-        reason = data.get("reason", "")
-        border = "4px solid #10b981" if passed else "4px solid #ef4444"
+        passed = data.get("pass")
+        reason = data.get("reason", "Cannot evaluate")
+        if passed is True:
+            border_color = "#059669"
+            badge = "PASS"
+            badge_color = "#059669"
+        elif passed is False:
+            border_color = "#dc2626"
+            badge = "FAIL"
+            badge_color = "#dc2626"
+        else:
+            border_color = "#d97706"
+            badge = "?"
+            badge_color = "#d97706"
         st.markdown(
-            f'<div style="border-left:{border};padding-left:12px;margin:6px 0;">'
-            f'<span style="font-family:JetBrains Mono,monospace;">{criterion}</span> — '
-            f'<b>{"PASS" if passed else "FAIL"}</b><br/>'
-            f'<span style="color:#6b7280;">{reason}</span></div>',
+            f'<div style="border-left:3px solid {border_color}; '
+            f'padding:8px 12px; margin-bottom:4px; background:#111827;">'
+            f'<span style="color:{badge_color};font-weight:700;'
+            f'font-family:\'JetBrains Mono\',monospace;font-size:11px;">'
+            f'{badge}</span> '
+            f'<span style="color:#f9fafb;font-size:13px;">'
+            f'{criterion.replace("_", " ").title()}</span><br>'
+            f'<span style="color:#6b7280;font-size:11px;">{reason}</span>'
+            f'</div>',
             unsafe_allow_html=True,
         )

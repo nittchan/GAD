@@ -13,6 +13,8 @@ from gad.engine.models import BasisRiskReport
 from gad.engine.analytics import track, get_or_create_session_id
 from dashboard.components.auth import current_user
 from dashboard.components import (
+    chart_summary,
+    confusion_matrix_markdown,
     render_score_card,
     timeline_fig,
     scatter_fig,
@@ -82,9 +84,13 @@ def main():
     c1, c2 = st.columns(2)
     with c1:
         st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(report))
     with c2:
         st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(report))
     st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
+    st.caption(chart_summary(report))
+    st.markdown(confusion_matrix_markdown(report))
     render_lloyds_checklist(report)
     with st.expander("Methodology", expanded=False):
         st.markdown(

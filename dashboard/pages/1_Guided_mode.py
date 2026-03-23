@@ -11,8 +11,11 @@ from gad.engine import TriggerDef, compute_basis_risk
 from gad.engine.loader import load_weather_data_from_csv
 from gad.engine.models import BasisRiskReport, DataSourceProvenance
 from gad.engine.analytics import track, get_or_create_session_id
+from gad.pipeline import PipelineError, fetch_chirps_series
 from dashboard.components.auth import current_user
 from dashboard.components import (
+    chart_summary,
+    confusion_matrix_markdown,
     render_score_card,
     timeline_fig,
     scatter_fig,
@@ -37,6 +40,36 @@ PERIL_CONFIG = {
     "wind": {"label": "Wind", "icon": "💨", "unit": "knots", "default_threshold": 50.0, "hint": "Payout when wind speed exceeds X knots.", "data_source": "NOAA / ERA5"},
     "earthquake": {"label": "Earthquake", "icon": "🌍", "unit": "MMI intensity", "default_threshold": 6.0, "hint": "Payout when MMI exceeds X at location.", "data_source": "USGS ShakeMap"},
 }
+
+
+def _load_sample_csv(stem: str) -> list[dict]:
+    csv_path = EXAMPLE_TO_CSV.get(stem)
+    if not csv_path or not csv_path.is_file():
+        raise FileNotFoundError(f"Sample data not found for {stem}")
+    return load_weather_data_from_csv(csv_path)
+
+
+def get_weather_data_for_trigger(trigger: TriggerDef) -> tuple[list[dict], str]:
+    """
+    Returns (weather_data, source_label).
+    Falls back to sample CSV if live fetch fails.
+    """
+    if trigger.peril in ("drought", "flood"):
+        try:
+            lat = float(trigger.geography["coordinates"][1])
+            lon = float(trigger.geography["coordinates"][0])
+            weather_data = fetch_chirps_series(
+                lat=lat,
+                lon=lon,
+                years=list(range(2010, 2024)),
+                threshold=trigger.threshold,
+                fires_when_above=trigger.trigger_fires_when_above,
+            )
+            return weather_data, f"CHIRPS v2.0 live data ({lat:.2f}°, {lon:.2f}°)"
+        except PipelineError as e:
+            return _load_sample_csv("kenya-drought-chirps"), f"Sample data (live fetch failed: {e})"
+
+    return _load_sample_csv("kenya-drought-chirps"), "Illustrative sample data (Kenya drought series)"
 
 
 def main():
@@ -134,26 +167,26 @@ def main():
                 st.rerun()
         with col2:
             if st.button("Compute basis risk", use_container_width=True, type="primary"):
-                example_stem = "kenya-drought-chirps"
-                csv_path = EXAMPLE_TO_CSV.get(example_stem)
-                if csv_path and csv_path.is_file():
-                    weather_data = load_weather_data_from_csv(csv_path)
+                try:
+                    weather_data, source_label = get_weather_data_for_trigger(trigger)
                     report = compute_basis_risk(trigger, weather_data)
                     st.session_state["wizard_report"] = report
                     st.session_state["wizard_trigger"] = trigger
+                    st.session_state["wizard_source_label"] = source_label
                     track("report_computed", session_id, user_id=user_id, trigger_id=trigger.trigger_id, report_id=report.report_id)
-                else:
-                    st.error("Sample data not found. Add data/series/kenya_drought.csv.")
+                except Exception as e:
+                    st.error(str(e))
                 st.rerun()
 
         if st.session_state.get("wizard_report") and st.session_state.get("wizard_trigger"):
             report = st.session_state["wizard_report"]
             trigger = st.session_state["wizard_trigger"]
+            source_label = st.session_state.get("wizard_source_label", "Unknown data source")
             st.markdown(
                 '<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-bottom:16px;">'
-                '<strong>Illustrative back-test using Kenya drought sample data</strong><br/>'
-                '<span style="color:#94a3b8;font-size:0.9em;">The scores and charts below use historical Kenya drought series for demonstration. '
-                'Your trigger definition (<b>' + trigger.name + '</b>) is unchanged; in production, data would match your chosen location and peril.</span>'
+                f'<strong>Data source: {source_label}</strong><br/>'
+                '<span style="color:#94a3b8;font-size:0.9em;">Your trigger definition (<b>' + trigger.name + '</b>) is unchanged. '
+                'Live-source failures degrade gracefully to sample data.</span>'
                 '</div>',
                 unsafe_allow_html=True,
             )
@@ -161,9 +194,13 @@ def main():
             c1, c2 = st.columns(2)
             with c1:
                 st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
             with c2:
                 st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
             st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
+            st.caption(chart_summary(report))
+            st.markdown(confusion_matrix_markdown(report))
             render_lloyds_checklist(report)
             pdf_bytes = generate_lloyds_report(trigger, report)
             st.download_button("Download Lloyd's PDF", data=pdf_bytes, file_name=f"gad_report_{trigger.trigger_id}.pdf", mime="application/pdf")

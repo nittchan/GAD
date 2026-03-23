@@ -6,15 +6,16 @@
 - Engineering-focused version: CLAUDE_ENGINEERING.md
 - Contributor onboarding version: CLAUDE_ONBOARDING.md
 
-## Project Scope: GAD (Get Actuary Done)
+## Project Scope: GAD (Global Actuarial Dashboard)
 
-GAD is an open-source parametric insurance platform with three integrated layers:
+GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. Basis risk analytics dashboard for trigger design and evaluation.
-2. Oracle infrastructure for signed, hash-chained trigger determinations.
-3. Practitioner intelligence and account activity layer via Supabase.
+1. **Global Monitor** — live risk map across 5 peril categories (flights, AQI, wildfire, drought, weather) with 17 pre-built triggers using free open data.
+2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export, guided/expert modes.
+3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
+4. **Account layer** — user auth, saved triggers, activity events via Supabase.
 
-The product goal is to move from pre-trade actuarial analysis (v0.1) toward treaty-grade, independently verifiable post-trade determinations (v0.2+).
+The product goal: become THE default global parametric insurance monitor. v0.2 ships the visible public dashboard; oracle signing layers underneath in v0.2.2+.
 
 ## Current Stage and Product Shape
 
@@ -38,128 +39,31 @@ Version indicators in the repository point to v0.1.x with partial v0.2 groundwor
   - Fully operational policy-bound settlement pipeline.
   - Productionized key lifecycle and rotation workflows.
 
-## Highest-Risk Blocker Before v0.2 (Resolved In Working Tree)
+## Engine Migration (Completed 2026-03-23)
 
-The dual engine/model stack was the primary architectural risk in this repository:
-
-- gad/engine/ package stack
-  - UUID-based models, dashboard-integrated compute path.
-- gad/_engine_legacy.py + gad/_models_legacy.py + gad/_io_legacy.py stack
-  - Retired legacy manifest-driven compute path kept only for one migration safety window.
-
-What was blocker-level:
-
-- Different entrypoints can execute different computation/model contracts.
-- tests/test_reproducibility.py previously validated the manifest path, not the dashboard path.
-- Oracle work on top of split compute paths risks non-equivalent determinations.
-
-Resolution applied:
-
-- Option A selected: canonicalized on gad/engine/ (UUID stack)
-  - Retired gad/engine.py, gad/models.py, gad/io.py to *_legacy.py files.
-  - Rewrote reproducibility test to canonical package path + weather_data contract.
-  - Added manifest compatibility adapter load_from_manifest() to gad/engine/loader.py.
-  - Marked root app.py as deprecated and pinned it to explicit legacy imports.
-
-- Option B rejected: canonicalize on gad/engine.py (manifest stack)
-  - Not aligned with dashboard, oracle models, or Supabase-oriented UUID contracts.
-
-Migration status: retirement is complete in the current working tree; delete *_legacy.py files in the follow-up cleanup commit after one safety cycle.
-Retirement landing commit: a21e66f4c19ae37561cc44bd552d3edf450f55a2
-
-## Option A migration checklist (engine canonicalization)
-
-Execute in order. Each step should leave tests passing before moving to the next.
-
-### 1. Verify canonical imports compile
-
-- [x] `from gad.engine import compute_basis_risk, TriggerDef, BasisRiskReport` resolves to `gad/engine/__init__.py`, not `gad/engine.py`.
-- [x] Confirm with:
-
-```bash
-python -c "import gad.engine; print(gad.engine.__file__)"
-```
-
-Expected: `.../gad/engine/__init__.py`
-
-### 2. Rewrite test_reproducibility.py
-
-- [x] Replace `from gad.engine import ...` + `from gad.io import ...` + `from gad.models import ...` with `from gad.engine import ...`.
-- [x] Replace manifest-driven `compute_basis_risk(trigger, manifest, data_root)` calls with loader-driven `compute_basis_risk(trigger_def, weather_data)`.
-- [x] Confirm test passes:
-
-```bash
-pytest tests/test_reproducibility.py -v
-```
-
-### 3. Move manifest adapter into gad/engine/loader.py
-
-- [x] Add `load_from_manifest(manifest_path, trigger_key, data_root) -> list[dict]` that reads manifest YAML and returns `weather_data` list.
-- [x] Confirm existing loader tests still pass.
-
-### 4. Audit root app.py
-
-- [x] List every import from `gad.engine` (module), `gad.models`, `gad.io`.
-- [x] Either rewrite to use `gad.engine` (package) or mark file as deprecated with a header comment: `# DEPRECATED: use dashboard/app.py`.
-- [x] Do not delete yet; confirm nothing in CI depends on it.
-
-### 5. Retire legacy files (only after steps 1-4 pass)
-
-- [x] `git mv gad/engine.py gad/_engine_legacy.py` (rename, do not delete in the same commit).
-- [x] `git mv gad/models.py gad/_models_legacy.py`.
-- [x] `git mv gad/io.py gad/_io_legacy.py`.
-- [x] Run full test suite:
-
-```bash
-pytest tests/ -v
-```
-
-- [x] Verify no remaining imports reach legacy path:
-
-```bash
-grep -r "from gad\.engine import\|from gad\.models import\|from gad\.io import" \
-  --include="*.py" . \
-  | grep -v "_legacy\|#"
-```
-
-Expected: zero lines of `from gad.models import` or `from gad.io import` outside approved fixture exceptions.
-
-- [ ] If clean: delete the `_legacy` files in the next commit.
-
-### 6. Update CLAUDE.md
-
-- [x] Move Highest-Risk Blocker section to resolved status after retirement lands.
-- [x] Update Alternate manifest path section to Legacy path (retired).
-- [x] Note the git commit hash where retirement landed: a21e66f4c19ae37561cc44bd552d3edf450f55a2.
-
-Migration note: `data/manifest.yaml` is not retired by this migration. The manifest format remains valid input through `load_from_manifest()` in `gad/engine/loader.py`; only direct legacy Python module usage is retired.
+Canonicalized on gad/engine/ (UUID stack). Legacy modules (`gad/engine.py`, `gad/models.py`, `gad/io.py`), deprecated root `app.py`, `gad/pdf_export.py`, and `gad/registry.py` all deleted. Manifest format remains usable via `load_from_manifest()` adapter in `gad/engine/loader.py`. Landing commit: a21e66f4c19ae37561cc44bd552d3edf450f55a2.
 
 ## Repository Topology
 
 Top-level domains and responsibilities:
 
-- app.py
-  - Legacy/alternate Streamlit app surface rooted at repository level.
-  - Explicitly pinned to gad/_models_legacy.py, gad/_io_legacy.py, gad/_engine_legacy.py.
-
 - dashboard/
   - Primary Streamlit product UI.
   - app.py home/landing + multipage navigation.
-  - pages/ guided, expert, profile, compare, account experiences.
+  - pages/ global monitor, guided, expert, profile, compare, account.
   - components/ auth and visual rendering helpers.
 
 - gad/
   - Core Python package.
-  - Canonical model/engine track:
-    - gad/engine/ package (spec-aligned, UUID-centered, dashboard-integrated).
-  - Retired legacy compatibility files:
-    - gad/_engine_legacy.py + gad/_models_legacy.py + gad/_io_legacy.py.
-  - Also includes oracle models, pdf export, pipeline, and registry adapters.
+  - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export).
+  - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources).
+  - gad/monitor/sources/ — API fetchers (opensky, openaq, firms, openmeteo).
+  - gad/pipeline.py — CHIRPS raster fetch and extraction.
 
 - data/
   - Manifest and demo/reference series.
-  - Trigger YAML definitions for manifest-driven path.
   - CHIRPS cache directory for pipeline artifacts.
+  - monitor_cache/ — cached live data from background fetcher (gitignored).
 
 - schema/
   - JSON schema and canonical example triggers.
@@ -184,6 +88,12 @@ Entry point: dashboard/app.py
 
 User flows:
 
+0. Global Monitor (dashboard/pages/6_Global_Monitor.py)
+   - Interactive world map with 17 pre-built triggers across 5 perils.
+   - Reads from local cache only — zero external API calls.
+   - Trigger status cards with live values and threshold evaluation.
+   - Background fetcher: `python -m gad.monitor.fetcher`
+
 1. Guided mode (dashboard/pages/1_Guided_mode.py)
    - 4-step plain-English wizard.
    - Builds TriggerDef from user choices.
@@ -207,14 +117,6 @@ User flows:
 5. Account (dashboard/pages/5_Account.py)
    - OAuth callback/session management.
    - Reads saved triggers and notification subscriptions from Supabase.
-
-### Surface B: Root App (alternate)
-
-Entry point: app.py
-
-- Uses manifest-trigger mapping and gad.engine.py compute path.
-- Includes CHIRPS live pipeline helper hooks and local registry path.
-- Appears to coexist with dashboard app, likely as older or parallel implementation track.
 
 ## Core Engine and Data Contracts
 
@@ -266,18 +168,9 @@ Analytics in gad/engine/analytics.py:
 - Uses SUPABASE_SERVICE_KEY for insert bypass of RLS.
 - Session id helper for Streamlit flows.
 
-### Legacy manifest path (retired)
+### Legacy manifest path (deleted)
 
-The retired compatibility path defines:
-
-- Trigger ids as lowercase string keys (not UUIDs).
-- DataManifest mapping trigger ids -> series refs.
-- compute_basis_risk(trigger, manifest, data_root) using CSV columns:
-  - period, index_value, spatial_ref, loss_event, optional loss_proxy.
-- Optional bounding-box regional aggregation.
-- Zero-trigger-fire warnings and checklist criterion for degeneracy.
-
-This path is no longer the canonical compute/test path. tests/test_reproducibility.py now validates the package engine API and uses load_from_manifest() adapter output as weather_data input.
+The legacy manifest-driven compute path (`gad/engine.py`, `gad/models.py`, `gad/io.py`) was deleted on 2026-03-23. The manifest YAML format remains usable through `load_from_manifest()` in `gad/engine/loader.py`, which converts manifest data into the canonical `weather_data` input format.
 
 ## Oracle and Ledger Scope
 
@@ -423,64 +316,73 @@ Quality/dev tools (optional dev deps):
 
 ## Architectural Status
 
-Canonical engine boundary is now set to gad/engine/.
+Canonical engine boundary is gad/engine/. Legacy modules deleted (2026-03-23).
 
-Legacy manifest modules were renamed to *_legacy.py and retained temporarily for migration safety only.
+All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader.py.
 
-Any new compute, oracle, and test work should target gad/engine/ and gad/engine/loader.py.
+## v0.2 Roadmap — Global Monitor
 
-Next cleanup action: remove *_legacy.py modules in the follow-up commit once import-sweep and runtime confidence checks remain clean.
+### v0.2.0 (built, needs deployment)
+- Global Monitor with 17 triggers across 5 perils (flights, AQI, wildfire, drought, weather).
+- Background fetcher with cache-based security (users never trigger API calls).
+- Interactive world map with trigger status cards.
+- 15/17 triggers fetch real data. 2 drought triggers need CHIRPS wiring.
 
-## v0.2 Readiness and Dependency Order
+### v0.2.1 (next)
+- Wire CHIRPS drought data to fetcher.
+- Get free API keys (FIRMS, WAQI, OpenSky) for full data quality.
+- Deploy to Fly.io with Cloudflare proxy.
+- Add more peril categories and pre-built triggers.
+- Pre-compute historical basis risk for global triggers.
 
-Status snapshot:
+### v0.2.2 (oracle layer)
+- Ed25519 signed determinations under the visible dashboard.
+- Determination status page upgrade (verification proof page).
+- OracleLog dual write (JSONL + per-file JSON).
+- key_id field and genesis hash constant.
 
-- Real-time trigger monitor: not functional.
-- Ed25519 signing in production flow: primitives exist, live key-managed signing not complete.
-- CHIRPS live pipeline: partial helpers implemented, hardening/tests incomplete.
-- Policy-bound settlement pipeline: schema groundwork present, runtime not complete.
-- Notification automation: schema groundwork present, delivery runtime not complete.
-- SQLite trigger/report registry: roadmap only.
-
-Recommended dependency order:
-
-1. Resolve dual-stack into one canonical engine path.
-2. Enable live signing with managed operational key and published key id/public key flow.
-3. Harden CHIRPS pipeline with failure-path tests.
-4. Build real-time trigger monitor emitting TriggerDetermination artifacts.
-5. Wire notification delivery and scheduling runtime.
-
-## Roadmap Signals (from TODOS and docs)
-
-Near-term intended expansions include:
-
-- SQLite-backed trigger/report registry.
-- Regional/spatial trigger support beyond point-only simplification.
-- Automated open-data ingestion pipelines.
-- Robust handling when trigger never fires in back-tests.
-- Full live oracle runtime with policy-bound monitoring and signed settlement delivery.
+### v0.3 (platform)
+- DataSourceConnector protocol for community-contributed sources.
+- Verification SDK and CLI.
+- Webhook delivery with HMAC-SHA256 auth.
+- Deploy to Oracle button in dashboard.
 
 ## Operational Environment Variables
 
-Expected env vars across runtime surfaces:
-
+Required:
 - SUPABASE_URL
 - SUPABASE_ANON_KEY
 - SUPABASE_SERVICE_KEY (for analytics writes)
-- GAD_ORACLE_PRIVATE_KEY_HEX (Ed25519 operational key for signing, v0.2)
-- GAD_ORACLE_PUBLIC_KEY_HEX (matching Ed25519 public key, v0.2)
-- GAD_ORACLE_KEY_ID (UUID used in key-registry metadata, v0.2)
+
+Optional (improve Global Monitor data quality):
+- NASA_FIRMS_MAP_KEY (free wildfire data — firms.modaps.eosdis.nasa.gov)
+- WAQI_API_TOKEN (better AQI geo accuracy — aqicn.org/api)
+- OPENSKY_USERNAME, OPENSKY_PASSWORD (higher rate limits — opensky-network.org)
+
+Oracle (v0.2.2+):
+- GAD_ORACLE_PRIVATE_KEY_HEX (Ed25519 operational key for signing)
+- GAD_ORACLE_PUBLIC_KEY_HEX (matching Ed25519 public key)
+- GAD_ORACLE_KEY_ID (UUID used in key-registry metadata)
 
 Additional runtime credentials/configs are required for full production deployment of Fly, Cloudflare Worker, and R2.
 
-## Practical Definition of Done for v0.1 in this Repo
+## Practical Definition of Done
 
-From code and documentation, v0.1 is considered complete when:
-
+### v0.1 (complete)
 - Dashboard computes and displays basis risk for sample triggers.
 - Lloyds checklist and PDF export are available.
 - Determination schema is fixed and verification function exists.
-- Ledger read path and key registry endpoint contracts are public.
 - Core tests pass for basis risk, Lloyds, oracle signing, and determinism.
 
-What remains is mainly production hardening and v0.2 real-time oracle behaviors.
+### v0.2.0 (built, pending deployment)
+- Global Monitor page with interactive world map and 17 triggers.
+- Background fetcher pulling live data from 4 free APIs.
+- Cache-based security model (users never trigger API calls).
+- 15/17 triggers returning real data.
+
+### v0.2.0 deployment checklist
+- [ ] Get free API keys: NASA FIRMS, WAQI, OpenSky
+- [ ] Wire CHIRPS drought data to fetcher
+- [ ] Deploy to Fly.io (`fly deploy`)
+- [ ] Add Cloudflare proxy for DDoS protection
+- [ ] Verify all 17 triggers show live data

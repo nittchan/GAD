@@ -10,7 +10,11 @@ import os
 import uuid
 from uuid import UUID
 
+from dotenv import load_dotenv
+
 from gad.engine.models import GadEvent
+
+load_dotenv()
 
 # EVENT TYPES (exhaustive — add new ones here only)
 # trigger_viewed, trigger_created, trigger_modified, trigger_made_public,

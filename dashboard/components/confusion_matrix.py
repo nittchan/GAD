@@ -46,3 +46,22 @@ def confusion_matrix_fig(report: BasisRiskReport) -> go.Figure:
         height=280,
     )
     return fig
+
+
+def confusion_matrix_markdown(report: BasisRiskReport) -> str:
+    rows = report.backtest_rows or []
+    total = len(rows)
+    if total == 0:
+        return "| | Loss occurred | No loss |\n|---|---|---|\n| Trigger fired | TP: 0.0% | FP: 0.0% |\n| No trigger | FN: 0.0% | TN: 0.0% |"
+
+    tp, fp, fn, tn = _confusion_from_report(report)
+    tpr = tp / total
+    fpr = fp / total
+    fnr = fn / total
+    tnr = tn / total
+    return (
+        f"| | Loss occurred | No loss |\n"
+        f"|---|---|---|\n"
+        f"| Trigger fired | TP: {tpr:.1%} | FP: {fpr:.1%} |\n"
+        f"| No trigger | FN: {fnr:.1%} | TN: {tnr:.1%} |"
+    )

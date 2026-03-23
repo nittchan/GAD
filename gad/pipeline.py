@@ -5,15 +5,16 @@ ERA5 (Copernicus CDS API) and NOAA/NCEI can be added with the same pattern.
 
 from __future__ import annotations
 
+import io
 import gzip
 import re
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     import pandas as pd
-    from gad._models_legacy import TriggerDef
 
 try:
     import requests
@@ -31,6 +32,10 @@ except ImportError:
 CHIRPS_BASE = "https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs"
 DEFAULT_CACHE_DIR = Path("data/cache/chirps")
 CHIRPS_LAT_LIMIT = 50  # CHIRPS covers 50°S–50°N
+
+
+class PipelineError(Exception):
+    """All pipeline failures wrap to this type."""
 
 
 def get_cache_dir(cache_dir: Optional[Path] = None) -> Path:
@@ -59,15 +64,18 @@ def fetch_chirps_monthly(
         return out_path
     url = f"{CHIRPS_BASE}/{filename}"
     if requests is None:
-        raise RuntimeError(
+        raise PipelineError(
             "Install 'requests' to use the pipeline. Then retry or download manually from "
             "https://data.chc.ucsb.edu/products/CHIRPS-2.0/"
         )
-    resp = requests.get(url, timeout=60, stream=True)
-    resp.raise_for_status()
-    with open(out_path, "wb") as f:
-        for chunk in resp.iter_content(chunk_size=8192):
-            f.write(chunk)
+    try:
+        resp = requests.get(url, timeout=60, stream=True)
+        resp.raise_for_status()
+        with open(out_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+    except Exception as e:
+        raise PipelineError(f"CHIRPS fetch failed for {year}-{month_str}: {e}") from e
     return out_path
 
 
@@ -98,21 +106,26 @@ def _open_raster_path(raster_path: Path):
 def _read_point_from_geotiff(raster_path: Path, lat: float, lon: float) -> float:
     """Read precipitation value at (lat, lon) from a CHIRPS GeoTIFF. Returns mm."""
     if rasterio is None:
-        raise RuntimeError("rasterio is required for CHIRPS extraction. pip install rasterio")
-    src, tmp_path = _open_raster_path(raster_path)
-    with src:
-        transform = src.transform
-        row, col = rowcol(transform, lon, lat)
-        if row < 0 or row >= src.height or col < 0 or col >= src.width:
-            raise ValueError(
-                f"Point ({lat}, {lon}) is outside raster extent (height={src.height}, width={src.width})"
-            )
-        window = rasterio.windows.Window(col, row, 1, 1)
-        data = src.read(1, window=window)
-        val = float(data[0, 0])
-    if tmp_path is not None:
-        tmp_path.unlink(missing_ok=True)
-    return val
+        raise PipelineError("rasterio is required for CHIRPS extraction. pip install rasterio")
+    try:
+        src, tmp_path = _open_raster_path(raster_path)
+        with src:
+            transform = src.transform
+            row, col = rowcol(transform, lon, lat)
+            if row < 0 or row >= src.height or col < 0 or col >= src.width:
+                raise PipelineError(
+                    f"Point ({lat}, {lon}) is outside raster extent (height={src.height}, width={src.width})"
+                )
+            window = rasterio.windows.Window(col, row, 1, 1)
+            data = src.read(1, window=window)
+            val = float(data[0, 0])
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+        return val
+    except PipelineError:
+        raise
+    except Exception as e:
+        raise PipelineError(f"CHIRPS extraction failed for {raster_path.name}: {e}") from e
 
 
 def raster_paths_to_series(
@@ -193,45 +206,70 @@ def run_chirps_fetch(
     return paths
 
 
-def build_chirps_series_for_trigger(
-    trigger: "TriggerDef",
-    cache_dir: Optional[Path] = None,
-    data_root: Optional[Path] = None,
-) -> Path:
+def fetch_chirps_series(
+    lat: float,
+    lon: float,
+    years: list[int],
+    *,
+    threshold: float = 50.0,
+    fires_when_above: bool = False,
+) -> list[dict]:
     """
-    Fetch CHIRPS for the trigger's location and date range, convert to engine series CSV,
-    write to cache, and return the CSV path. Use with make_live_manifest() and compute_basis_risk().
-
-    Raises ValueError if lat/lon outside CHIRPS extent (50°S–50°N) or on fetch/conversion errors.
+    Fetch monthly CHIRPS rainfall for a point over given years and return weather_data.
+    Raises PipelineError on hard failures.
     """
-    from gad._models_legacy import TriggerDef
+    if requests is None:
+        raise PipelineError("requests is required for CHIRPS fetch")
+    if rasterio is None:
+        raise PipelineError("rasterio is required for CHIRPS fetch")
+    if not years:
+        raise PipelineError("years must not be empty")
 
-    cache = get_cache_dir(cache_dir)
-    series_dir = cache / "series"
-    series_dir.mkdir(parents=True, exist_ok=True)
-    out_csv = series_dir / f"{trigger.id}.csv"
+    results: list[dict] = []
+    for year in years:
+        for month in range(1, 13):
+            url = (
+                f"{CHIRPS_BASE}/chirps-v2.0.{year}.{month:02d}.tif.gz"
+            )
+            try:
+                resp = requests.get(url, timeout=30)
+                if resp.status_code == 404:
+                    continue
+                if resp.status_code != 200:
+                    raise PipelineError(f"CHIRPS returned {resp.status_code} for {url}")
 
-    lat, lon = trigger.location.lat, trigger.location.lon
-    start, end = trigger.date_range.start, trigger.date_range.end
-    raster_paths = run_chirps_fetch(
-        start.year, start.month, end.year, end.month, cache_dir=cache
-    )
-    raster_paths_to_series(raster_paths, lat, lon, output_csv=out_csv)
-    return out_csv
+                decompressed = gzip.decompress(resp.content)
+                with rasterio.io.MemoryFile(io.BytesIO(decompressed).read()) as memfile:
+                    with memfile.open() as src:
+                        py, px = src.index(lon, lat)
+                        if not (0 <= py < src.height and 0 <= px < src.width):
+                            raise PipelineError(
+                                f"Point ({lat}, {lon}) is outside raster bounds"
+                            )
+                        value = float(src.read(1)[py, px])
+                        if src.nodata is not None and value == src.nodata:
+                            value = 0.0
 
+                if fires_when_above:
+                    loss_proxy = 1.0 if value > threshold else 0.0
+                else:
+                    loss_proxy = 1.0 if value < threshold else 0.0
 
-def make_live_manifest(trigger_id: str, series_csv_path: Path, data_root: Path) -> "DataManifest":
-    """
-    Build a one-off DataManifest that maps trigger_id to the generated series CSV.
-    data_root must be the root under which series_csv_path lives (e.g. project data dir).
-    """
-    from gad._models_legacy import DataManifest, SeriesRef
+                results.append(
+                    {
+                        "period": datetime(year, month, 1),
+                        "trigger_value": value,
+                        "loss_proxy": loss_proxy,
+                    }
+                )
+            except PipelineError:
+                raise
+            except Exception as e:
+                raise PipelineError(f"CHIRPS fetch failed for {year}-{month:02d}: {e}") from e
 
-    try:
-        rel = series_csv_path.resolve().relative_to(Path(data_root).resolve())
-    except ValueError:
-        raise ValueError(
-            f"series_csv_path {series_csv_path} must be under data_root {data_root}"
-        ) from None
-    ref = SeriesRef(primary_series_csv=str(rel))
-    return DataManifest(triggers={trigger_id: ref})
+    if len(results) < 10:
+        raise PipelineError(
+            f"Insufficient CHIRPS data: got {len(results)} periods, need >= 10"
+        )
+    return results
+

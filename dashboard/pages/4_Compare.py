@@ -10,6 +10,7 @@ from gad.engine import TriggerDef, compute_basis_risk
 from gad.engine.loader import load_weather_data_from_csv
 from gad.engine.models import BasisRiskReport
 from dashboard.components import (
+    chart_summary,
     render_score_card,
     timeline_fig,
     scatter_fig,
@@ -58,12 +59,16 @@ def main():
     with col1:
         render_score_card(r1)
         st.plotly_chart(timeline_fig(r1), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(r1))
         st.plotly_chart(scatter_fig(r1), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(r1))
         render_lloyds_checklist(r1)
     with col2:
         render_score_card(r2)
         st.plotly_chart(timeline_fig(r2), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(r2))
         st.plotly_chart(scatter_fig(r2), use_container_width=True, config={"displayModeBar": False})
+        st.caption(chart_summary(r2))
         render_lloyds_checklist(r2)
     st.markdown("#### Comparison")
     st.markdown(

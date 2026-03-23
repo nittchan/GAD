@@ -20,7 +20,8 @@ def get_supabase():
             return None
         try:
             from supabase import create_client
-            return create_client(url, key)
+            _sb = create_client(url, key)
+            return _sb
         except Exception:
             return None
     return _sb
@@ -71,21 +72,32 @@ def render_auth_widget():
 
 
 def handle_oauth_callback():
-    """Call on the account page to capture the OAuth return."""
+    """
+    Called on every page load. Captures OAuth return code if present.
+    Safe to call when no code is in params.
+    """
     import streamlit as st
     sb = get_supabase()
     if not sb:
         return None
     params = st.query_params
-    if "code" in params or "access_token" in params:
-        try:
-            session = sb.auth.get_session()
-            if session:
-                st.session_state["supabase_session"] = session
-                st.query_params.clear()
-                return getattr(session, "user", None)
-        except Exception:
-            pass
+    if "code" not in params:
+        return None
+    auth_code = params.get("code")
+    if isinstance(auth_code, list):
+        auth_code = auth_code[0] if auth_code else None
+    if not auth_code:
+        st.query_params.clear()
+        return None
+    try:
+        session = sb.auth.exchange_code_for_session({"auth_code": auth_code})
+        st.session_state["supabase_session"] = session
+        st.query_params.clear()
+        st.rerun()
+        return getattr(session, "user", getattr(getattr(session, "session", None), "user", None))
+    except Exception as e:
+        st.warning(f"Sign-in failed: {e}")
+        st.query_params.clear()
     return None
 
 

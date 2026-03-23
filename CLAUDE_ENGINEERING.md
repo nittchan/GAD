@@ -6,150 +6,116 @@ Engineering-focused scope summary for implementation, debugging, and refactor de
 
 ## System Boundary
 
-GAD currently operates as a hybrid of:
+GAD operates as four integrated layers:
 
-1. A Streamlit analysis product for parametric trigger quality evaluation.
-2. An oracle contract surface for determination retrieval and key registry publication.
-3. A Supabase-backed account and event telemetry layer.
+1. **Global Monitor** — live risk dashboard with 5 peril categories, background data fetching, cache-based reads.
+2. **Basis risk engine** — Spearman correlation, bootstrap CI, Lloyd's checklist, PDF export.
+3. **Oracle infrastructure** — Ed25519 signed determinations, hash-chained log, Cloudflare Worker read surface.
+4. **Account/telemetry** — Supabase-backed auth, saved triggers, activity events.
 
-The architecture is in a migration phase with two partially overlapping engine stacks.
+Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global Monitor built (2026-03-23).
 
 ## Runtime Entry Points
 
-- Primary app: dashboard/app.py
-- Alternate app: app.py
+- Dashboard: `streamlit run dashboard/app.py`
+- Background fetcher: `python -m gad.monitor.fetcher` (cron) or `python -m gad.monitor.fetcher --loop` (continuous)
 - Oracle read surface: oracle_ledger/worker.js
 
-## Core Code Paths
+## Package Structure
 
-### Path A: package engine (gad/engine/)
+### gad/engine/ — Compute core
+- models.py: TriggerDef, BasisRiskReport, TriggerDetermination, PolicyBinding, GadEvent
+- basis_risk.py: Spearman rho, bootstrap CI, confusion matrix, Lloyd's integration
+- lloyds.py: Lloyd's checklist scoring
+- oracle.py: Ed25519 sign/verify, hash chain, append-only log
+- loader.py: CSV → weather_data, manifest adapter
+- pdf_export.py: Lloyd's-formatted PDF reports
+- analytics.py: Supabase event writes
 
-- Data model: UUID-centric TriggerDef, BasisRiskReport, TriggerDetermination.
-- Compute API: compute_basis_risk(trigger, weather_data)
-- Input format: weather_data list of dicts with trigger_value/index_value + loss_proxy/loss_event.
-- Risk metrics: Spearman rho, bootstrap CI, p-value, FPR/FNR, Lloyds detail.
-- Crypto: canonical-payload Ed25519 sign/verify and local append-only determination persistence.
-- Event telemetry: GadEvent writes to Supabase gad_events using service key.
+### gad/monitor/ — Global Monitor
+- triggers.py: 17 pre-built triggers across 5 perils with coordinates
+- cache.py: JSON file cache with TTL, staleness detection
+- fetcher.py: Background worker fetches all sources on schedule
+- security.py: Rate limiter, input sanitization, key management
+- sources/opensky.py: Flight delay data (OpenSky Network API)
+- sources/openaq.py: Air quality (OpenAQ v3 + WAQI fallback)
+- sources/firms.py: Wildfire detection (NASA FIRMS)
+- sources/openmeteo.py: Weather forecasts (Open-Meteo)
 
-### Path B: manifest engine (gad/engine.py + gad/models.py + gad/io.py)
+### Security model
+```
+Users → Dashboard → Cache (local JSON files) → Response
+                     ↑
+Background fetcher → External APIs → Cache
+(cron, 15 min)
 
-- Data model: string trigger ids keyed in manifest.
-- Compute API: compute_basis_risk(trigger, manifest, data_root)
-- Input format: CSV series referenced via data/manifest.yaml.
-- Extra behavior: optional bounding box aggregation and explicit zero-trigger-fire warnings.
-- Determinism test coverage currently points here.
+Users NEVER trigger API calls. Cost is fixed regardless of traffic.
+```
 
-## Current Architectural Risk
+## Dashboard Pages
 
-Dual-stack coexistence introduces:
-
-- API signature divergence for compute_basis_risk.
-- Model divergence (UUID vs string ids; different TriggerDef fields).
-- Test/runtime ambiguity depending on import path resolution.
-
-Refactor prerequisite: choose canonical engine boundary, then align imports and fixtures in one wave.
-
-Recommended direction: canonicalize on gad/engine/ (UUID stack), then migrate manifest loading into gad/engine/loader.py as a compatibility adapter.
-
-## Data Contracts
-
-### Trigger definitions
-
-- Product examples: schema/examples/*.yaml.
-- Manifest path triggers: data/triggers/*.yaml.
-- JSON contract: schema/trigger.schema.json.
-
-### Series data
-
-- Manifest-mapped datasets: data/series/*.csv.
-- Expected columns vary by engine path.
-
-### Oracle determination shape
-
-Common required fields across code/docs:
-
-- determination_id
-- policy_id
-- trigger_id
-- fired
-- fired_at
-- data_snapshot_hash
-- computation_version
-- determined_at
-- prev_hash
-- signature
-
-v0.1 permits empty signature while preserving schema stability.
-
-## Operational Surfaces
-
-### Dashboard pages
-
-- Guided mode: dashboard/pages/1_Guided_mode.py
-- Expert mode: dashboard/pages/2_Expert_mode.py
+- Global Monitor: dashboard/pages/6_Global_Monitor.py (interactive map + trigger cards)
+- Guided mode: dashboard/pages/1_Guided_mode.py (4-step wizard)
+- Expert mode: dashboard/pages/2_Expert_mode.py (YAML editor)
 - Trigger profile: dashboard/pages/3_Trigger_profile.py
 - Compare: dashboard/pages/4_Compare.py
 - Account: dashboard/pages/5_Account.py
 
-### Oracle worker routes
+## Data Contracts
 
-- GET /determination/{uuid}
-- GET /.well-known/oracle-keys.json
+### Monitor triggers (gad/monitor/triggers.py)
+Pre-built triggers with: id, name, peril, lat/lon, threshold, unit, data_source, description.
+17 triggers across 5 perils. Add new triggers by appending to GLOBAL_TRIGGERS list.
 
-Storage backend: Cloudflare R2 via ORACLE_BUCKET binding.
+### Monitor cache (data/monitor_cache/)
+JSON files with: source, key, data, cached_at, expires_at. Gitignored. Created by fetcher.
 
-## Persistence Layer
+### Engine models (gad/engine/models.py)
+UUID-centric TriggerDef, BasisRiskReport, TriggerDetermination. Pydantic v2.
 
-Supabase schema in supabase/migrations/001_initial_schema.sql defines:
+### Oracle determination shape
+determination_id, policy_id, trigger_id, fired, fired_at, data_snapshot_hash, computation_version, determined_at, prev_hash, signature. v0.1: empty signature. v0.2.2: signed + key_id.
 
-- profiles
-- trigger_defs
-- basis_risk_reports
-- saved_triggers
-- trigger_notifications
-- oracle_determinations
-- gad_events
-- api_keys
+## Test Coverage
 
-RLS is enabled; user writes are constrained; service-role paths are used for system telemetry.
-
-## Test Coverage Snapshot
-
-- Basis risk compute: tests/test_basis_risk.py
-- Lloyds checklist scoring: tests/test_lloyds.py
-- Oracle signature verification: tests/test_oracle.py
-- Deterministic manifest compute: tests/test_reproducibility.py
+- tests/test_basis_risk.py: core compute
+- tests/test_lloyds.py: checklist scoring
+- tests/test_oracle.py: sign/verify round-trip
+- tests/test_reproducibility.py: deterministic outputs
+- tests/test_import_hygiene.py: no legacy imports
 
 Notable gaps:
-
-- Dashboard integration behavior.
-- Auth/session E2E coverage.
-- Pipeline network/raster failure modes.
-- Worker contract tests.
+- Monitor fetcher integration tests
+- Dashboard page smoke tests
+- CHIRPS pipeline error paths
+- Worker contract tests
 
 ## Build and Runtime
 
 - Python: >=3.12
 - Packaging: pyproject.toml + requirements.txt
 - Dashboard container: dashboard/Dockerfile
-- Fly deployment: fly.toml
+- Fly deployment: fly.toml (auto-stop, connection limits, 512MB cap)
 - Worker deployment: oracle_ledger/wrangler.toml
 
-## Required Environment Variables
+## Environment Variables
 
-- SUPABASE_URL
-- SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_KEY
-- GAD_ORACLE_PRIVATE_KEY_HEX
-- GAD_ORACLE_PUBLIC_KEY_HEX
-- GAD_ORACLE_KEY_ID
+Required:
+- SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 
-Additional infra credentials are required for Fly/Cloudflare/R2 operations.
+Optional (improve data quality):
+- NASA_FIRMS_MAP_KEY — free wildfire data
+- WAQI_API_TOKEN — better AQI geo accuracy
+- OPENSKY_USERNAME, OPENSKY_PASSWORD — higher rate limits
+
+Oracle (v0.2.2+):
+- GAD_ORACLE_PRIVATE_KEY_HEX, GAD_ORACLE_PUBLIC_KEY_HEX, GAD_ORACLE_KEY_ID
 
 ## Near-Term Engineering Priorities
 
-1. Decide canonical engine path and retire the duplicate stack.
-2. Add integration tests around dashboard compute flows and auth.
-3. Move oracle from schema/read-only posture to live signed append pipeline.
-4. Harden key lifecycle and registry publication workflow.
-5. Expand data ingestion from static bundles to managed live feeds.
+1. Wire CHIRPS drought data to monitor fetcher.
+2. Deploy dashboard + fetcher to Fly.io.
+3. Add Cloudflare proxy for DDoS protection.
+4. Add more peril categories (earthquake/USGS, shipping/AIS, health/WHO).
+5. Pre-compute historical basis risk for all 17 triggers.
+6. Layer oracle signing (v0.2.2) under the Global Monitor.
