@@ -20,7 +20,7 @@ from gad.monitor.triggers import (
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 
-st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
 # ── Dark theme CSS ──
 st.markdown("""
@@ -129,6 +129,23 @@ def _status_badge(status: str) -> str:
     cls = css_class.get(status, "status-no-data")
     return f'<span class="status-badge {cls}">{label}</span>'
 
+
+# ── Sidebar ──
+st.sidebar.markdown(
+    '<div style="padding:8px 0 16px 0;">'
+    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '</div>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown("---")
+st.sidebar.page_link("app.py", label="Home", icon="🏠")
+st.sidebar.page_link("pages/6_Global_Monitor.py", label="Global Monitor", icon="🌍")
+st.sidebar.page_link("pages/1_Guided_mode.py", label="Build your own", icon="✨")
+st.sidebar.page_link("pages/2_Expert_mode.py", label="Expert mode", icon="📝")
+st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon="📊")
+st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
+st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 
 # ── Page Header ──
 st.markdown(
@@ -255,32 +272,21 @@ if map_rows:
         pickable=False,
     ) if len(triggered) > 0 else None
 
-    # Labels
-    text = pdk.Layer(
-        "TextLayer",
-        data=df,
-        get_position=["lon", "lat"],
-        get_text="name",
-        get_color=[230, 237, 243, 200],
-        get_size=11,
-        get_alignment_baseline="'top'",
-        get_pixel_offset=[0, 14],
-        pickable=False,
-    )
+    # No text labels — too dense with 426 triggers. Info shown via hover tooltip.
 
-    view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.6, pitch=0)
+    view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.8, pitch=0)
 
     tooltip = {
-        "html": "<div style='font-family:monospace;background:#161b22;padding:10px 14px;border:1px solid #30363d;border-radius:4px;min-width:180px'>"
+        "html": "<div style='font-family:monospace;background:#161b22;padding:10px 14px;border:1px solid #30363d;border-radius:4px;min-width:200px'>"
                 "<div style='font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:4px'>{name}</div>"
                 "<div style='font-size:11px;color:#8b949e;margin-bottom:6px'>{location}</div>"
-                "<div style='font-size:16px;font-weight:700;color:#58a6ff;margin-bottom:2px'>{value_str}</div>"
+                "<div style='font-size:18px;font-weight:700;color:#58a6ff;margin-bottom:2px'>{value_str}</div>"
                 "<div style='font-size:11px;font-weight:600;color:#e6edf3'>{status_label}</div>"
                 "</div>",
         "style": {"backgroundColor": "transparent", "border": "none"},
     }
 
-    layers = [scatter, text]
+    layers = [scatter]
     if glow is not None:
         layers.insert(0, glow)
 
