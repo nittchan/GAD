@@ -11,7 +11,7 @@ from typing import Literal
 
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake"]
 
 
 @dataclass(frozen=True)
@@ -132,6 +132,18 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="drought-ethiopia", name="Ethiopia Drought", peril="drought", lat=9.0, lon=38.7, location_label="Addis Ababa region, Ethiopia", threshold=40, threshold_unit="mm_rainfall", fires_when_above=False, data_source="chirps", description="Monthly rainfall drops below 40mm."),
     MonitorTrigger(id="drought-sahel", name="Sahel Drought", peril="drought", lat=14.0, lon=2.0, location_label="Sahel region, Niger", threshold=30, threshold_unit="mm_rainfall", fires_when_above=False, data_source="chirps", description="Monthly rainfall drops below 30mm in the Sahel."),
     MonitorTrigger(id="drought-northeast-brazil", name="NE Brazil Drought", peril="drought", lat=-8.0, lon=-36.0, location_label="Pernambuco, Brazil", threshold=40, threshold_unit="mm_rainfall", fires_when_above=False, data_source="chirps", description="Monthly rainfall drops below 40mm."),
+
+    # ── Earthquake ──
+    MonitorTrigger(id="quake-japan", name="Japan Earthquake", peril="earthquake", lat=35.6762, lon=139.6503, location_label="Tokyo region, Japan", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-turkey", name="Turkey Earthquake", peril="earthquake", lat=39.9334, lon=32.8597, location_label="Ankara region, Turkey", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-california", name="California Earthquake", peril="earthquake", lat=34.0522, lon=-118.2437, location_label="Los Angeles, USA", threshold=4.5, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M4.5+ earthquake within 200km."),
+    MonitorTrigger(id="quake-chile", name="Chile Earthquake", peril="earthquake", lat=-33.4489, lon=-70.6693, location_label="Santiago, Chile", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-indonesia", name="Indonesia Earthquake", peril="earthquake", lat=-6.2088, lon=106.8456, location_label="Jakarta, Indonesia", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-nepal", name="Nepal Earthquake", peril="earthquake", lat=27.7172, lon=85.3240, location_label="Kathmandu, Nepal", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-italy", name="Italy Earthquake", peril="earthquake", lat=42.3498, lon=13.3996, location_label="L'Aquila, Italy", threshold=4.5, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M4.5+ earthquake within 200km."),
+    MonitorTrigger(id="quake-iran", name="Iran Earthquake", peril="earthquake", lat=35.6892, lon=51.3890, location_label="Tehran, Iran", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
+    MonitorTrigger(id="quake-india-delhi", name="Delhi NCR Earthquake", peril="earthquake", lat=28.6139, lon=77.2090, location_label="Delhi NCR, India", threshold=4.5, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M4.5+ earthquake within 200km."),
+    MonitorTrigger(id="quake-nz", name="New Zealand Earthquake", peril="earthquake", lat=-41.2866, lon=174.7756, location_label="Wellington, New Zealand", threshold=5.0, threshold_unit="magnitude", fires_when_above=True, data_source="usgs", description="USGS detects M5.0+ earthquake within 200km."),
 ]
 
 
@@ -156,6 +168,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "wildfire": "Wildfire",
     "drought": "Drought",
     "extreme_weather": "Extreme Weather",
+    "earthquake": "Earthquake",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -164,4 +177,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "wildfire": "fire_extinguisher",
     "drought": "water_drop",
     "extreme_weather": "thunderstorm",
+    "earthquake": "globe_with_meridians",
 }

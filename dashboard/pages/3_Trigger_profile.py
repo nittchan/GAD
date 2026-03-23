@@ -16,7 +16,7 @@ import streamlit as st
 
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake
 
 st.set_page_config(page_title="Trigger Profile | Parametric Data", layout="wide", initial_sidebar_state="expanded")
 
@@ -60,7 +60,7 @@ st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 # ── Trigger selector ──
 SOURCE_KEY_MAP = {
     "openmeteo": "weather", "openaq": "aqi", "firms": "fire",
-    "opensky": "flights", "chirps": "drought",
+    "opensky": "flights", "chirps": "drought", "usgs": "earthquake",
 }
 
 # Check if navigated from Global Monitor
@@ -109,6 +109,8 @@ def _evaluate(trigger: MonitorTrigger, data: dict) -> dict:
         return opensky.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "chirps":
         return chirps_monitor.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "usgs":
+        return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 

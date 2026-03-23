@@ -31,7 +31,7 @@ from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
-from gad.monitor.sources import aviationstack, airnow, gpm_imerg
+from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake
 
 logging.basicConfig(
     level=logging.INFO,
@@ -148,6 +148,11 @@ def fetch_drought(trigger: MonitorTrigger) -> dict | None:
     return result.data
 
 
+def fetch_earthquake(trigger: MonitorTrigger) -> dict | None:
+    """Earthquake: USGS (free, no key, real-time)."""
+    return usgs_earthquake.fetch_earthquakes(trigger.lat, trigger.lon, trigger.id)
+
+
 # ── Peril → fetch function mapping ──
 FETCH_MAP = {
     "opensky": fetch_flight_delay,
@@ -155,6 +160,7 @@ FETCH_MAP = {
     "firms": fetch_wildfire,
     "openmeteo": fetch_weather,
     "chirps": fetch_drought,
+    "usgs": fetch_earthquake,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -164,6 +170,7 @@ SOURCE_CACHE_KEY = {
     "firms": "fire",
     "openmeteo": "weather",
     "chirps": "drought",
+    "usgs": "earthquake",
 }
 
 

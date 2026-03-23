@@ -16,9 +16,13 @@ from gad.engine.models import (
 )
 from gad.engine.pdf_export import generate_lloyds_report
 from gad.engine.oracle import (
+    GENESIS_HASH,
     append_to_oracle_log,
+    canonical_hash,
     data_snapshot_hash,
+    read_last_hash,
     sign_determination,
+    verify_chain,
     verify_determination,
 )
 

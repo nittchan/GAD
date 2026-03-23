@@ -18,7 +18,7 @@ from gad.monitor.triggers import (
     get_triggers_by_peril,
 )
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake
 
 st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
@@ -83,6 +83,7 @@ SOURCE_KEY_MAP = {
     "firms": "fire",
     "opensky": "flights",
     "chirps": "drought",
+    "usgs": "earthquake",
 }
 
 
@@ -104,6 +105,8 @@ def _evaluate_trigger(trigger: MonitorTrigger, data: dict) -> dict:
         return opensky.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "chirps":
         return chirps_monitor.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "usgs":
+        return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 

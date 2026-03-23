@@ -69,8 +69,9 @@ class TriggerDef(BaseModel):
 class TriggerDetermination(BaseModel):
     """
     Every determination is a signed, hash-chained artifact.
-    Schema is frozen at v0.1 — DO NOT add optional fields later without
-    versioning, because prev_hash makes this append-only.
+    prev_hash makes the log append-only — any field change affects future hashes.
+    New optional fields (like key_id) are safe because they serialize as null
+    and don't break the chain for existing entries.
     """
 
     determination_id: UUID = Field(default_factory=uuid4)
@@ -91,6 +92,10 @@ class TriggerDetermination(BaseModel):
     signature: str = Field(
         default="",
         description="Ed25519 hex signature — empty string in v0.1",
+    )
+    key_id: Optional[UUID] = Field(
+        default=None,
+        description="UUID of the signing key from the key registry. None in v0.1 (unsigned).",
     )
 
 

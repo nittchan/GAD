@@ -61,6 +61,7 @@ PERIL_CONFIG = {
     "drought": {"label": "Drought", "icon": "☀️", "unit": "mm rainfall", "default": 50.0, "above": False, "source": "chirps"},
     "extreme_weather": {"label": "Extreme Weather", "icon": "🌪️", "unit": "celsius", "default": 42.0, "above": True, "source": "openmeteo"},
     "wildfire": {"label": "Wildfire", "icon": "🔥", "unit": "fire count", "default": 10.0, "above": True, "source": "firms"},
+    "earthquake": {"label": "Earthquake", "icon": "🌍", "unit": "magnitude", "default": 5.0, "above": True, "source": "usgs"},
 }
 
 # ── Header ──
@@ -78,7 +79,7 @@ st.divider()
 # ── Step 1: Peril ──
 if step == 1:
     st.markdown("### What are you covering?")
-    cols = st.columns(5)
+    cols = st.columns(6)
     for i, (key, cfg) in enumerate(PERIL_CONFIG.items()):
         with cols[i]:
             if st.button(f"{cfg['icon']}\n\n{cfg['label']}", key=f"peril_{key}", use_container_width=True):
