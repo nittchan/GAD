@@ -15,9 +15,10 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 
 ## Stage
 
-- v0.1: Basis risk dashboard with guided/expert modes. Deployed.
-- v0.2.0 (current): Global Monitor with 426 triggers across 144 airports (50 Indian + 94 global) and 5 perils. Deployed to Fly.io.
+- v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 426 triggers, 144 airports, multi-source data (8 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
+- v0.3: New perils (earthquake, shipping, health, solar), enterprise tier.
 
 ## Development Workflow
 
@@ -62,22 +63,26 @@ Compute engine: gad/engine/ package
 
 | Source | API | Key needed? |
 |--------|-----|------------|
-| OpenSky | Flight departures | Optional (higher rate limits) |
-| OpenAQ / WAQI | Air quality index | Optional (better geo accuracy) |
-| NASA FIRMS | Active fire detection | Yes (free registration) |
-| Open-Meteo | Weather forecasts | No |
-| CHIRPS | Rainfall (drought) | No |
+| OpenSky | Flight departures | OAuth2 (configured) |
+| AviationStack | Flight schedules (tier-1) | API key (configured) |
+| WAQI | Air quality (global) | API key (configured) |
+| AirNow EPA | Air quality (US) | API key (configured) |
+| OpenAQ v3 | Air quality (open data) | API key (configured) |
+| NASA FIRMS | Wildfire (VIIRS+MODIS) | MAP key (configured) |
+| Open-Meteo | Weather forecasts | No key needed |
+| CHIRPS | Monthly rainfall | No key needed |
+| NASA GPM IMERG | Daily precipitation | Earthdata token (configured) |
 
 ## Env Vars
 
 - SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
-- GAD_ORACLE_PRIVATE_KEY_HEX, GAD_ORACLE_PUBLIC_KEY_HEX, GAD_ORACLE_KEY_ID
-- NASA_FIRMS_MAP_KEY (optional), WAQI_API_TOKEN (optional), OPENSKY_USERNAME/PASSWORD (optional)
+- NASA_FIRMS_MAP_KEY, WAQI_API_TOKEN, OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
+- AVIATIONSTACK_API_KEY, OPENAQ_API_KEY, AIRNOW_API_KEY, NASA_EARTHDATA_TOKEN
+- GAD_ORACLE_PRIVATE_KEY_HEX, GAD_ORACLE_PUBLIC_KEY_HEX, GAD_ORACLE_KEY_ID (v0.2.2)
 
 ## Near-Term Priorities
 
-1. Get free API keys (FIRMS, WAQI, OpenSky) for full data quality.
-2. Wire CHIRPS drought data to the background fetcher.
-3. Deploy to Fly.io with Cloudflare proxy.
-4. Add more peril categories and pre-built triggers.
-5. Layer oracle signing (v0.2.2) under the visible dashboard.
+1. Historical basis risk for all 426 triggers (needs data download pipeline).
+2. Oracle signing (v0.2.2) wired to live monitor.
+3. New perils: earthquake (USGS), shipping, health, solar.
+4. Parametric Data Pro (enterprise tier).

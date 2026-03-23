@@ -128,9 +128,8 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. Wire CHIRPS drought data to monitor fetcher.
-2. Deploy dashboard + fetcher to Fly.io.
-3. Add Cloudflare proxy for DDoS protection.
-4. Add more peril categories (earthquake/USGS, shipping/AIS, health/WHO).
-5. Pre-compute historical basis risk for all 426 triggers.
-6. Layer oracle signing (v0.2.2) under the Global Monitor.
+1. Historical basis risk for all 426 triggers (download historical series, pre-compute).
+2. NOAA data sources: HRRR Smoke (wildfire), GFS (weather), SPI (drought).
+3. Oracle signing (v0.2.2): wire Ed25519 to live monitor, determination status page.
+4. New perils: earthquake (USGS API — easy), shipping, health, solar.
+5. Parametric Data Pro: premium data sources, API access, enterprise features.

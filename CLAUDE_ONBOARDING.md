@@ -104,8 +104,8 @@ Optional (improve Global Monitor data quality):
 
 ## Good First Tasks
 
-1. Add a new peril category (earthquake via USGS API).
-2. Wire CHIRPS drought data to the monitor fetcher.
-3. Add integration tests for the Global Monitor page.
-4. Add contract tests for oracle worker response behavior.
-5. Add more pre-built triggers to gad/monitor/triggers.py.
+1. Add earthquake peril (USGS API — free, no key, GeoJSON format).
+2. Add airports to `gad/monitor/airports.py` (auto-generates triggers).
+3. Add a new data source connector in `gad/monitor/sources/`.
+4. Add integration tests for the Global Monitor page.
+5. Add contract tests for oracle worker response behavior.

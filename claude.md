@@ -38,25 +38,25 @@ The product goal: become THE default global parametric insurance monitor. v0.2 s
 
 ## Current Stage and Product Shape
 
-Version indicators in the repository point to v0.1.x with partial v0.2 groundwork:
+**v0.2.1 is live at parametricdata.io.** The product has evolved significantly from v0.1:
 
-- v0.1 delivered:
-  - Trigger schemas and sample triggers.
-  - Basis risk computation with Spearman metrics and back-test outputs.
-  - Lloyds-style checklist and PDF report export.
-  - Dashboard with guided, expert, profile, compare, and account pages.
-  - Oracle determination schema and verification primitives.
-  - Cloudflare Worker surface for determination retrieval and key registry endpoint.
+- v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers, guided/expert modes, PDF export.
+- v0.2.0 (2026-03-23): Global Monitor with 426 triggers across 144 airports, 5 perils, interactive map.
+- v0.2.1 (2026-03-23): Multi-source data connectors (AviationStack, AirNow, FIRMS dual satellite, GPM IMERG). All pages unified under the 426-trigger registry.
 
-- v0.2 groundwork already present:
-  - Oracle event and determination models.
-  - Key registry and webhook/log contracts documented.
-  - CHIRPS live data pipeline helpers.
+Current capabilities:
+  - Global Monitor: live risk map with 426 triggers, hover tooltips, peril/country filters.
+  - Multi-source fetcher: priority fallback across 8 data sources.
+  - All pages wired to the trigger registry (Trigger Profile, Compare, Guided Mode, Expert Mode, Monitor Status).
+  - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
+  - Deployed at parametricdata.io with Cloudflare DDoS protection.
 
-- Not fully complete yet:
-  - Real-time trigger monitor/event loop.
-  - Fully operational policy-bound settlement pipeline.
-  - Productionized key lifecycle and rotation workflows.
+Not yet complete (v0.2.2+):
+  - Oracle signing wired to live monitor (Ed25519 primitives exist, not yet connected).
+  - Determination status page upgrade (verification proof UI).
+  - Historical basis risk for all 426 triggers (only 2 legacy triggers have CSVs).
+  - New perils: earthquake (USGS), shipping (AIS), health (WHO), solar (NOAA SWPC).
+  - Parametric Data Pro (enterprise tier).
 
 ## Engine Migration (Completed 2026-03-23)
 
@@ -339,32 +339,29 @@ Canonical engine boundary is gad/engine/. Legacy modules deleted (2026-03-23).
 
 All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader.py.
 
-## v0.2 Roadmap — Global Monitor
+## Roadmap
 
-### v0.2.0 (built, needs deployment)
-- Global Monitor with 426 triggers across 144 airports (50 Indian + 94 global) and 5 perils (flights, AQI, wildfire, drought, weather).
-- Triggers auto-generated from master airport registry (`gad/monitor/airports.py`): 144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather.
-- Background fetcher with cache-based security (users never trigger API calls).
-- Interactive world map with trigger status cards.
+### v0.2.0 — Global Monitor (SHIPPED 2026-03-23)
+- 426 triggers across 144 airports (50 Indian + 94 global), 5 perils.
+- Background fetcher, cache-based security, interactive map. Deployed to parametricdata.io.
 
-### v0.2.1 (next)
-- Wire CHIRPS drought data to fetcher.
-- Get free API keys (FIRMS, WAQI, OpenSky) for full data quality.
-- Deploy to Fly.io with Cloudflare proxy.
-- Add more peril categories and pre-built triggers.
-- Pre-compute historical basis risk for global triggers.
+### v0.2.1 — Multi-Source Data (SHIPPED 2026-03-23)
+- Multi-source connectors: AviationStack, AirNow, FIRMS VIIRS+MODIS, GPM IMERG, OpenAQ v3.
+- Priority fallback protocol. All 8 API keys configured. All pages unified under registry.
 
-### v0.2.2 (oracle layer)
-- Ed25519 signed determinations under the visible dashboard.
-- Determination status page upgrade (verification proof page).
-- OracleLog dual write (JSONL + per-file JSON).
-- key_id field and genesis hash constant.
+### v0.2 remaining
+- Historical basis risk for all 426 triggers.
+- NOAA HRRR Smoke, NOAA GFS weather, NOAA SPI drought.
+
+### v0.2.2 (oracle layer — next milestone)
+- Ed25519 signed determinations wired to live monitor.
+- Determination status page upgrade (verification proof).
+- OracleLog dual write, key_id field, genesis hash.
 
 ### v0.3 (platform)
-- DataSourceConnector protocol for community-contributed sources.
-- Verification SDK and CLI.
-- Webhook delivery with HMAC-SHA256 auth.
-- Deploy to Oracle button in dashboard.
+- New perils: earthquake (USGS), shipping (AIS), health (WHO), solar (NOAA SWPC).
+- Verification SDK + CLI, webhook delivery, Deploy to Oracle button.
+- Parametric Data Pro (enterprise tier).
 
 ## Operational Environment Variables
 
@@ -373,10 +370,14 @@ Required:
 - SUPABASE_ANON_KEY
 - SUPABASE_SERVICE_KEY (for analytics writes)
 
-Optional (improve Global Monitor data quality):
-- NASA_FIRMS_MAP_KEY (free wildfire data — firms.modaps.eosdis.nasa.gov)
-- WAQI_API_TOKEN (better AQI geo accuracy — aqicn.org/api)
-- OPENSKY_USERNAME, OPENSKY_PASSWORD (higher rate limits — opensky-network.org)
+Global Monitor data sources (all configured):
+- NASA_FIRMS_MAP_KEY (wildfire — VIIRS + MODIS)
+- WAQI_API_TOKEN (air quality — global)
+- OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET (flights — OAuth2, 4000 credits/day)
+- AVIATIONSTACK_API_KEY (flight schedules — tier-1 airports, 500 req/mo)
+- OPENAQ_API_KEY (air quality — open data)
+- AIRNOW_API_KEY (air quality — US EPA authoritative)
+- NASA_EARTHDATA_TOKEN (GPM IMERG — daily precipitation)
 
 Oracle (v0.2.2+):
 - GAD_ORACLE_PRIVATE_KEY_HEX (Ed25519 operational key for signing)
@@ -387,21 +388,18 @@ Additional runtime credentials/configs are required for full production deployme
 
 ## Practical Definition of Done
 
-### v0.1 (complete)
-- Dashboard computes and displays basis risk for sample triggers.
-- Lloyds checklist and PDF export are available.
-- Determination schema is fixed and verification function exists.
-- Core tests pass for basis risk, Lloyds, oracle signing, and determinism.
+### v0.1 (complete 2026-03-19)
+- Dashboard with 3 sample triggers, guided/expert modes, PDF export.
 
-### v0.2.0 (built, pending deployment)
-- Global Monitor page with interactive world map and 426 triggers across 144 airports.
-- Triggers data-driven from airport registry (`gad/monitor/airports.py`).
-- Background fetcher pulling live data from 4 free APIs.
-- Cache-based security model (users never trigger API calls).
+### v0.2.1 (complete 2026-03-23)
+- [x] Global Monitor with 426 triggers across 144 airports, 5 perils
+- [x] Multi-source data connectors with priority fallback (8 APIs)
+- [x] All pages wired to 426-trigger registry
+- [x] Deployed to parametricdata.io with Cloudflare DDoS
+- [x] Dev → staging → production workflow
+- [x] All 8 API keys configured on Fly.io
 
-### v0.2.0 deployment checklist
-- [ ] Get free API keys: NASA FIRMS, WAQI, OpenSky
-- [ ] Wire CHIRPS drought data to fetcher
-- [ ] Deploy to Fly.io (`fly deploy`)
-- [ ] Add Cloudflare proxy for DDoS protection
-- [ ] Verify all 426 triggers show live data
+### v0.2.2 (next)
+- [ ] Oracle signing wired to live monitor
+- [ ] Determination status page with verification proof
+- [ ] Historical basis risk for all triggers
