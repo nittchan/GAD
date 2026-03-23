@@ -7,3 +7,5 @@ __pycache__/
 data/gad_registry.db
 data/cache/
 data/monitor_cache/
+registry/determinations/*.json
+registry/oracle_log.jsonl

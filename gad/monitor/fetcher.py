@@ -27,11 +27,21 @@ try:
 except ImportError:
     pass
 
+import json
+from datetime import datetime, timezone
+from uuid import UUID, uuid4
+
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake
+from gad.engine.oracle import (
+    sign_determination, append_to_oracle_log, read_last_hash,
+    data_snapshot_hash, _load_private_key, GENESIS_HASH,
+)
+from gad.engine.models import TriggerDetermination
+from gad.engine.version import get_gad_version
 
 logging.basicConfig(
     level=logging.INFO,
@@ -180,11 +190,71 @@ def _should_fetch(source: str, trigger_id: str) -> bool:
     return data is None or is_stale
 
 
+def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
+    """Quick evaluation: did the trigger fire?"""
+    if trigger.data_source == "openmeteo":
+        r = openmeteo.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit, trigger.fires_when_above)
+    elif trigger.data_source == "openaq":
+        r = openaq.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "firms":
+        r = firms.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "opensky":
+        r = opensky.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "chirps":
+        r = chirps_monitor.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "usgs":
+        r = usgs_earthquake.evaluate_trigger(data, trigger.threshold)
+    else:
+        return False
+    return r.get("fired", False)
+
+
+def _create_determination(trigger: MonitorTrigger, data: dict, fired: bool) -> TriggerDetermination:
+    """Create a TriggerDetermination from a fetch result."""
+    raw_bytes = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
+    return TriggerDetermination(
+        determination_id=uuid4(),
+        policy_id=UUID("00000000-0000-0000-0000-000000000000"),  # no policy binding in v0.2
+        trigger_id=UUID(int=hash(trigger.id) % (2**128)),  # deterministic UUID from trigger ID
+        fired=fired,
+        fired_at=datetime.now(timezone.utc) if fired else None,
+        data_snapshot_hash=data_snapshot_hash(raw_bytes),
+        computation_version=get_gad_version(),
+        prev_hash=GENESIS_HASH,  # placeholder, updated during signing
+    )
+
+
+# Oracle signing state
+_oracle_signing_enabled = False
+_private_key: bytes | None = None
+_key_id: str | None = None
+
+
+def _init_oracle_signing() -> None:
+    """Initialize oracle signing if private key is available."""
+    global _oracle_signing_enabled, _private_key, _key_id
+    _private_key = _load_private_key()
+    _key_id = os.environ.get("GAD_ORACLE_KEY_ID")
+    _oracle_signing_enabled = _private_key is not None
+    if _oracle_signing_enabled:
+        log.info(f"Oracle signing ENABLED (key_id={_key_id})")
+    else:
+        log.info("Oracle signing DISABLED (no GAD_ORACLE_PRIVATE_KEY_HEX)")
+
+
 def fetch_all() -> dict:
-    """Fetch all triggers that need updating. Returns summary."""
+    """Fetch all triggers that need updating. Sign determinations if key is available."""
+    global _oracle_signing_enabled
+
+    if not _oracle_signing_enabled:
+        _init_oracle_signing()
+
     fetched = 0
     skipped = 0
     errors = 0
+    signed = 0
+
+    prev_hash = read_last_hash() if _oracle_signing_enabled else GENESIS_HASH
 
     for trigger in GLOBAL_TRIGGERS:
         if not _should_fetch(trigger.data_source, trigger.id):
@@ -193,7 +263,6 @@ def fetch_all() -> dict:
 
         fetch_fn = FETCH_MAP.get(trigger.data_source)
         if not fetch_fn:
-            log.warning(f"No fetch function for source: {trigger.data_source}")
             errors += 1
             continue
 
@@ -201,18 +270,29 @@ def fetch_all() -> dict:
             result = fetch_fn(trigger)
             if result is not None:
                 fetched += 1
-                if fetched % 20 == 0:
-                    log.info(f"Progress: {fetched} fetched, {skipped} skipped, {errors} errors")
+
+                # Oracle signing: create and sign a determination for every evaluation
+                if _oracle_signing_enabled and _private_key:
+                    try:
+                        fired = _evaluate_fired(trigger, result)
+                        det = _create_determination(trigger, result, fired)
+                        signed_det = sign_determination(det, _private_key, prev_hash, _key_id)
+                        prev_hash = append_to_oracle_log(signed_det)
+                        signed += 1
+                    except Exception as e:
+                        log.warning(f"Oracle signing failed for {trigger.id}: {e}")
+
+                if fetched % 50 == 0:
+                    log.info(f"Progress: {fetched} fetched, {signed} signed, {errors} errors")
             else:
                 errors += 1
         except Exception as e:
             errors += 1
             log.error(f"Error fetching {trigger.id}: {e}")
 
-        # Small delay between API calls to be polite
         time.sleep(0.3)
 
-    summary = {"fetched": fetched, "skipped": skipped, "errors": errors}
+    summary = {"fetched": fetched, "skipped": skipped, "errors": errors, "signed": signed}
     log.info(f"Fetch complete: {summary}")
     return summary
 
