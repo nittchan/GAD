@@ -127,19 +127,41 @@ def _status_badge(status: str) -> str:
 st.markdown(
     '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
     '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
-    '<p style="color:#8b949e;font-size:14px;">Live parametric insurance risk across 5 peril categories. All data from open sources.</p>',
+    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports and 5 peril categories. All data from open sources.</p>',
     unsafe_allow_html=True,
 )
 
-# ── Peril filter ──
-peril_options = list(PERIL_LABELS.keys())
-peril_labels_list = list(PERIL_LABELS.values())
-selected_perils = st.multiselect(
-    "Filter by peril",
-    options=peril_options,
-    default=peril_options,
-    format_func=lambda x: PERIL_LABELS[x],
-)
+# ── Filters ──
+filter_col1, filter_col2 = st.columns([1, 1])
+with filter_col1:
+    peril_options = list(PERIL_LABELS.keys())
+    selected_perils = st.multiselect(
+        "Filter by peril",
+        options=peril_options,
+        default=peril_options,
+        format_func=lambda x: PERIL_LABELS[x],
+    )
+with filter_col2:
+    from gad.monitor.airports import ALL_AIRPORTS
+    countries = sorted(set(a.country for a in ALL_AIRPORTS))
+    selected_countries = st.multiselect(
+        "Filter by country (flights/weather/AQI)",
+        options=countries,
+        default=[],
+        placeholder="All countries",
+    )
+
+# ── Build country lookup for airport-derived triggers ──
+_airport_country = {}
+for _a in ALL_AIRPORTS:
+    _airport_country[_a.iata.lower()] = _a.country
+
+def _trigger_country(trigger: MonitorTrigger) -> str | None:
+    """Get country for an airport-derived trigger."""
+    for suffix in [trigger.id.split("-")[-1]]:
+        if suffix in _airport_country:
+            return _airport_country[suffix]
+    return None
 
 # ── Build map data ──
 map_rows = []
@@ -148,6 +170,12 @@ trigger_results = {}
 for trigger in GLOBAL_TRIGGERS:
     if trigger.peril not in selected_perils:
         continue
+
+    # Apply country filter (only for airport-derived triggers)
+    if selected_countries:
+        country = _trigger_country(trigger)
+        if country is not None and country not in selected_countries:
+            continue
 
     data, is_stale = _get_trigger_data(trigger)
 
