@@ -29,26 +29,22 @@
 
 ## v0.2.2 — Oracle Layer
 
-### Signed determinations
-**What:** Enable Ed25519 signing on all trigger determinations produced by the monitor.
-**Why:** Cryptographic attestation makes determinations independently verifiable.
-**Context:** Signing primitives exist in `gad/engine/oracle.py`. Wire into the fetcher/monitor flow.
-**Effort:** Medium.
+### Wire oracle signing to live monitor (next session)
+**What:** Each successful data fetch in the monitor produces a `TriggerDetermination`, signs it with Ed25519, and appends to the oracle log. This connects the existing signing primitives to the live data flow.
+**Implementation:**
+1. After each trigger evaluation in the fetcher, create a `TriggerDetermination`
+2. Call `sign_determination()` with the private key from env
+3. Call `append_to_oracle_log()` (dual write: JSONL + per-file JSON)
+4. Upload per-file JSON to R2 via Cloudflare API
+**Infrastructure already in place:** `sign_determination()`, `verify_determination()`, `append_to_oracle_log()`, `read_last_hash()`, `verify_chain()`, `GENESIS_HASH`, `key_id` field — all built.
+**Effort:** Medium — mostly wiring, not new primitives.
+**Depends on:** Generate an Ed25519 key pair and set `GAD_ORACLE_PRIVATE_KEY_HEX` + `GAD_ORACLE_PUBLIC_KEY_HEX` in Fly.io secrets.
 
 ### Determination status page upgrade
 **What:** Upgrade `oracle_ledger/worker.js` to verification proof page (green/red seal, hash chain, in-browser WebCrypto).
 **Context:** Design decisions from /plan-design-review. Seal-first hierarchy, oracle palette (#0a0e1a, #00d4d4).
-**Depends on:** Signed determinations.
+**Depends on:** Signed determinations wired.
 **Effort:** Medium.
-
-### OracleLog dual write (JSONL + per-file JSON)
-**What:** Write each determination to JSONL (hash chain, source of truth) and per-file JSON (Worker reads).
-**Depends on:** Signed determinations.
-**Effort:** Small.
-
-### key_id field + genesis hash constant
-**What:** Add `key_id: Optional[UUID]` to TriggerDetermination. Define `GENESIS_HASH` constant.
-**Effort:** Small.
 
 ## v0.3 — Platform & New Perils
 
@@ -107,12 +103,21 @@
 - All 8 API keys configured (FIRMS, OpenSky OAuth2, WAQI, AviationStack, OpenAQ, Earthdata, AirNow)
 
 ### v0.2 — Page Updates (2026-03-23)
-- All pages wired to 426-trigger registry (no more 3-trigger YAML system)
+- All pages wired to 436-trigger registry (no more 3-trigger YAML system)
 - Trigger Profile: click-through from Global Monitor, live data + basis risk when available
-- Compare: searchable dropdown of all 426 triggers, side-by-side with delta table
-- Guided Mode: 5 perils, outputs MonitorTrigger, computes basis risk, "View on map"
+- Compare: searchable dropdown of all 436 triggers, side-by-side with delta table
+- Guided Mode: 6 perils (incl. earthquake), outputs MonitorTrigger, computes basis risk
 - Expert Mode: JSON editor, validates as MonitorTrigger, "View trigger profile"
 - Account → Monitor Status: per-peril data health, source table, platform stats
+
+### v0.2 — Oracle Primitives + Earthquake + Verify CLI (2026-03-23)
+- key_id: Optional[UUID] added to TriggerDetermination model
+- GENESIS_HASH constant defined in oracle.py
+- OracleLog dual write (per-file JSON + JSONL) with canonical_hash()
+- read_last_hash() and verify_chain() for hash chain verification
+- Earthquake peril: 10 seismic zones via USGS API (free, no key, real-time)
+- Verification CLI: `python -m gad.verify <url-or-file>` and `--chain` mode
+- Total triggers: 436 (144 flights + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake)
 
 ### Infrastructure (2026-03-23)
 - Domain parametricdata.io live with Cloudflare SSL + DDoS protection
