@@ -92,9 +92,26 @@ elif step == 2:
     peril = st.session_state.get("wizard_peril", "drought")
     cfg = PERIL_CONFIG[peril]
     st.markdown(f"### Where? ({cfg['icon']} {cfg['label']})")
-    location_name = st.text_input("Location name", placeholder="e.g. Marsabit, Bengaluru, JFK")
-    lat = st.number_input("Latitude", value=28.5562, format="%.4f")
-    lon = st.number_input("Longitude", value=77.1000, format="%.4f")
+
+    # Airport picker — searchable dropdown from the 144 airport registry
+    from gad.monitor.airports import ALL_AIRPORTS
+    airport_options = {f"{a.city} — {a.name} ({a.iata})": a for a in ALL_AIRPORTS}
+    airport_labels = ["Custom location..."] + list(airport_options.keys())
+
+    selected_airport = st.selectbox("Select an airport or city", airport_labels, index=0)
+
+    if selected_airport != "Custom location..." and selected_airport in airport_options:
+        airport = airport_options[selected_airport]
+        location_name = f"{airport.city} ({airport.iata})"
+        lat = airport.lat
+        lon = airport.lon
+        st.success(f"Selected: {airport.name}, {airport.city} ({airport.lat:.4f}, {airport.lon:.4f})")
+    else:
+        st.caption("Or enter coordinates manually:")
+        location_name = st.text_input("Location name", placeholder="e.g. Dubai, Marsabit")
+        lat = st.number_input("Latitude", value=25.2532, format="%.4f")
+        lon = st.number_input("Longitude", value=55.3657, format="%.4f")
+
     c1, c2 = st.columns(2)
     with c1:
         if st.button("← Back", use_container_width=True):
