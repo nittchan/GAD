@@ -122,9 +122,8 @@ User flows:
    - Emits analytics events.
 
 2. Expert mode (dashboard/pages/2_Expert_mode.py)
-   - YAML editor path.
-   - Validates trigger schema and computes report.
-   - Same render and PDF pipeline as guided mode.
+   - JSON editor. Validates as MonitorTrigger.
+   - Computes basis risk with sample data when available.
 
 3. Trigger profile (dashboard/pages/3_Trigger_profile.py)
    - Single trigger deep profile from schema/examples and mapped series CSV.

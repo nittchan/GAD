@@ -57,7 +57,7 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 
 - Global Monitor: dashboard/pages/6_Global_Monitor.py (interactive map + trigger cards)
 - Guided mode: dashboard/pages/1_Guided_mode.py (4-step wizard)
-- Expert mode: dashboard/pages/2_Expert_mode.py (YAML editor)
+- Expert mode: dashboard/pages/2_Expert_mode.py (JSON editor)
 - Trigger profile: dashboard/pages/3_Trigger_profile.py
 - Compare: dashboard/pages/4_Compare.py
 - Account: dashboard/pages/5_Account.py
