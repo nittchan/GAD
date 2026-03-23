@@ -1,4 +1,4 @@
-# GAD — Global Actuarial Dashboard
+# Parametric Data — Global Insurance Monitor
 
 Open-source parametric insurance platform. Live risk monitoring, basis risk scoring, and oracle infrastructure.
 

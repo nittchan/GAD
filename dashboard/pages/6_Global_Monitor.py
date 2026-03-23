@@ -20,11 +20,14 @@ from gad.monitor.triggers import (
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 
-st.set_page_config(page_title="GAD Global Monitor", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide")
 
 # ── Dark theme CSS ──
 st.markdown("""
 <style>
+    .stApp { background-color: #0d1117; }
+    [data-testid="stSidebar"] { background: #161b22; }
+    h1, h2, h3 { color: #e6edf3 !important; }
     .trigger-card {
         background: #161b22;
         border: 1px solid #30363d;
@@ -121,8 +124,12 @@ def _status_badge(status: str) -> str:
 
 
 # ── Page Header ──
-st.markdown("# Global Actuarial Dashboard")
-st.markdown("Live parametric insurance risk monitoring across **5 peril categories** using open data.")
+st.markdown(
+    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
+    '<p style="color:#8b949e;font-size:14px;">Live parametric insurance risk across 5 peril categories. All data from open sources.</p>',
+    unsafe_allow_html=True,
+)
 
 # ── Peril filter ──
 peril_options = list(PERIL_LABELS.keys())
@@ -159,10 +166,20 @@ for trigger in GLOBAL_TRIGGERS:
             [210, 153, 34, 200] if result["status"] == "stale" else \
             [139, 148, 158, 200]
 
+    value = result.get("value")
+    unit = result.get("unit", trigger.threshold_unit)
+    value_str = f"{value} {unit}" if value is not None else "No data"
+    status_label = "TRIGGERED" if result["status"] == "critical" else \
+                   "NORMAL" if result["status"] == "normal" else \
+                   "UPDATING" if result["status"] == "stale" else "NO DATA"
+
     map_rows.append({
         "lat": trigger.lat,
         "lon": trigger.lon,
         "name": trigger.name,
+        "location": trigger.location_label,
+        "value_str": value_str,
+        "status_label": status_label,
         "status": result["status"],
         "color_r": color[0],
         "color_g": color[1],
@@ -173,32 +190,72 @@ for trigger in GLOBAL_TRIGGERS:
 
 # ── Map ──
 if map_rows:
+    import pydeck as pdk
+
     df = pd.DataFrame(map_rows)
-    st.pydeck_chart(
-        {
-            "initialViewState": {
-                "latitude": 20,
-                "longitude": 40,
-                "zoom": 1.5,
-                "pitch": 0,
-            },
-            "layers": [
-                {
-                    "@@type": "ScatterplotLayer",
-                    "data": df.to_dict("records"),
-                    "getPosition": "@@=[lon, lat]",
-                    "getFillColor": "@@=[color_r, color_g, color_b, color_a]",
-                    "getRadius": "@@=size",
-                    "pickable": True,
-                    "radiusMinPixels": 6,
-                    "radiusMaxPixels": 20,
-                },
-            ],
-            "mapStyle": "mapbox://styles/mapbox/dark-v11",
-        },
-        use_container_width=True,
-        height=450,
+
+    # Main markers
+    scatter = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position=["lon", "lat"],
+        get_fill_color=["color_r", "color_g", "color_b", "color_a"],
+        get_radius="size",
+        pickable=True,
+        radius_min_pixels=8,
+        radius_max_pixels=24,
+        opacity=0.85,
     )
+
+    # Outer glow ring for triggered alerts
+    triggered = df[df["status"] == "critical"]
+    glow = pdk.Layer(
+        "ScatterplotLayer",
+        data=triggered,
+        get_position=["lon", "lat"],
+        get_fill_color=[248, 81, 73, 60],
+        get_radius=160000,
+        radius_min_pixels=16,
+        radius_max_pixels=40,
+        pickable=False,
+    ) if len(triggered) > 0 else None
+
+    # Labels
+    text = pdk.Layer(
+        "TextLayer",
+        data=df,
+        get_position=["lon", "lat"],
+        get_text="name",
+        get_color=[230, 237, 243, 200],
+        get_size=11,
+        get_alignment_baseline="'top'",
+        get_pixel_offset=[0, 14],
+        pickable=False,
+    )
+
+    view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.6, pitch=0)
+
+    tooltip = {
+        "html": "<div style='font-family:monospace;background:#161b22;padding:10px 14px;border:1px solid #30363d;border-radius:4px;min-width:180px'>"
+                "<div style='font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:4px'>{name}</div>"
+                "<div style='font-size:11px;color:#8b949e;margin-bottom:6px'>{location}</div>"
+                "<div style='font-size:16px;font-weight:700;color:#58a6ff;margin-bottom:2px'>{value_str}</div>"
+                "<div style='font-size:11px;font-weight:600;color:#e6edf3'>{status_label}</div>"
+                "</div>",
+        "style": {"backgroundColor": "transparent", "border": "none"},
+    }
+
+    layers = [scatter, text]
+    if glow is not None:
+        layers.insert(0, glow)
+
+    deck = pdk.Deck(
+        layers=layers,
+        initial_view_state=view_state,
+        map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+        tooltip=tooltip,
+    )
+    st.pydeck_chart(deck, use_container_width=True, height=500)
 else:
     st.info("No triggers match the selected filters.")
 

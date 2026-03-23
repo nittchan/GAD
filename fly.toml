@@ -1,34 +1,25 @@
-# Fly.io — GAD dashboard
+# fly.toml — parametricdata.io dashboard
 # Deploy: fly deploy
-#
-# Cost protection:
-# - auto_stop_machines: stops when idle (no traffic = no cost)
-# - max_machines: caps horizontal scaling (prevents DDoS cost spikes)
-# - memory/cpu: minimal resources (Streamlit is lightweight for cached reads)
-# - Cloudflare proxy recommended in front for DDoS/rate-limit protection
 
-app = "gad-dashboard"
-primary_region = "bom"
+app = 'gad-dashboard'
+primary_region = 'bom'
 
 [build]
-  dockerfile = "dashboard/Dockerfile"
+  dockerfile = 'dashboard/Dockerfile'
 
 [http_service]
   internal_port = 8501
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
+  processes = ['app']
   [http_service.concurrency]
-    type = "connections"
-    hard_limit = 50      # Max 50 concurrent WebSocket connections per machine
-    soft_limit = 25      # Start scaling at 25
+    type = 'connections'
+    hard_limit = 50
+    soft_limit = 25
 
-# Cap scaling — prevents DDoS from spinning up expensive machines
 [[vm]]
-  memory = "512mb"
-  cpu_kind = "shared"
+  memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
-
-[processes]
-  app = "streamlit run dashboard/app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true --server.maxUploadSize=5"

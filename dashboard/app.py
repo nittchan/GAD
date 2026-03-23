@@ -1,5 +1,5 @@
 """
-GAD Dashboard — oracle.parametricdata.io. Home: hero + two CTAs (Try sample / Build your own).
+Parametric Data — parametricdata.io. Home page.
 """
 
 from __future__ import annotations
@@ -11,74 +11,116 @@ from dashboard.components.auth import handle_oauth_callback
 
 load_dotenv()
 
-COLORS = {"bg": "#0a0e1a", "surface": "#111827", "text": "#f9fafb", "muted": "#6b7280", "teal": "#00a8a8"}
-CSS = f"""
+st.set_page_config(
+    page_title="Parametric Data — Global Insurance Monitor",
+    page_icon="🌍",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+handle_oauth_callback()
+
+# ── Global dark theme ──
+st.markdown("""
 <style>
-.stApp {{ background-color: {COLORS["bg"]}; color: {COLORS["text"]}; }}
-[data-testid="stSidebar"] {{ background: {COLORS["surface"]}; }}
+    .stApp { background-color: #0d1117; }
+    [data-testid="stSidebar"] { background: #161b22; }
+    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
+    .hero-tag { color: #58a6ff; font-size: 12px; letter-spacing: 2px;
+                text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+    .hero-title { font-size: 40px; font-weight: 700; color: #e6edf3;
+                  line-height: 1.2; margin-bottom: 12px; }
+    .hero-sub { font-size: 16px; color: #8b949e; max-width: 560px; line-height: 1.6; }
+    .feature-card { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+                    padding: 20px; height: 100%; }
+    .feature-card h4 { color: #e6edf3; margin: 0 0 8px 0; font-size: 15px; }
+    .feature-card p { color: #8b949e; font-size: 13px; margin: 0; line-height: 1.5; }
+    .stat-number { font-family: 'JetBrains Mono', monospace; font-size: 28px;
+                   font-weight: 700; color: #58a6ff; }
+    .stat-label { color: #8b949e; font-size: 12px; }
 </style>
-"""
+""", unsafe_allow_html=True)
 
+# ── Sidebar nav ──
+st.sidebar.markdown(
+    '<p style="font-size:11px;color:#8b949e;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<p style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:0;">Global Monitor</p>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown("---")
+st.sidebar.page_link("app.py", label="Home", icon="🏠")
+st.sidebar.page_link("pages/6_Global_Monitor.py", label="Global Monitor", icon="🌍")
+st.sidebar.page_link("pages/1_Guided_mode.py", label="Build your own", icon="✨")
+st.sidebar.page_link("pages/2_Expert_mode.py", label="Expert mode", icon="📝")
+st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon="📊")
+st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
+st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 
-def main() -> None:
-    st.set_page_config(page_title="GAD — Get Actuary Done", layout="wide", initial_sidebar_state="expanded")
-    handle_oauth_callback()
-    st.markdown(CSS, unsafe_allow_html=True)
-    st.markdown(
-        '<p style="font-size:0.75rem;color:#6b7280;margin-bottom:0;">Get Actuary Done</p>'
-        '<p style="font-size:1.75rem;font-weight:700;margin-bottom:0;">GAD</p>'
-        '<p style="color:#6b7280;margin-top:0;">Basis risk & oracle ledger</p>',
-        unsafe_allow_html=True,
-    )
-    st.sidebar.markdown("---")
-    st.sidebar.page_link("app.py", label="Home", icon="🏠")
-    st.sidebar.page_link("pages/1_Guided_mode.py", label="Build your own (wizard)", icon="✨")
-    st.sidebar.page_link("pages/2_Expert_mode.py", label="Expert mode (YAML)", icon="📝")
-    st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon="📊")
-    st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
-    st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
+# ── Hero ──
+st.markdown("""
+<div style="padding: 48px 0 24px 0;">
+    <p class="hero-tag">The global parametric insurance monitor</p>
+    <h1 class="hero-title">Live risk data.<br>Open actuarial math.<br>Verifiable oracle.</h1>
+    <p class="hero-sub">
+        17 parametric triggers across flights, air quality, wildfire, drought, and extreme weather —
+        all scored with Spearman basis risk, Lloyd's alignment, and cryptographic attestation.
+        Open-source. Free forever.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-    # Hero
-    st.markdown(
-        """
-    <div style="padding: 48px 0 32px 0;">
-        <p style="color:#00a8a8; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
-            Open-source parametric infrastructure
-        </p>
-        <h1 style="font-size:36px; font-weight:700; color:#0a1628; line-height:1.2; margin-bottom:12px;">
-            Score any parametric trigger<br>in 60 seconds.
-        </h1>
-        <p style="font-size:16px; color:#6b7280; max-width:520px;">
-            Spearman basis risk. Historical back-test. Lloyd's alignment.
-            All transparent. All verifiable. All open-source.
-        </p>
+col1, col2, col3 = st.columns([2, 2, 3])
+with col1:
+    if st.button("🌍  Open Global Monitor", use_container_width=True, type="primary"):
+        st.switch_page("pages/6_Global_Monitor.py")
+with col2:
+    if st.button("✨  Build your own trigger", use_container_width=True):
+        st.switch_page("pages/1_Guided_mode.py")
+
+# ── Stats bar ──
+st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
+s1, s2, s3, s4 = st.columns(4)
+with s1:
+    st.markdown('<div class="stat-number">17</div><div class="stat-label">Live triggers</div>', unsafe_allow_html=True)
+with s2:
+    st.markdown('<div class="stat-number">5</div><div class="stat-label">Peril categories</div>', unsafe_allow_html=True)
+with s3:
+    st.markdown('<div class="stat-number">4</div><div class="stat-label">Open data sources</div>', unsafe_allow_html=True)
+with s4:
+    st.markdown('<div class="stat-number">Ed25519</div><div class="stat-label">Oracle signing</div>', unsafe_allow_html=True)
+
+# ── Features ──
+st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown("""
+    <div class="feature-card">
+        <h4>Spearman Basis Risk</h4>
+        <p>How well does your trigger correlate with actual losses?
+        Bootstrap confidence intervals. Confusion matrix. All auditable.</p>
     </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
+with c2:
+    st.markdown("""
+    <div class="feature-card">
+        <h4>Lloyd's Alignment</h4>
+        <p>10-point checklist mapped to Lloyd's parametric product standards.
+        Failed criteria shown with remediation. PDF export.</p>
+    </div>
+    """, unsafe_allow_html=True)
+with c3:
+    st.markdown("""
+    <div class="feature-card">
+        <h4>Oracle Ledger</h4>
+        <p>Every trigger determination cryptographically signed, hash-chained,
+        and published to a permanent public ledger. Independently verifiable.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([2, 2, 3])
-    with col1:
-        if st.button("Try a sample trigger", use_container_width=True, type="primary"):
-            st.session_state["load_sample"] = "kenya-drought-chirps"
-            st.switch_page("pages/3_Trigger_profile.py")
-    with col2:
-        if st.button("Build your own", use_container_width=True):
-            st.switch_page("pages/1_Guided_mode.py")
-
-    st.divider()
-    st.markdown("### What you get")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("**Spearman rho**")
-        st.caption("How well does your trigger correlate with actual losses? Auditable.")
-    with c2:
-        st.markdown("**Lloyd's alignment**")
-        st.caption("10-point checklist. Failed criteria shown with remediation hints.")
-    with c3:
-        st.markdown("**Oracle ledger**")
-        st.caption("Every determination signed, hash-chained, and published permanently.")
-
-
-if __name__ == "__main__":
-    main()
+# ── Footer ──
+st.markdown("<div style='height:48px'></div>", unsafe_allow_html=True)
+st.markdown(
+    '<p style="color:#484f58;font-size:12px;text-align:center;">'
+    'Open-source under AGPL-3.0 (engine) and MIT (schema). '
+    'Data from OpenSky, OpenAQ, NASA FIRMS, Open-Meteo, CHIRPS.</p>',
+    unsafe_allow_html=True,
+)
