@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+**World's first open-source actuarial data platform.**
+Author: Nitthin Chandran Nair. Built with Claude Code. Powered by OrbitCover (MedPiper — YC-backed).
+
 ## Scope Variants
 
 - Quick context version: CLAUDE_QUICK.md

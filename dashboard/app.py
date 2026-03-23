@@ -117,10 +117,5 @@ with c3:
     """, unsafe_allow_html=True)
 
 # ── Footer ──
-st.markdown("<div style='height:48px'></div>", unsafe_allow_html=True)
-st.markdown(
-    '<p style="color:#484f58;font-size:12px;text-align:center;">'
-    'Open-source under AGPL-3.0 (engine) and MIT (schema). '
-    'Data from OpenSky, OpenAQ, NASA FIRMS, Open-Meteo, CHIRPS.</p>',
-    unsafe_allow_html=True,
-)
+from dashboard.components.footer import render_footer
+render_footer()

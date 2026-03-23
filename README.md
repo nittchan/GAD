@@ -1,6 +1,10 @@
 # Parametric Data — Global Insurance Monitor
 
-Open-source parametric insurance platform. Live risk monitoring, basis risk scoring, and oracle infrastructure.
+**World's first open-source actuarial data platform.**
+
+Live risk monitoring, basis risk scoring, and oracle infrastructure for parametric insurance — covering 144 airports, 5 peril categories, and 426 triggers globally.
+
+Built by [Nitthin Chandran Nair](https://github.com/nittchan) using [Claude Code](https://claude.ai/claude-code). Powered by [OrbitCover](https://orbitcover.com) (MedPiper Technologies — backed by Y Combinator).
 
 ## Global Monitor
 
@@ -103,6 +107,13 @@ All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. See [doc
 - [DESIGN.md](DESIGN.md) — Design system (colors, typography, spacing, components)
 - [TODOS.md](TODOS.md) — Roadmap and deferred work
 - [GAD-design.md](GAD-design.md) — Original design document
+
+## Author
+
+**Nitthin Chandran Nair** — [GitHub](https://github.com/nittchan) · [OrbitCover](https://orbitcover.com)
+
+Built with [Claude Code](https://claude.ai/claude-code) (Anthropic).
+Powered by OrbitCover (MedPiper Technologies — backed by Y Combinator).
 
 ## License
 

@@ -209,3 +209,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ── Footer ──
+from dashboard.components.footer import render_footer
+render_footer()

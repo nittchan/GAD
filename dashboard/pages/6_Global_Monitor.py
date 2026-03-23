@@ -355,12 +355,5 @@ for peril in selected_perils:
                         st.info("No data yet. Run `python -m gad.monitor.fetcher` to fetch.")
 
 # ── Footer ──
-st.markdown("---")
-st.markdown(
-    "Data from [OpenSky](https://opensky-network.org), "
-    "[OpenAQ](https://openaq.org), "
-    "[NASA FIRMS](https://firms.modaps.eosdis.nasa.gov), "
-    "[Open-Meteo](https://open-meteo.com), "
-    "[CHIRPS](https://www.chc.ucsb.edu/data/chirps). "
-    "All data is pre-fetched and cached — this page makes **zero** external API calls."
-)
+from dashboard.components.footer import render_footer
+render_footer()
