@@ -6,7 +6,23 @@
 - Engineering-focused version: CLAUDE_ENGINEERING.md
 - Contributor onboarding version: CLAUDE_ONBOARDING.md
 
-## Project Scope: GAD (Global Actuarial Dashboard)
+## Development Workflow
+
+```
+dev branch        → local development (no auto-deploy)
+                      ↓ merge
+staging branch    → auto-deploys to gad-dashboard-staging.fly.dev
+                      ↓ verify, then merge
+main branch       → auto-deploys to parametricdata.io (production)
+```
+
+**Rules:**
+- All work happens on `dev` (or feature branches off `dev`).
+- Never push directly to `staging` or `main`.
+- Merge `dev` → `staging` to test. Merge `staging` → `main` to ship.
+- See docs/DEPLOYMENT.md for full deployment details.
+
+## Project Scope: Parametric Data (parametricdata.io)
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 

@@ -87,7 +87,13 @@ pytest
 
 ## Deployment
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Dashboard on Fly.io, oracle ledger on Cloudflare Worker + R2.
+```
+dev branch    → local development
+staging       → gad-dashboard-staging.fly.dev (auto-deploy)
+main          → parametricdata.io (auto-deploy)
+```
+
+All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full details.
 
 ## Documentation
 

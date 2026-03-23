@@ -90,12 +90,26 @@ Notable gaps:
 - CHIRPS pipeline error paths
 - Worker contract tests
 
+## Development Workflow
+
+```
+dev → staging (gad-dashboard-staging.fly.dev) → main (parametricdata.io)
+```
+
+All work on `dev`. Never push to `staging` or `main` directly. GitHub Actions auto-deploy on merge.
+
+| Environment | Fly App | URL | Branch |
+|-------------|---------|-----|--------|
+| Development | — | localhost:8501 | dev |
+| Staging | gad-dashboard-staging | gad-dashboard-staging.fly.dev | staging |
+| Production | gad-dashboard | parametricdata.io | main |
+
 ## Build and Runtime
 
 - Python: >=3.12
 - Packaging: pyproject.toml + requirements.txt
 - Dashboard container: dashboard/Dockerfile
-- Fly deployment: fly.toml (auto-stop, connection limits, 512MB cap)
+- Fly deployment: fly.toml (auto-stop, connection limits, 1GB)
 - Worker deployment: oracle_ledger/wrangler.toml
 
 ## Environment Variables

@@ -1,34 +1,103 @@
 # Deployment — parametricdata.io
 
-Treaty-grade infrastructure: the `/determination/{uuid}` route will be referenced in reinsurance contracts. This doc covers DNS, dashboard hosting, and the oracle Worker.
+Treaty-grade infrastructure: the `/determination/{uuid}` route will be referenced in reinsurance contracts. This doc covers the development workflow, environments, DNS, and hosting.
+
+## Development Workflow
+
+```
+dev branch        → local development (no auto-deploy)
+                      ↓ merge
+staging branch    → auto-deploys to gad-dashboard-staging.fly.dev
+                      ↓ verify, then merge
+main branch       → auto-deploys to parametricdata.io (production)
+```
+
+**Rules:**
+- All work happens on `dev` (or feature branches off `dev`).
+- Never push directly to `staging` or `main`.
+- Merge `dev` → `staging` to test. Merge `staging` → `main` to ship.
+- GitHub Actions handle deployment automatically on merge.
+
+## Environments
+
+| Environment | Fly App | URL | Branch | Auto-deploy |
+|-------------|---------|-----|--------|-------------|
+| **Development** | — | localhost:8501 | `dev` | No |
+| **Staging** | gad-dashboard-staging | gad-dashboard-staging.fly.dev | `staging` | Yes |
+| **Production** | gad-dashboard | parametricdata.io | `main` | Yes |
+
+Both Fly apps have the same API key secrets (FIRMS, OpenSky, WAQI). Staging uses the same data sources as production — the only difference is the URL.
+
+## GitHub Actions (`.github/workflows/fly-deploy.yml`)
+
+- Push to `staging` → deploys to `gad-dashboard-staging`
+- Push to `main` → deploys to `gad-dashboard` (production)
+- Requires `FLY_API_TOKEN` secret in GitHub repo settings
+
+## How to deploy
+
+### Local development
+```bash
+source .venv/bin/activate
+python -m gad.monitor.fetcher    # fetch live data
+streamlit run dashboard/app.py   # run dashboard
+```
+
+### Deploy to staging
+```bash
+git checkout staging
+git merge dev
+git push origin staging
+# GitHub Action auto-deploys to gad-dashboard-staging.fly.dev
+# Verify at https://gad-dashboard-staging.fly.dev
+```
+
+### Deploy to production
+```bash
+git checkout main
+git merge staging
+git push origin main
+# GitHub Action auto-deploys to parametricdata.io
+```
+
+### Manual deploy (emergency)
+```bash
+fly deploy --app gad-dashboard           # production
+fly deploy --app gad-dashboard-staging   # staging
+```
 
 ## Domain and DNS
 
 - **Domain:** `parametricdata.io`
-- **Authoritative DNS** at Cloudflare. Do not delegate to a third-party nameserver.
+- **Registrar:** Bigrock (nameservers pointed to Cloudflare)
+- **DNS:** Cloudflare (authoritative)
 
 ### DNS records
 
 | Record | Type | Target | Proxy |
 |--------|------|--------|-------|
-| `parametricdata.io` | A / CNAME | Fly.io dashboard app | ON |
-| `oracle.parametricdata.io` | CNAME | Cloudflare Worker (or Fly.io) | ON |
-| DNSSEC | — | Enable in Cloudflare → DNS → Settings → DNSSEC | — |
-| `parametricdata.io` | CAA | `0 issue "letsencrypt.org"` | — |
-| `parametricdata.io` | CAA | `0 issuewild ";"` (no wildcards) | — |
+| `parametricdata.io` | A | `66.241.125.64` | ON |
+| `parametricdata.io` | AAAA | `2a09:8280:1::e7:c15f:0` | ON |
+| `www` | CNAME | `parametricdata.io` | ON |
+| `oracle.parametricdata.io` | CNAME | Cloudflare Worker | ON |
+
+### Fly.io certificates
+```bash
+fly certs add parametricdata.io
+fly certs add www.parametricdata.io
+```
 
 ## Routing architecture
 
 ```
-parametricdata.io
+parametricdata.io (production)
 ├── /                         → Fly.io (Streamlit dashboard + Global Monitor)
 ├── /determination/{uuid}     → Cloudflare Worker → R2
 ├── /.well-known/...          → Cloudflare Worker → R2
 └── /docs                     → Cloudflare Pages (optional)
 
-oracle.parametricdata.io
-├── /determination/{uuid}     → Cloudflare Worker → R2
-└── /.well-known/oracle-keys.json → Cloudflare Worker → R2
+gad-dashboard-staging.fly.dev (staging)
+└── /                         → Fly.io staging app (same code, same data sources)
 ```
 
 - **Dashboard:** ~99.5% SLA (Fly.io). Not treaty-critical.
@@ -41,56 +110,43 @@ cd oracle_ledger
 npx wrangler r2 bucket create gad-oracle-determinations
 ```
 
-- **Versioning:** OFF (determinations are write-once).
-- **Public access:** OFF (served via Worker only).
-
 ## Cloudflare Worker
 
 ```bash
 cd oracle_ledger
-npx wrangler deploy
-# Production (oracle.parametricdata.io):
 npx wrangler deploy --env production
 ```
 
-Ensure `wrangler.toml` production routes point to `oracle.parametricdata.io` with zone_name `parametricdata.io`.
+## Environment variables on Fly.io
 
-## Fly.io dashboard
-
-From repo root:
+Set on BOTH staging and production:
 
 ```bash
-fly launch --name gad-dashboard --region bom
-# Or: fly deploy
+# Production
+fly secrets set NASA_FIRMS_MAP_KEY=<key> --app gad-dashboard
+fly secrets set OPENSKY_CLIENT_ID=<id> --app gad-dashboard
+fly secrets set OPENSKY_CLIENT_SECRET=<secret> --app gad-dashboard
+fly secrets set WAQI_API_TOKEN=<token> --app gad-dashboard
+
+# Staging (same keys)
+fly secrets set NASA_FIRMS_MAP_KEY=<key> --app gad-dashboard-staging
+fly secrets set OPENSKY_CLIENT_ID=<id> --app gad-dashboard-staging
+fly secrets set OPENSKY_CLIENT_SECRET=<secret> --app gad-dashboard-staging
+fly secrets set WAQI_API_TOKEN=<token> --app gad-dashboard-staging
 ```
 
-### Environment variables on Fly.io
+## Background fetcher
 
-```bash
-fly secrets set NASA_FIRMS_MAP_KEY=<key>
-fly secrets set OPENSKY_CLIENT_ID=<id>
-fly secrets set OPENSKY_CLIENT_SECRET=<secret>
-fly secrets set WAQI_API_TOKEN=<token>
-fly secrets set SUPABASE_URL=<url>
-fly secrets set SUPABASE_ANON_KEY=<key>
-fly secrets set SUPABASE_SERVICE_KEY=<key>
+The Dockerfile runs the fetcher in the background on startup:
+```dockerfile
+CMD python -m gad.monitor.fetcher & streamlit run dashboard/app.py ...
 ```
 
-### Background fetcher
-
-The fetcher runs as a scheduled process to keep the monitor cache fresh:
-
-```bash
-# Option 1: Fly.io scheduled Machine (recommended)
-# Add to fly.toml: [processes] fetcher = "python -m gad.monitor.fetcher --loop --interval 900"
-
-# Option 2: External cron (e.g., GitHub Actions, cron-job.org)
-# Run every 15 minutes: python -m gad.monitor.fetcher
-```
+Data is fetched once on machine start, then cached. When the machine auto-stops and restarts, it fetches fresh data again.
 
 ## TLS and HSTS
 
-Cloudflare terminates TLS at the edge. Universal SSL is automatic. Set minimum TLS to 1.2 (SSL/TLS → Edge Certificates). Enable HSTS (max-age=31536000, include subdomains).
+Cloudflare terminates TLS at the edge. Universal SSL is automatic. Set minimum TLS to 1.2. Enable HSTS (max-age=31536000, include subdomains).
 
 ## DDoS protection
 
@@ -105,8 +161,9 @@ Recommended rate limit: 60 requests/minute per IP on the dashboard.
 
 | Item | Monthly |
 |------|---------|
-| Cloudflare (parametricdata.io) | ~$10/yr domain |
+| Cloudflare (parametricdata.io) | ~$10/yr |
 | Cloudflare Workers (paid) | $5 |
 | Cloudflare R2 | < $0.50 |
-| Fly.io (dashboard) | $6 |
-| **Total** | **~$12** |
+| Fly.io production | $3-6 (auto-stop) |
+| Fly.io staging | $0-3 (auto-stop) |
+| **Total** | **~$10-15** |

@@ -58,6 +58,18 @@ The strongest production-ready capability is the Global Monitor (live risk map) 
 - **Background fetcher** pre-fetches all data — users never trigger API calls (security/cost protection).
 - **Oracle determinations** are cryptographically signed attestations that a trigger fired (v0.2.2+).
 
+## Development Workflow
+
+```
+dev → staging (gad-dashboard-staging.fly.dev) → main (parametricdata.io)
+```
+
+1. All work happens on the `dev` branch.
+2. Never push directly to `staging` or `main`.
+3. Merge `dev` → `staging` to test at gad-dashboard-staging.fly.dev.
+4. Merge `staging` → `main` to ship to parametricdata.io.
+5. GitHub Actions auto-deploy on merge.
+
 ## Safe Contribution Workflow
 
 1. Compute code: target gad/engine/. Monitor code: target gad/monitor/.

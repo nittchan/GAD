@@ -15,9 +15,17 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 
 ## Stage
 
-- v0.1: Basis risk dashboard with guided/expert modes. Functional and deployed.
-- v0.2.0 (current): Global Monitor with 17 triggers across 5 perils. Background fetcher + cache-based security. Built, needs deployment.
+- v0.1: Basis risk dashboard with guided/expert modes. Deployed.
+- v0.2.0 (current): Global Monitor with 17 triggers across 5 perils. Deployed to Fly.io.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
+
+## Development Workflow
+
+```
+dev → staging (gad-dashboard-staging.fly.dev) → main (parametricdata.io)
+```
+
+All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. GitHub Actions auto-deploy.
 
 ## Main Entry Points
 
