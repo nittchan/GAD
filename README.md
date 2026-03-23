@@ -6,13 +6,16 @@ Open-source parametric insurance platform. Live risk monitoring, basis risk scor
 
 GAD monitors parametric insurance triggers across **5 peril categories** using free open data:
 
-| Peril | Data Source | Triggers |
-|-------|-----------|----------|
-| Flight delay | OpenSky Network | BLR, DEL, JFK, LHR |
-| Air quality | OpenAQ / WAQI | Delhi, Beijing, Lahore, LA |
-| Wildfire | NASA FIRMS | California, NSW, Amazon |
-| Drought | CHIRPS | Kenya, Rajasthan |
-| Extreme weather | Open-Meteo | Cyclone, flood, heatwave, freeze |
+| Peril | Data Source | Triggers | Airports |
+|-------|-----------|----------|----------|
+| Flight delay | OpenSky Network | 144 | 144 (50 Indian + 94 global) |
+| Air quality | OpenAQ / WAQI | 125 | Top pollution-risk airports |
+| Wildfire | NASA FIRMS | 8 | Regional hotspots |
+| Drought | CHIRPS | 5 | Agricultural zones |
+| Extreme weather | Open-Meteo | 144 | 144 (all airports) |
+| **Total** | | **426** | **144 airports** |
+
+Triggers are auto-generated from the master airport registry (`gad/monitor/airports.py`).
 
 ## Quick start
 
@@ -62,7 +65,7 @@ print(verify_determination(det, bytes.fromhex(pubkey_hex)))  # True
 ## Layout
 
 - `gad/engine/` — Computation core (AGPL): models, basis_risk, lloyds, oracle, loader
-- `gad/monitor/` — Global monitor: data source fetchers, cache, pre-built triggers, security
+- `gad/monitor/` — Global monitor: airport registry, data source fetchers, cache, auto-generated triggers, security
 - `schema/` — Trigger JSON Schema and example YAMLs (MIT)
 - `dashboard/` — Streamlit app: home, global monitor, guided mode, expert mode, profile, compare, account
 - `supabase/migrations/` — Initial schema

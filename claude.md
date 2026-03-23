@@ -26,7 +26,7 @@ main branch       → auto-deploys to parametricdata.io (production)
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 5 peril categories (flights, AQI, wildfire, drought, weather) with 17 pre-built triggers using free open data.
+1. **Global Monitor** — live risk map across 5 peril categories (flights, AQI, wildfire, drought, weather) with 426 triggers across 144 airports (50 Indian + 94 global), data-driven from airport registry (`gad/monitor/airports.py`).
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export, guided/expert modes.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -105,7 +105,7 @@ Entry point: dashboard/app.py
 User flows:
 
 0. Global Monitor (dashboard/pages/6_Global_Monitor.py)
-   - Interactive world map with 17 pre-built triggers across 5 perils.
+   - Interactive world map with 426 triggers across 144 airports and 5 perils.
    - Reads from local cache only — zero external API calls.
    - Trigger status cards with live values and threshold evaluation.
    - Background fetcher: `python -m gad.monitor.fetcher`
@@ -339,10 +339,10 @@ All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader
 ## v0.2 Roadmap — Global Monitor
 
 ### v0.2.0 (built, needs deployment)
-- Global Monitor with 17 triggers across 5 perils (flights, AQI, wildfire, drought, weather).
+- Global Monitor with 426 triggers across 144 airports (50 Indian + 94 global) and 5 perils (flights, AQI, wildfire, drought, weather).
+- Triggers auto-generated from master airport registry (`gad/monitor/airports.py`): 144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather.
 - Background fetcher with cache-based security (users never trigger API calls).
 - Interactive world map with trigger status cards.
-- 15/17 triggers fetch real data. 2 drought triggers need CHIRPS wiring.
 
 ### v0.2.1 (next)
 - Wire CHIRPS drought data to fetcher.
@@ -391,14 +391,14 @@ Additional runtime credentials/configs are required for full production deployme
 - Core tests pass for basis risk, Lloyds, oracle signing, and determinism.
 
 ### v0.2.0 (built, pending deployment)
-- Global Monitor page with interactive world map and 17 triggers.
+- Global Monitor page with interactive world map and 426 triggers across 144 airports.
+- Triggers data-driven from airport registry (`gad/monitor/airports.py`).
 - Background fetcher pulling live data from 4 free APIs.
 - Cache-based security model (users never trigger API calls).
-- 15/17 triggers returning real data.
 
 ### v0.2.0 deployment checklist
 - [ ] Get free API keys: NASA FIRMS, WAQI, OpenSky
 - [ ] Wire CHIRPS drought data to fetcher
 - [ ] Deploy to Fly.io (`fly deploy`)
 - [ ] Add Cloudflare proxy for DDoS protection
-- [ ] Verify all 17 triggers show live data
+- [ ] Verify all 426 triggers show live data

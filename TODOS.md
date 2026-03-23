@@ -4,7 +4,7 @@
 
 ### Wire CHIRPS drought data to background fetcher
 **What:** Connect the existing CHIRPS pipeline (`gad/pipeline.py`) to the monitor fetcher so drought triggers get live data.
-**Why:** 2 of 17 global triggers (Kenya Marsabit, Rajasthan) show "no data" because the fetcher doesn't have a CHIRPS source connector.
+**Why:** 5 of 426 global triggers (drought triggers for Kenya Marsabit, Rajasthan, etc.) show "no data" because the fetcher doesn't have a CHIRPS source connector.
 **Cons:** None — the pipeline code already exists, just needs wiring.
 **Context:** Add a `chirps` case to `fetch_trigger()` in `gad/monitor/fetcher.py`. Use `fetch_chirps_series()` from `gad/pipeline.py`.
 **Depends on:** Nothing — can be done immediately.
@@ -12,7 +12,7 @@
 ### Get free API keys for better data quality
 **What:** Register for free API keys: NASA FIRMS (wildfire), WAQI (air quality), OpenSky (flight data).
 **Why:** Wildfire triggers show "no API key." AQI data falls back to demo token (returns wrong stations). OpenSky hits rate limits without auth.
-**Pros:** All free. Unlocks full data for all 17 triggers.
+**Pros:** All free. Unlocks full data for all 426 triggers.
 **Context:** NASA FIRMS: firms.modaps.eosdis.nasa.gov/api/area. WAQI: aqicn.org/api. OpenSky: opensky-network.org/apidoc.
 **Depends on:** Nothing — account registration only.
 
@@ -35,7 +35,7 @@
 **Depends on:** v0.2.0 deployed and stable.
 
 ### Pre-built trigger profiles with historical basis risk
-**What:** For each of the 17 global triggers, pre-compute historical basis risk (Spearman rho, back-test) using the existing engine. Show scores on the map alongside live status.
+**What:** For each of the 426 global triggers, pre-compute historical basis risk (Spearman rho, back-test) using the existing engine. Show scores on the map alongside live status.
 **Why:** Live status shows "is the trigger firing now." Basis risk shows "how good is this trigger design." Both together make the dashboard valuable.
 **Context:** Use `compute_basis_risk()` with historical series data. Cache results alongside live data.
 **Depends on:** Historical series data for each trigger location.
@@ -112,4 +112,4 @@
 
 ### Global Monitor v0.2.0 — Initial Build
 **Completed:** 2026-03-23
-**What:** Built `gad/monitor/` package with 5 peril categories (flight delay, air quality, wildfire, drought, extreme weather), 17 pre-built triggers, 4 data source fetchers (OpenSky, OpenAQ/WAQI, NASA FIRMS, Open-Meteo), cache-based security model, background fetcher, and interactive map dashboard page. 15/17 triggers successfully fetch real data.
+**What:** Built `gad/monitor/` package with 5 peril categories (flight delay, air quality, wildfire, drought, extreme weather), 426 triggers across 144 airports (50 Indian + 94 global) auto-generated from master airport registry (`gad/monitor/airports.py`), 4 data source fetchers (OpenSky, OpenAQ/WAQI, NASA FIRMS, Open-Meteo), cache-based security model, background fetcher, and interactive map dashboard page.

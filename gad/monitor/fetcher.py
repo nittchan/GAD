@@ -37,12 +37,18 @@ logging.basicConfig(
 log = logging.getLogger("gad.monitor.fetcher")
 
 # Fetch interval per source (seconds) — respects rate limits
+# With 200+ airports, we need longer TTLs to stay within API limits
+# OpenSky: 4000 credits/day → ~3 fetches/airport/day (every 8h)
+# OpenAQ/WAQI: generous but 150+ cities → every 2h
+# Open-Meteo: free, no limits → every 1h
+# FIRMS: 5000 txn/10min → generous for 8 fire zones
+# CHIRPS: monthly data → every 6h
 INTERVALS = {
-    "openmeteo": 1800,    # 30 min — generous free tier
-    "openaq": 3600,       # 1 hour — respect rate limits
-    "firms": 3600,        # 1 hour — NASA FIRMS
-    "opensky": 1800,      # 30 min — rate-limited
-    "chirps": 21600,      # 6 hours — monthly data, no rush
+    "openmeteo": 3600,    # 1 hour — free, no limits
+    "openaq": 7200,       # 2 hours — 150+ cities
+    "firms": 3600,        # 1 hour — only ~8 fire zones
+    "opensky": 28800,     # 8 hours — 200+ airports, 4000 credits/day
+    "chirps": 21600,      # 6 hours — monthly data
 }
 
 

@@ -25,7 +25,8 @@ The strongest production-ready capability is the Global Monitor (live risk map) 
 - dashboard/components/: score cards, charts, checklist, auth helpers.
 
 ### Global Monitor (gad/monitor/)
-- gad/monitor/triggers.py: 17 pre-built triggers across 5 perils with real coordinates.
+- gad/monitor/airports.py: Master airport registry (50 Indian + 94 global = 144 airports).
+- gad/monitor/triggers.py: Auto-generates 426 triggers across 5 perils from the airport registry.
 - gad/monitor/cache.py: local JSON cache — dashboard reads from here, never from APIs.
 - gad/monitor/fetcher.py: background worker that fetches data from external APIs on a schedule.
 - gad/monitor/sources/: API connectors (OpenSky, OpenAQ, NASA FIRMS, Open-Meteo).

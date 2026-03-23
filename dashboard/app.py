@@ -61,7 +61,7 @@ st.markdown("""
     <p class="hero-tag">The global parametric insurance monitor</p>
     <h1 class="hero-title">Live risk data.<br>Open actuarial math.<br>Verifiable oracle.</h1>
     <p class="hero-sub">
-        43 parametric triggers across 30 airports, air quality, wildfire, drought, and extreme weather —
+        426 parametric triggers across 144 airports (50 Indian + 94 global), air quality, wildfire, drought, and extreme weather —
         all scored with Spearman basis risk, Lloyd's alignment, and cryptographic attestation.
         Open-source. Free forever.
     </p>
@@ -80,7 +80,7 @@ with col2:
 st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
 s1, s2, s3, s4 = st.columns(4)
 with s1:
-    st.markdown('<div class="stat-number">43</div><div class="stat-label">Live triggers</div>', unsafe_allow_html=True)
+    st.markdown('<div class="stat-number">426</div><div class="stat-label">Live triggers</div>', unsafe_allow_html=True)
 with s2:
     st.markdown('<div class="stat-number">5</div><div class="stat-label">Peril categories</div>', unsafe_allow_html=True)
 with s3:

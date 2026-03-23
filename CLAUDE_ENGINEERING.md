@@ -33,7 +33,8 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - analytics.py: Supabase event writes
 
 ### gad/monitor/ — Global Monitor
-- triggers.py: 17 pre-built triggers across 5 perils with coordinates
+- airports.py: Master airport registry (50 Indian + 94 global = 144 airports)
+- triggers.py: Auto-generates flight delay, weather, and AQI triggers for all airports (426 triggers across 5 perils)
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
@@ -64,8 +65,8 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 ## Data Contracts
 
 ### Monitor triggers (gad/monitor/triggers.py)
-Pre-built triggers with: id, name, peril, lat/lon, threshold, unit, data_source, description.
-17 triggers across 5 perils. Add new triggers by appending to GLOBAL_TRIGGERS list.
+Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
+426 triggers across 5 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather). Add new airports to the registry to expand coverage.
 
 ### Monitor cache (data/monitor_cache/)
 JSON files with: source, key, data, cached_at, expires_at. Gitignored. Created by fetcher.
@@ -131,5 +132,5 @@ Oracle (v0.2.2+):
 2. Deploy dashboard + fetcher to Fly.io.
 3. Add Cloudflare proxy for DDoS protection.
 4. Add more peril categories (earthquake/USGS, shipping/AIS, health/WHO).
-5. Pre-compute historical basis risk for all 17 triggers.
+5. Pre-compute historical basis risk for all 426 triggers.
 6. Layer oracle signing (v0.2.2) under the Global Monitor.

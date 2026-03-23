@@ -157,46 +157,12 @@ def fetch_departures(airport_icao: str, trigger_id: str) -> dict | None:
         return None
 
 
-# Map trigger ID to ICAO code — 30 tier-1 airports
-AIRPORT_ICAO_MAP = {
-    # Asia
-    "flight-delay-del": "VIDP",
-    "flight-delay-bom": "VABB",
-    "flight-delay-blr": "VOBL",
-    "flight-delay-sin": "WSSS",
-    "flight-delay-hkg": "VHHH",
-    "flight-delay-nrt": "RJAA",
-    "flight-delay-icn": "RKSI",
-    "flight-delay-bkk": "VTBS",
-    "flight-delay-pek": "ZBAA",
-    "flight-delay-pvg": "ZSPD",
-    # Middle East
-    "flight-delay-dxb": "OMDB",
-    "flight-delay-doh": "OTHH",
-    "flight-delay-auh": "OMAA",
-    # Europe
-    "flight-delay-lhr": "EGLL",
-    "flight-delay-cdg": "LFPG",
-    "flight-delay-fra": "EDDF",
-    "flight-delay-ams": "EHAM",
-    "flight-delay-ist": "LTFM",
-    "flight-delay-mad": "LEMD",
-    # North America
-    "flight-delay-jfk": "KJFK",
-    "flight-delay-lax": "KLAX",
-    "flight-delay-ord": "KORD",
-    "flight-delay-atl": "KATL",
-    "flight-delay-dfw": "KDFW",
-    "flight-delay-yyz": "CYYZ",
-    "flight-delay-mex": "MMMX",
-    # South America
-    "flight-delay-gru": "SBGR",
-    # Africa
-    "flight-delay-jnb": "FAOR",
-    # Oceania
-    "flight-delay-syd": "YSSY",
-    "flight-delay-mel": "YMML",
-}
+# Auto-generate ICAO map from airport registry
+def _build_icao_map() -> dict[str, str]:
+    from gad.monitor.airports import ALL_AIRPORTS
+    return {f"flight-delay-{a.iata.lower()}": a.icao for a in ALL_AIRPORTS}
+
+AIRPORT_ICAO_MAP = _build_icao_map()
 
 
 def evaluate_trigger(data: dict, threshold: float) -> dict:
