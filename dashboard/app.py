@@ -1,5 +1,5 @@
 """
-GAD Dashboard — oracle.gad.dev. Home: hero + two CTAs (Try sample / Build your own).
+GAD Dashboard — oracle.parametricdata.io. Home: hero + two CTAs (Try sample / Build your own).
 """
 
 from __future__ import annotations

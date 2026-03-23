@@ -59,7 +59,7 @@ def _build_page_template(canvas_obj, doc, trigger: TriggerDef, report: BasisRisk
     canvas_obj.line(20 * mm, 14 * mm, w - 20 * mm, 14 * mm)
     canvas_obj.setFillColor(MUTED)
     canvas_obj.setFont(FONT_BODY, 7)
-    canvas_obj.drawString(20 * mm, 9 * mm, "oracle.gad.dev")
+    canvas_obj.drawString(20 * mm, 9 * mm, "oracle.parametricdata.io")
     canvas_obj.drawCentredString(w / 2, 9 * mm, f"Report {report.report_id}")
     canvas_obj.drawRightString(w - 20 * mm, 9 * mm, f"Page {canvas_obj.getPageNumber()}")
     canvas_obj.restoreState()

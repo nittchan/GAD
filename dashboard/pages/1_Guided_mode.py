@@ -148,7 +148,7 @@ def main():
             geography={"type": "Point", "coordinates": [loc["lon"], loc["lat"]]},
             provenance=DataSourceProvenance(
                 primary_source=config["data_source"],
-                primary_url="https://oracle.gad.dev/sources",
+                primary_url="https://oracle.parametricdata.io/sources",
                 max_data_latency_seconds=300,
                 historical_years_available=30,
             ),

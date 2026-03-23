@@ -349,7 +349,7 @@ def verify_determination(
 Every operational key ever used by OrbitCover's oracle must be permanently published, with its validity window, at a canonical URL:
 
 ```
-https://oracle.orbitcover.com/.well-known/oracle-keys.json
+https://oracle.parametricdata.io/.well-known/oracle-keys.json
 ```
 
 Structure:
@@ -412,7 +412,7 @@ These decisions, if deferred, create breaking changes later:
 - [x] `policy_binding` block added to trigger YAML schema (even if the monitoring loop is a TODO stub)
 - [x] `data_source_provenance` fields added to trigger YAML schema
 - [x] AGPL for computation engine, MIT for schema — committed and in LICENSE files before first public push
-- [x] Public key registry URL (`oracle.orbitcover.com/.well-known/oracle-keys.json`) reserved and format documented, even if unpopulated
+- [x] Public key registry URL (`oracle.parametricdata.io/.well-known/oracle-keys.json`) reserved and format documented, even if unpopulated
 - [x] Webhook interface schema and OracleLog append contract defined (payload, idempotency, retries; append-only log, one record per determination, hash chain) — see [ORACLE_WEBHOOK_AND_LOG.md](ORACLE_WEBHOOK_AND_LOG.md)
 
 ---
@@ -433,7 +433,7 @@ These decisions, if deferred, create breaking changes later:
 - Three-tier key hierarchy with HSM-backed Intermediate Key
 - Public key registry with revocation support
 - Lloyd's treaty-ready documentation output from scoring module
-- Parametric Trigger Master Agreement draft referencing oracle.orbitcover.com key registry
+- Parametric Trigger Master Agreement draft referencing oracle.parametricdata.io key registry
 - Independent verification guide published for reinsurer audit teams
 
 ---

@@ -5,7 +5,7 @@
 **Canonical URL (reserved):**
 
 ```
-https://oracle.orbitcover.com/.well-known/oracle-keys.json
+https://oracle.parametricdata.io/.well-known/oracle-keys.json
 ```
 
 **Status:** Reserved and documented in v0.1. The endpoint may be unpopulated until v0.2 when Ed25519 signing is live.

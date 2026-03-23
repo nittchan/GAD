@@ -47,12 +47,12 @@ from gad.engine import verify_determination
 from gad.engine.models import TriggerDetermination
 
 det_json = requests.get(
-    "https://oracle.gad.dev/determination/{uuid}?format=json"
+    "https://oracle.parametricdata.io/determination/{uuid}?format=json"
 ).json()
 det = TriggerDetermination(**det_json)
 
 keys = requests.get(
-    "https://oracle.gad.dev/.well-known/oracle-keys.json"
+    "https://oracle.parametricdata.io/.well-known/oracle-keys.json"
 ).json()
 pubkey_hex = keys["keys"][0]["public_key_hex"]
 

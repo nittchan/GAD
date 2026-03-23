@@ -121,9 +121,9 @@ def main() -> None:
 
     print("Uploaded oracle-keys.json")
     print("=== URLS ===")
-    print(f"https://oracle.gad.dev/determination/{signed_det.determination_id}")
-    print("https://oracle.gad.dev/.well-known/oracle-keys.json")
-    print("https://oracle.gad.dev")
+    print(f"https://oracle.parametricdata.io/determination/{signed_det.determination_id}")
+    print("https://oracle.parametricdata.io/.well-known/oracle-keys.json")
+    print("https://oracle.parametricdata.io")
 
 
 if __name__ == "__main__":

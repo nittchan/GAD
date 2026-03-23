@@ -195,7 +195,7 @@ Responsibilities:
 Infra config:
 
 - wrangler.toml binds ORACLE_BUCKET to gad-oracle-determinations.
-- production routes target oracle.gad.dev for determination and well-known key endpoint.
+- production routes target oracle.parametricdata.io for determination and well-known key endpoint.
 
 ### Oracle protocol documentation
 
