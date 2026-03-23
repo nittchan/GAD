@@ -1,13 +1,36 @@
 # TODOS
 
-## v0.2 — Remaining
+## Sprint 1: Close the Actuarial Gap (NEXT SESSION — PRIORITY 1)
 
-### Pre-built historical basis risk for all 436 triggers
-**What:** For each trigger, pre-compute historical basis risk (Spearman rho, back-test) using the engine. Show scores on the map alongside live status.
-**Why:** Live status shows "is the trigger firing now." Basis risk shows "how good is this trigger design." Both together make the dashboard valuable.
-**Context:** Use `compute_basis_risk()` with historical series data. Currently only 2 legacy triggers (Kenya drought, IndiGo flights) have CSVs. Need to generate historical series from the data source APIs for all 436 triggers.
-**Effort:** Large — needs historical data download pipeline per source.
-**Depends on:** Multi-source data connectors (done).
+The product is called an actuarial data platform. It needs to actually compute actuarial math for more than 2 triggers. This sprint makes every trigger on the map show real Spearman rho, Lloyd's scores, and confusion matrices.
+
+### Task 1.1: Historical data download pipeline
+**What:** One script per data source that downloads historical time series for all triggers and writes to `data/series/{trigger_id}.csv` in the format `load_weather_data_from_csv()` already expects (columns: period, trigger_value/index_value, loss_proxy/loss_event).
+**Sources and methods:**
+- **Open-Meteo** `/v1/archive` endpoint — takes `start_date`/`end_date`, free, no key. Pull 5 years of daily temp/rainfall/wind for all 144 airports. Easiest source.
+- **OpenAQ** `/v2/measurements` — takes `date_from`/`date_to` and `location_id`. Pull 2-3 years of daily AQI. Need to first resolve nearest station per airport, then batch download.
+- **OpenSky** `/flights/departure` — has `begin`/`end` time window (max 2 hours per call). Pull 1 year of departure history per airport. Must batch carefully to respect 4000 credits/day.
+- **USGS Earthquake** API already returns historical data by date range natively. Pull 5 years of M2+ within 200km of each earthquake zone.
+- **CHIRPS/GPM IMERG** — pipeline already exists in `gad/pipeline.py`. Extend to download multi-year monthly series for drought triggers.
+- **NASA FIRMS** — FIRMS archive endpoint provides historical fire data. Pull 1 year for each wildfire zone.
+**Output:** `data/series/{trigger_id}.csv` per trigger. Gitignored (large files). Script: `python -m gad.monitor.historical`
+**Effort with CC:** ~2-3 hours (one fetcher per source, they're all REST APIs returning JSON/CSV).
+
+### Task 1.2: Precompute basis risk for all triggers
+**What:** Once CSVs exist, run `compute_basis_risk()` across all 436 triggers. Serialize `BasisRiskReport` to JSON. Store at `data/basis_risk/{trigger_id}.json`.
+**Implementation:**
+```bash
+python -m gad.monitor.precompute   # runs once, ~5 min
+```
+Script reads each `data/series/{trigger_id}.csv`, builds a `TriggerDef`, calls `compute_basis_risk()`, writes the report JSON. Refresh monthly via cron.
+**Effort with CC:** ~30 min (the engine already works, just need the orchestration script).
+
+### Task 1.3: Wire precomputed reports into Trigger Profile
+**What:** Load precomputed `BasisRiskReport` from `data/basis_risk/{trigger_id}.json` on the Trigger Profile page. Replaces the current "Historical basis risk analysis requires time-series data" placeholder with actual Spearman rho, back-test timeline, scatter plot, confusion matrix, Lloyd's checklist, and PDF export — for every trigger.
+**Implementation:** In `dashboard/pages/3_Trigger_profile.py`, check for `data/basis_risk/{trigger_id}.json` before falling back to the legacy CSV check. If found, deserialize `BasisRiskReport` and render with existing dashboard components.
+**Effort with CC:** ~15 min (the components already exist, just need to load from JSON instead of computing live).
+
+## v0.2 — Remaining
 
 ### NOAA HRRR Smoke data (wildfire impact)
 **What:** Add NOAA HRRR smoke plume data for wildfire impact assessment.
