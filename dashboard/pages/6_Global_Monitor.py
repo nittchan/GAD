@@ -302,7 +302,7 @@ for peril in selected_perils:
 
     st.markdown(f'<div class="peril-header">{PERIL_LABELS[peril]} ({len(peril_triggers)})</div>', unsafe_allow_html=True)
 
-    # Flight delay: compact table (30 airports is too many for cards)
+    # Flight delay: compact table (144 airports — cards don't scale)
     if peril == "flight_delay":
         table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
         table_html += '<tr style="border-bottom:1px solid #30363d;color:#8b949e;text-align:left;">'
