@@ -25,8 +25,15 @@ st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="�
 # ── Dark theme CSS ──
 st.markdown("""
 <style>
+    /* Hide Streamlit default chrome */
+    [data-testid="stSidebarNav"] { display: none; }
+    header[data-testid="stHeader"] { background: transparent; }
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
+    [data-testid="stDecoration"] { display: none; }
+
     .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; }
+    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
     h1, h2, h3 { color: #e6edf3 !important; }
     .trigger-card {
         background: #161b22;
