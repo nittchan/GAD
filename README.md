@@ -1,121 +1,111 @@
-# Parametric Data — Global Insurance Monitor
+# Parametric Data
 
-**World's first open-source actuarial data platform.**
+**The world's first open-source actuarial data platform for parametric insurance.**
 
-Live risk monitoring, basis risk scoring, and oracle infrastructure for parametric insurance — covering 144 airports, 5 peril categories, and 426 triggers globally.
+[parametricdata.io](https://parametricdata.io)
 
-Built by [Nitthin Chandran Nair](https://github.com/nittchan) using [Claude Code](https://claude.ai/claude-code). Powered by [OrbitCover](https://orbitcover.com) (MedPiper Technologies — backed by Y Combinator).
+Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, and extreme weather — and evaluates how well parametric insurance triggers perform against them. 436 triggers. 144 airports. 6 peril categories. 9 data sources. All open. All free.
 
-## Global Monitor
+## What you see
 
-GAD monitors parametric insurance triggers across **5 peril categories** using free open data:
+Open [parametricdata.io](https://parametricdata.io) and you get a live risk map of the world. Every dot is a parametric insurance trigger being monitored in real time. Click any dot to see its full profile — current value, threshold, status, and (when available) historical basis risk with Spearman correlation, Lloyd's alignment, and a downloadable PDF report.
 
-| Peril | Data Source | Triggers | Airports |
-|-------|-----------|----------|----------|
-| Flight delay | OpenSky Network | 144 | 144 (50 Indian + 94 global) |
-| Air quality | OpenAQ / WAQI | 125 | Top pollution-risk airports |
-| Wildfire | NASA FIRMS | 8 | Regional hotspots |
-| Drought | CHIRPS | 5 | Agricultural zones |
-| Extreme weather | Open-Meteo | 144 | 144 (all airports) |
-| **Total** | | **426** | **144 airports** |
+## Why it matters
 
-Triggers are auto-generated from the master airport registry (`gad/monitor/airports.py`).
+Parametric insurance pays when a trigger fires — a rainfall threshold, a flight delay, an earthquake magnitude. The actuarial math behind these triggers has always been proprietary. Parametric Data makes it open, auditable, and verifiable.
 
-## Quick start
+Every trigger determination can be cryptographically signed, hash-chained, and independently verified. A reinsurer can open a URL and see proof — no proprietary software required.
+
+## Coverage
+
+| Peril | Triggers | Data sources | Coverage |
+|-------|----------|-------------|----------|
+| Flight delay | 144 | AviationStack, OpenSky | 144 airports across 6 continents |
+| Air quality | 125 | AirNow EPA, WAQI, OpenAQ | Global + authoritative US EPA data |
+| Extreme weather | 144 | Open-Meteo | Heat, freeze, wind, rainfall at every airport |
+| Earthquake | 10 | USGS | Major seismic zones worldwide |
+| Wildfire | 8 | NASA FIRMS (VIIRS + MODIS) | California, Australia, Amazon, Siberia, Europe, Indonesia |
+| Drought | 5 | CHIRPS, NASA GPM IMERG | Kenya, India, Ethiopia, Sahel, Brazil |
+
+## Run it yourself
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+git clone https://github.com/nittchan/GAD.git
+cd GAD
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Fetch live data (runs once, ~30 seconds)
-python -m gad.monitor.fetcher
-
-# Launch dashboard
-streamlit run dashboard/app.py
+python -m gad.monitor.fetcher    # fetch live data (~60 seconds)
+streamlit run dashboard/app.py   # open the dashboard
 ```
-
-Open the URL shown in the terminal. Navigate to **Global Monitor** for the live risk map.
-
-## Dashboard pages
-
-- **Global Monitor** — Interactive world map with live trigger status across all perils
-- **Guided mode** — Build a custom parametric trigger in 4 steps
-- **Expert mode** — YAML editor for advanced trigger design
-- **Trigger profile** — Deep-dive on a single trigger's basis risk
-- **Compare** — Side-by-side trigger comparison
-- **Account** — Saved triggers and subscriptions (Supabase)
 
 ## Verify a determination
 
+```bash
+python -m gad.verify https://oracle.parametricdata.io/determination/{uuid}
+python -m gad.verify --chain registry/   # verify the full hash chain
+```
+
+Or in Python:
+
 ```python
-import requests
 from gad.engine import verify_determination
 from gad.engine.models import TriggerDetermination
 
-det_json = requests.get(
-    "https://oracle.parametricdata.io/determination/{uuid}?format=json"
-).json()
-det = TriggerDetermination(**det_json)
-
-keys = requests.get(
-    "https://oracle.parametricdata.io/.well-known/oracle-keys.json"
-).json()
-pubkey_hex = keys["keys"][0]["public_key_hex"]
-
-print(verify_determination(det, bytes.fromhex(pubkey_hex)))  # True
+det = TriggerDetermination(**determination_json)
+print(verify_determination(det, public_key_bytes))  # True
 ```
 
-## Layout
+## Architecture
 
-- `gad/engine/` — Computation core (AGPL): models, basis_risk, lloyds, oracle, loader
-- `gad/monitor/` — Global monitor: airport registry, data source fetchers, cache, auto-generated triggers, security
-- `schema/` — Trigger JSON Schema and example YAMLs (MIT)
-- `dashboard/` — Streamlit app: home, global monitor, guided mode, expert mode, profile, compare, account
-- `supabase/migrations/` — Initial schema
-- `oracle_ledger/` — Cloudflare Worker for `/determination/{uuid}` and `/.well-known/oracle-keys.json`
-- `docs/` — [Gap analysis](docs/GAP_ANALYSIS_ORACLE.md), [key registry](docs/ORACLE_KEY_REGISTRY.md), [webhook contracts](docs/ORACLE_WEBHOOK_AND_LOG.md), [deployment](docs/DEPLOYMENT.md)
+```
+parametricdata.io
+├── Global Monitor        Live risk map (436 triggers, 6 perils)
+├── Trigger Profile       Click any trigger → full basis risk analysis
+├── Compare               Side-by-side trigger comparison
+├── Build Your Own        4-step wizard → custom trigger
+├── Expert Mode           JSON editor → full schema control
+└── Monitor Status        Data source health dashboard
 
-## Security model
+Background fetcher (every 15 min)
+├── AviationStack         Flight schedules (tier-1 airports)
+├── OpenSky Network       Flight departures (all airports)
+├── AirNow EPA            US air quality (authoritative)
+├── WAQI                  Global air quality
+├── NASA FIRMS            Wildfire (VIIRS + MODIS dual satellite)
+├── Open-Meteo            Weather forecasts
+├── CHIRPS                Monthly rainfall
+├── NASA GPM IMERG        Daily precipitation
+└── USGS                  Earthquake detection
 
-The public dashboard makes **zero external API calls**. All data is pre-fetched by a background worker and served from a local cache. Even 10,000 concurrent users cost nothing more in API calls than zero users.
+Oracle layer (v0.2.2)
+├── Ed25519 signing       Every determination cryptographically signed
+├── Hash chain            Append-only JSONL log with chain verification
+├── Key registry          Public keys at /.well-known/oracle-keys.json
+└── Cloudflare Worker     /determination/{uuid} — permanent public ledger
+```
 
-- Background fetcher runs on a 15-minute schedule
-- Users read only from cache (no user action triggers an API call)
-- Fly.io auto-stop when idle ($0 when no traffic)
-- Connection limits cap horizontal scaling
-- Cloudflare proxy recommended for DDoS protection
+## Security
 
-## Tests
+The public dashboard makes **zero external API calls**. All data is pre-fetched by a background worker and served from a local cache. 10,000 concurrent users cost the same in API calls as zero users.
+
+## Contributing
+
+Add a new airport: edit `gad/monitor/airports.py` — triggers auto-generate.
+Add a new data source: create a file in `gad/monitor/sources/`.
+Add a new peril: update `gad/monitor/triggers.py` and wire into the fetcher.
 
 ```bash
-pytest
+pytest   # run tests before submitting
 ```
-
-## Deployment
-
-```
-dev branch    → local development
-staging       → gad-dashboard-staging.fly.dev (auto-deploy)
-main          → parametricdata.io (auto-deploy)
-```
-
-All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full details.
-
-## Documentation
-
-- [DESIGN.md](DESIGN.md) — Design system (colors, typography, spacing, components)
-- [TODOS.md](TODOS.md) — Roadmap and deferred work
-- [GAD-design.md](GAD-design.md) — Original design document
 
 ## Author
 
-**Nitthin Chandran Nair** — [GitHub](https://github.com/nittchan) · [OrbitCover](https://orbitcover.com)
+**Nitthin Chandran Nair**
 
-Built with [Claude Code](https://claude.ai/claude-code) (Anthropic).
-Powered by OrbitCover (MedPiper Technologies — backed by Y Combinator).
+Built with [Claude Code](https://claude.ai/claude-code). Powered by [OrbitCover](https://orbitcover.com) (MedPiper Technologies — backed by Y Combinator).
 
 ## License
 
-- **Engine:** AGPL-3.0 — see [LICENSE](LICENSE) and [LICENSE-engine](LICENSE-engine).
-- **Schema:** MIT — see [LICENSE-schema](LICENSE-schema) and [docs/LICENSE-SCHEMA.md](docs/LICENSE-SCHEMA.md).
+- **Engine:** AGPL-3.0 — see [LICENSE-engine](LICENSE-engine)
+- **Schema:** MIT — see [LICENSE-schema](LICENSE-schema)
