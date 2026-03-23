@@ -123,7 +123,46 @@ Fetcher calls sources in priority order, stops at first success. Logs which sour
 **Already have:** NASA FIRMS (done), WAQI (done), OpenSky OAuth2 (done)
 **Depends on:** Nothing — just account registrations, all free.
 
-## v0.2 — Global Monitor (In Progress)
+## v0.2 — Update Legacy Pages to New Registry (Next Session)
+
+### Wire all pages to the 426-trigger registry
+**What:** The v0.1 pages (Guided mode, Expert mode, Trigger profile, Compare, Account) still use the old 3-trigger YAML system. Update them to work with the new `gad/monitor/` trigger registry.
+**Why:** Right now the product is split — Global Monitor shows 426 live triggers, but clicking into any other page drops you into a disconnected 3-trigger world. The product needs to feel unified.
+**Priority:** HIGH — this is the #1 UX problem. Users land on the map, see data, then can't do anything with it.
+
+### Trigger Profile: click-through from Global Monitor
+**What:** When a user clicks a trigger on the Global Monitor map (or in the trigger table), navigate to the Trigger Profile page showing the full basis risk analysis for that trigger.
+**Flow:** Global Monitor → click "Delhi DEL" → Trigger Profile page with Spearman rho, back-test timeline, confusion matrix, Lloyd's checklist, PDF export.
+**Implementation:**
+1. Add click handler on Global Monitor that sets `st.session_state["selected_trigger"]` and calls `st.switch_page("pages/3_Trigger_profile.py")`
+2. Update Trigger Profile to read from `MonitorTrigger` + cached data instead of `schema/examples/` YAML
+3. The basis risk engine (`compute_basis_risk()`) needs weather_data — use cached fetcher data + historical series
+**Depends on:** Historical data pipeline for each trigger location.
+**Interim solution:** Show the cached live data (current value, threshold, status) on the profile page even without historical basis risk. Better than nothing.
+
+### Compare: side-by-side from registry
+**What:** Update Compare page to let users pick any 2 triggers from the 426-trigger registry and compare them.
+**Implementation:** Replace the old 3-trigger dropdown with a searchable selector from `GLOBAL_TRIGGERS`. Show cached live values side-by-side.
+**Depends on:** Trigger Profile working with new registry.
+
+### Guided Mode: build custom trigger → add to registry
+**What:** When a user builds a custom trigger in Guided Mode, add it to the monitor. The trigger appears on the Global Monitor map and starts getting live data.
+**Implementation:**
+1. Guided Mode wizard builds a `MonitorTrigger` from user input
+2. Save to a user_triggers.json file (or Supabase when auth is ready)
+3. Fetcher picks up user triggers alongside the pre-built ones
+**Depends on:** Monitor registry supporting dynamic triggers (currently static list).
+
+### Expert Mode: YAML → MonitorTrigger
+**What:** Update Expert Mode to output a `MonitorTrigger` compatible with the new registry, not just the old `TriggerDef`.
+**Implementation:** Parse YAML into MonitorTrigger fields. Validate against schema. Offer "Add to Global Monitor" button.
+**Depends on:** Guided Mode working with new registry.
+
+### Account page: saved triggers from registry
+**What:** Account page currently reads from Supabase (which isn't set up). Update to show the user's custom triggers from the local registry.
+**Depends on:** Supabase or local user trigger storage.
+
+## v0.2 — Global Monitor (Completed Items)
 
 ### Wire CHIRPS drought data to background fetcher
 **Completed:** 2026-03-23
