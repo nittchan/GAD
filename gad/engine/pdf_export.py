@@ -23,17 +23,17 @@ from reportlab.platypus import (
 )
 from gad.engine.models import BasisRiskReport, TriggerDef
 
-NAVY = colors.HexColor("#0a1628")
-TEAL = colors.HexColor("#00a8a8")
-SLATE = colors.HexColor("#374151")
-MUTED = colors.HexColor("#6b7280")
-LIGHT_BG = colors.HexColor("#f8fafc")
-BORDER = colors.HexColor("#e2e8f0")
-GREEN = colors.HexColor("#059669")
-AMBER = colors.HexColor("#d97706")
-RED = colors.HexColor("#dc2626")
+NAVY = colors.HexColor("#1E1B18")      # obsidian ink
+TEAL = colors.HexColor("#C8553D")      # burnt vermillion accent
+SLATE = colors.HexColor("#1E1B18")     # obsidian ink
+MUTED = colors.HexColor("#7A7267")     # graphite
+LIGHT_BG = colors.HexColor("#F5F0EB")  # parchment
+BORDER = colors.HexColor("#D4CCC0")    # sandstone
+GREEN = colors.HexColor("#2E8B6F")     # verdigris
+AMBER = colors.HexColor("#D4A017")     # signal amber
+RED = colors.HexColor("#A63D40")       # deep carmine
 WHITE = colors.white
-BLACK = colors.black
+BLACK = colors.HexColor("#1E1B18")
 FONT_BODY = "Helvetica"
 FONT_BOLD = "Helvetica-Bold"
 FONT_MONO = "Courier"
@@ -230,11 +230,11 @@ def _lloyds_table(lloyds_detail: dict, styles: dict) -> Table:
     for criterion, result in lloyds_detail.items():
         passed = result.get("pass")
         if passed is True:
-            badge = Paragraph('<font color="#059669"><b>PASS</b></font>', styles["table_cell"])
+            badge = Paragraph('<font color="#2E8B6F"><b>PASS</b></font>', styles["table_cell"])
         elif passed is False:
-            badge = Paragraph('<font color="#dc2626"><b>FAIL</b></font>', styles["table_cell"])
+            badge = Paragraph('<font color="#A63D40"><b>FAIL</b></font>', styles["table_cell"])
         else:
-            badge = Paragraph('<font color="#d97706"><b>N/A</b></font>', styles["table_cell"])
+            badge = Paragraph('<font color="#D4A017"><b>N/A</b></font>', styles["table_cell"])
         rows.append(
             [
                 Paragraph(criterion.replace("_", " ").title(), styles["table_cell"]),
