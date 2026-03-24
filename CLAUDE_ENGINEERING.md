@@ -87,19 +87,23 @@ UUID-centric TriggerDef, BasisRiskReport, TriggerDetermination. Pydantic v2.
 ### Oracle determination shape
 determination_id, policy_id, trigger_id, fired, fired_at, data_snapshot_hash, computation_version, determined_at, prev_hash, signature. v0.1: empty signature. v0.2.2: signed + key_id.
 
-## Test Coverage
+## Test Coverage (2209 tests)
 
-- tests/test_basis_risk.py: core compute
-- tests/test_lloyds.py: checklist scoring
-- tests/test_oracle.py: sign/verify round-trip, genesis hash, chain verification, tamper detection
-- tests/test_reproducibility.py: deterministic outputs
-- tests/test_import_hygiene.py: no legacy imports
+- tests/test_basis_risk.py: core compute (2 tests)
+- tests/test_lloyds.py: checklist scoring (2 tests)
+- tests/test_oracle.py: sign/verify, genesis hash, chain verification (7 tests)
+- tests/test_oracle_chain.py: 5-entry chain, tamper detection, canonical hash (12 tests)
+- tests/test_reproducibility.py: deterministic outputs (1 test)
+- tests/test_import_hygiene.py: no legacy imports (1 test)
+- tests/test_monitor_fetcher.py: evaluate_fired all 9 sources, FETCH_MAP, determination creation (32 tests)
+- tests/test_aqi_coordinates.py: all airports city coords, haversine sanity, AQI coord verification (~700 tests)
+- tests/test_triggers.py: 496 count, unique IDs, field validation, marine/flood/cyclone integrity (~1500 tests)
+- tests/test_risk_index.py: PREI formula, near-threshold, edge cases (17 tests)
 
-Notable gaps:
-- Monitor fetcher integration tests
+Remaining gaps:
+- Worker contract tests (requires Wrangler CLI)
+- Marine AISstream mock WebSocket tests
 - Dashboard page smoke tests
-- CHIRPS pipeline error paths
-- Worker contract tests
 
 ## Development Workflow
 
