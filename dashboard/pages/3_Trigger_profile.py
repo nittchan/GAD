@@ -61,6 +61,7 @@ st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon
 st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
+st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest", icon="📨")
 
 # ── Trigger selector ──
 SOURCE_KEY_MAP = {
@@ -375,6 +376,53 @@ else:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+# ── Risk Brief (AI-generated) ──
+try:
+    from datetime import datetime, timezone
+    from gad.monitor.intelligence import generate_trigger_brief
+
+    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+    st.markdown("### Risk Brief (AI-generated)")
+
+    brief = generate_trigger_brief(
+        trigger_id=trigger.id,
+        trigger_name=trigger.name,
+        peril=trigger.peril,
+        current_status=status,
+        threshold=trigger.threshold,
+        value=value,
+        rho=None,  # rho populated when precomputed report is available
+    )
+
+    # If we have a precomputed report, try to pass rho
+    if precomputed_path.is_file():
+        try:
+            import json as _json2
+            _rho_data = _json2.loads(precomputed_path.read_text(encoding="utf-8"))
+            _rho_val = _rho_data.get("spearman_rho")
+            if _rho_val is not None and _rho_val == _rho_val:  # exclude NaN
+                brief = generate_trigger_brief(
+                    trigger_id=trigger.id,
+                    trigger_name=trigger.name,
+                    peril=trigger.peril,
+                    current_status=status,
+                    threshold=trigger.threshold,
+                    value=value,
+                    rho=_rho_val,
+                )
+        except Exception:
+            pass
+
+    gen_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    st.markdown(f"""
+    <div class="detail-card">
+        <div style="color:#1E1B18;font-size:14px;line-height:1.7;">{brief}</div>
+        <div style="color:#7A7267;font-size:11px;margin-top:12px;">Generated {gen_time}</div>
+    </div>
+    """, unsafe_allow_html=True)
+except Exception:
+    pass  # Never crash the page if intelligence fails
 
 # ── Back to map ──
 st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
