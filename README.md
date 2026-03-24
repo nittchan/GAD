@@ -4,7 +4,7 @@
 
 [parametricdata.io](https://parametricdata.io)
 
-Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, and port congestion — and evaluates how well parametric insurance triggers perform against them. 456 triggers. 144 airports. 10 ports. 7 peril categories. 10 data sources. All open. All free.
+Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, and tropical cyclones — and evaluates how well parametric insurance triggers perform against them. 496 triggers. 144 airports. 10 ports. 9 peril categories. 12 data sources. All open. All free.
 
 ## What you see
 
@@ -27,6 +27,8 @@ Every trigger determination can be cryptographically signed, hash-chained, and i
 | Wildfire | 8 | NASA FIRMS (VIIRS + MODIS) | California, Australia, Amazon, Siberia, Europe, Indonesia |
 | Drought | 5 | CHIRPS, NASA GPM IMERG | Kenya, India, Ethiopia, Sahel, Brazil |
 | Marine / Shipping | 20 | AISstream | 10 tier-1 ports: Singapore, Rotterdam, Shanghai, LA, JNPT, Jebel Ali, Hamburg, Colombo, Port Klang, Busan |
+| Flood | 20 | USGS Water Services | 20 river gauge locations across US flood-prone zones |
+| Cyclone | 20 | NOAA NHC | 20 high-exposure coastal locations, active storm proximity |
 
 ## Run it yourself
 
@@ -61,7 +63,7 @@ print(verify_determination(det, public_key_bytes))  # True
 
 ```
 parametricdata.io
-├── Global Monitor        Live risk map (456 triggers, 7 perils)
+├── Global Monitor        Live risk map (496 triggers, 9 perils)
 ├── Trigger Profile       Click any trigger → full basis risk analysis
 ├── Compare               Side-by-side trigger comparison
 ├── Build Your Own        4-step wizard → custom trigger
@@ -78,8 +80,10 @@ Background fetcher (every 15 min)
 ├── Open-Meteo            Weather forecasts
 ├── CHIRPS                Monthly rainfall
 ├── NASA GPM IMERG        Daily precipitation
-├── USGS                  Earthquake detection
-└── AISstream             Marine vessel tracking (WebSocket)
+├── USGS Earthquake       Earthquake detection
+├── AISstream             Marine vessel tracking (WebSocket)
+├── USGS Water Services   Flood river gauge levels
+└── NOAA NHC              Tropical cyclone tracking
 
 Oracle layer (v0.2.2)
 ├── Ed25519 signing       Every determination cryptographically signed

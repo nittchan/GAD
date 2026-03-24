@@ -18,7 +18,7 @@ from gad.monitor.triggers import (
     get_triggers_by_peril,
 )
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc
 
 import json as _json
 from pathlib import Path as _Path
@@ -121,6 +121,8 @@ SOURCE_KEY_MAP = {
     "chirps": "drought",
     "usgs": "earthquake",
     "aisstream": "marine",
+    "usgs_water": "flood",
+    "noaa_nhc": "cyclone",
 }
 
 
@@ -146,6 +148,10 @@ def _evaluate_trigger(trigger: MonitorTrigger, data: dict) -> dict:
         return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "aisstream":
         return aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
+    elif trigger.data_source == "usgs_water":
+        return noaa_flood.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "noaa_nhc":
+        return noaa_nhc.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
@@ -364,6 +370,37 @@ if map_rows:
     st.pydeck_chart(deck, use_container_width=True, height=500)
 else:
     st.info("No triggers match the selected filters.")
+
+# ── Country Risk Index (PREI) ──
+from gad.monitor.risk_index import compute_prei
+
+prei_data = compute_prei(trigger_results)
+if prei_data:
+    with st.expander("Country Risk Exposure Index (PREI)", expanded=False):
+        st.caption("PREI = (fired/total)*100 + (near-threshold/total)*30. Higher = more risk exposure.")
+        prei_sorted = sorted(prei_data.items(), key=lambda x: x[1]["prei"], reverse=True)
+
+        table = '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+        table += '<tr style="border-bottom:1px solid #d1d9e0;color:#656d76;"><th style="padding:6px 10px;text-align:left;">Country</th><th style="padding:6px;text-align:right;">PREI</th><th style="padding:6px;text-align:right;">Triggers</th><th style="padding:6px;text-align:right;">Fired</th><th style="padding:6px;text-align:right;">Near</th></tr>'
+
+        for country, stats in prei_sorted:
+            prei_val = stats["prei"]
+            if prei_val >= 50:
+                prei_color = "#d1242f"
+            elif prei_val >= 20:
+                prei_color = "#9a6700"
+            else:
+                prei_color = "#1a7f37"
+            table += f'<tr style="border-bottom:1px solid #e1e4e8;">'
+            table += f'<td style="padding:6px 10px;">{country}</td>'
+            table += f'<td style="padding:6px;text-align:right;font-weight:700;color:{prei_color};font-family:ui-monospace,monospace;">{prei_val}</td>'
+            table += f'<td style="padding:6px;text-align:right;color:#656d76;">{stats["total"]}</td>'
+            table += f'<td style="padding:6px;text-align:right;color:#d1242f;">{stats["fired"]}</td>'
+            table += f'<td style="padding:6px;text-align:right;color:#9a6700;">{stats["near_threshold"]}</td>'
+            table += '</tr>'
+
+        table += '</table>'
+        st.markdown(table, unsafe_allow_html=True)
 
 # ── Trigger Display ──
 rho_map = _load_rho_map()

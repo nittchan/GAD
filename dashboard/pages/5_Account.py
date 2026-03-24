@@ -68,7 +68,7 @@ st.markdown("### Triggers by Peril")
 
 for peril_key, label in PERIL_LABELS.items():
     triggers = get_triggers_by_peril(peril_key)
-    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine"}.get(peril_key, peril_key)
+    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine", "flood": "flood", "cyclone": "cyclone"}.get(peril_key, peril_key)
 
     cached = 0
     stale = 0
@@ -117,6 +117,8 @@ st.markdown("""
 | NASA GPM IMERG | Daily precipitation | Earthdata token | Generous |
 | USGS | Earthquake detection | No key needed | Unlimited |
 | AISstream | Marine vessel tracking | API key | WebSocket |
+| USGS Water Services | River gauge height | No key needed | Unlimited |
+| NOAA NHC | Tropical cyclone tracking | No key needed | Unlimited |
 """)
 
 # ── Account (future) ──

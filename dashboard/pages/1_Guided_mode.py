@@ -63,6 +63,8 @@ PERIL_CONFIG = {
     "wildfire": {"label": "Wildfire", "icon": "🔥", "unit": "fire count", "default": 10.0, "above": True, "source": "firms"},
     "earthquake": {"label": "Earthquake", "icon": "🌍", "unit": "magnitude", "default": 5.0, "above": True, "source": "usgs"},
     "marine": {"label": "Marine / Shipping", "icon": "⚓", "unit": "vessels", "default": 20.0, "above": True, "source": "aisstream"},
+    "flood": {"label": "Flood", "icon": "🌊", "unit": "metres", "default": 5.0, "above": True, "source": "usgs_water"},
+    "cyclone": {"label": "Tropical Cyclone", "icon": "🌀", "unit": "knots", "default": 64.0, "above": True, "source": "noaa_nhc"},
 }
 
 # ── Header ──

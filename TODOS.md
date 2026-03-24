@@ -39,7 +39,7 @@
 ## P1 — Data Integrity and Coverage
 
 ### DATA-01: Historical data download pipeline
-**Why:** Most triggers had "no historical data". Platform needs Spearman rho for all triggers. Now 221 of 456 have precomputed reports.
+**Why:** Most triggers had "no historical data". Platform needs Spearman rho for all triggers. Now 221 of 496 have precomputed reports.
 
 - [x] **DATA-01a:** `scripts/fetch_historical_openmeteo.py` — 5yr daily weather for 144 airports. Open-Meteo Archive API, no key. Output: `data/series/weather/{IATA}_daily.csv`. Gitignored.
 - [x] **DATA-01b:** `scripts/fetch_historical_openaq.py` — 2yr daily AQI per city. OpenAQ v3 /sensors/{id}/days endpoint. Probes for best sensor with recent data. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes station mapping log for audit.
@@ -102,14 +102,14 @@
 ## P4 — New Perils (high commercial value)
 
 ### PERIL-01: Flood (NOAA NWS river gauge)
-- [ ] **PERIL-01a:** 20 flood gauge locations via USGS Water Services API (free)
-- [ ] **PERIL-01b:** `gad/monitor/sources/noaa_flood.py` — fetcher + evaluator
-- [ ] **PERIL-01c:** Flood trigger generation in `triggers.py`
+- [x] **PERIL-01a:** 20 flood gauge locations via USGS Water Services API (free)
+- [x] **PERIL-01b:** `gad/monitor/sources/noaa_flood.py` — fetcher + evaluator. Reads real-time river gauge levels from USGS Water Services.
+- [x] **PERIL-01c:** Flood trigger generation in `triggers.py` — 20 flood triggers across US flood-prone zones.
 
 ### PERIL-02: Tropical cyclone (NOAA NHC)
-- [ ] **PERIL-02a:** Active storms fetcher from NHC GeoJSON (free)
-- [ ] **PERIL-02b:** 20 high-exposure location triggers
-- [ ] **PERIL-02c:** Proximity evaluation (haversine + wind threshold)
+- [x] **PERIL-02a:** Active storms fetcher from NHC GeoJSON (free). `gad/monitor/sources/noaa_nhc.py` fetches active cyclone advisories.
+- [x] **PERIL-02b:** 20 high-exposure coastal location triggers generated in `triggers.py`.
+- [x] **PERIL-02c:** Proximity evaluation (haversine + wind threshold) implemented in noaa_nhc.py evaluator.
 
 ### PERIL-03: Crop / NDVI drought index
 - [ ] **PERIL-03a:** NASA MODIS NDVI fetcher via AppEEARS or Copernicus WCS
@@ -127,8 +127,8 @@
 - [ ] **INTEL-01d:** Digest page (`dashboard/pages/7_Digest.py`)
 
 ### INTEL-02: Parametric Risk Exposure Index per country
-- [ ] **INTEL-02a:** PREI score computation per country
-- [ ] **INTEL-02b:** Choropleth toggle on Global Monitor map
+- [x] **INTEL-02a:** PREI score computation per country — `gad/monitor/risk_index.py` computes composite risk scores.
+- [x] **INTEL-02b:** Choropleth toggle on Global Monitor map — PREI overlay available.
 
 ---
 
@@ -179,8 +179,8 @@
 | 8 | DATA-01c | Flight history fetched |
 | 9 | DATA-01d–01f | **DONE** — 221 precomputed reports, rho badges on map, profile page wired |
 | 10 | MARINE-01, MARINE-02 | **DONE** — Marine peril: 10 ports, 20 triggers, AISstream connector |
-| 11 | PERIL-01 | Flood peril live |
-| 12 | PERIL-02 | Cyclone peril live |
+| 11 | PERIL-01 | **DONE** — Flood peril: 20 triggers, USGS Water Services connector |
+| 12 | PERIL-02 | **DONE** — Cyclone peril: 20 triggers, NOAA NHC connector |
 | 13 | INTEL-01 | AI risk briefs per trigger |
 | 14 | API-01 | REST API live |
 | 15 | INFRA-01 | Test coverage closes major gaps |

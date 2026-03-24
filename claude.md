@@ -29,7 +29,7 @@ main branch       → auto-deploys to parametricdata.io (production)
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 7 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping) with 456 triggers across 144 airports + 10 ports, data-driven from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`). AQI triggers use city centre coordinates (not airport runway) for accurate monitoring station proximity.
+1. **Global Monitor** — live risk map across 9 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone) with 496 triggers across 144 airports + 10 ports, data-driven from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`). AQI triggers use city centre coordinates (not airport runway) for accurate monitoring station proximity.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export, guided/expert modes.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -45,8 +45,8 @@ The product goal: become THE default global parametric insurance monitor. v0.2 s
 - v0.2.1 (2026-03-23): Multi-source data connectors (AviationStack, AirNow, FIRMS dual satellite, GPM IMERG). All pages unified under the 426-trigger registry.
 
 Current capabilities:
-  - Global Monitor: live risk map with 456 triggers, hover tooltips, peril/country filters.
-  - Multi-source fetcher: priority fallback across 9 data sources.
+  - Global Monitor: live risk map with 496 triggers, hover tooltips, peril/country filters.
+  - Multi-source fetcher: priority fallback across 12 data sources.
   - All pages wired to the trigger registry (Trigger Profile, Compare, Guided Mode, Expert Mode, Monitor Status).
   - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
   - Deployed at parametricdata.io with Cloudflare DDoS protection.
@@ -55,7 +55,7 @@ Not yet complete (v0.2.2+):
   - Oracle signing wired to live monitor (Ed25519 primitives exist, not yet connected).
   - Determination status page upgrade (verification proof UI).
   - Historical basis risk precomputed for 221 triggers (144 weather + 72 AQI + legacy). Rho badges on Global Monitor. Trigger Profile shows full reports.
-  - New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
+  - New perils: health (WHO), solar (NOAA SWPC).
   - Parametric Data Pro (enterprise tier).
 
 ## Engine Migration (Completed 2026-03-23)
@@ -77,7 +77,8 @@ Top-level domains and responsibilities:
   - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export).
   - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources).
   - gad/monitor/ports.py — Port registry (10 tier-1 global ports with anchorage bounding boxes).
-  - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream).
+  - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream, noaa_flood, noaa_nhc).
+  - gad/monitor/risk_index.py — Parametric Risk Exposure Index (PREI) computation per country.
   - gad/pipeline.py — CHIRPS raster fetch and extraction.
 
 - data/
@@ -109,7 +110,7 @@ Entry point: dashboard/app.py
 User flows:
 
 0. Global Monitor (dashboard/pages/6_Global_Monitor.py)
-   - Interactive world map with 456 triggers across 144 airports and 7 perils.
+   - Interactive world map with 496 triggers across 144 airports and 9 perils.
    - Reads from local cache only — zero external API calls.
    - Trigger status cards with live values and threshold evaluation.
    - Background fetcher: `python -m gad.monitor.fetcher`
@@ -355,7 +356,7 @@ All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader
 - Priority fallback protocol. All 8 API keys configured. All pages unified under registry.
 
 ### v0.2 remaining
-- Historical basis risk for all 456 triggers.
+- Historical basis risk for all 496 triggers.
 - NOAA HRRR Smoke, NOAA GFS weather, NOAA SPI drought.
 
 ### v0.2.2 (oracle layer — next milestone)
@@ -364,7 +365,7 @@ All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader
 - OracleLog dual write, key_id field, genesis hash.
 
 ### v0.3 (platform)
-- New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
+- New perils: health (WHO), solar (NOAA SWPC).
 - Verification SDK + CLI, webhook delivery, Deploy to Oracle button.
 - Parametric Data Pro (enterprise tier).
 

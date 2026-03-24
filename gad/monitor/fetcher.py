@@ -36,6 +36,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
+from gad.monitor.sources import noaa_flood, noaa_nhc
 from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
@@ -178,6 +179,17 @@ def fetch_marine(trigger: MonitorTrigger) -> dict | None:
     return aisstream.fetch_port_vessels(port.id, port.anchor_bbox)
 
 
+def fetch_flood(trigger: MonitorTrigger) -> dict | None:
+    """Flood: USGS river gauge (free, no key)."""
+    site_id = trigger.id.replace("flood-", "")
+    return noaa_flood.fetch_gauge(site_id, trigger.id)
+
+
+def fetch_cyclone(trigger: MonitorTrigger) -> dict | None:
+    """Tropical cyclone: NOAA NHC active storms (free, no key)."""
+    return noaa_nhc.fetch_active_storms(trigger.lat, trigger.lon, trigger.id)
+
+
 # ── Peril → fetch function mapping ──
 FETCH_MAP = {
     "opensky": fetch_flight_delay,
@@ -187,6 +199,8 @@ FETCH_MAP = {
     "chirps": fetch_drought,
     "usgs": fetch_earthquake,
     "aisstream": fetch_marine,
+    "usgs_water": fetch_flood,
+    "noaa_nhc": fetch_cyclone,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -198,6 +212,8 @@ SOURCE_CACHE_KEY = {
     "chirps": "drought",
     "usgs": "earthquake",
     "aisstream": "marine",
+    "usgs_water": "flood",
+    "noaa_nhc": "cyclone",
 }
 
 
@@ -223,6 +239,10 @@ def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
         r = usgs_earthquake.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "aisstream":
         r = aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
+    elif trigger.data_source == "usgs_water":
+        r = noaa_flood.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "noaa_nhc":
+        r = noaa_nhc.evaluate_trigger(data, trigger.threshold)
     else:
         return False
     return r.get("fired", False)

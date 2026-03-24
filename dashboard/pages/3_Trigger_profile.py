@@ -16,7 +16,7 @@ import streamlit as st
 
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc
 
 st.set_page_config(page_title="Trigger Profile | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
@@ -69,6 +69,8 @@ SOURCE_KEY_MAP = {
     "openmeteo": "weather", "openaq": "aqi", "firms": "fire",
     "opensky": "flights", "chirps": "drought", "usgs": "earthquake",
     "aisstream": "marine",
+    "usgs_water": "flood",
+    "noaa_nhc": "cyclone",
 }
 
 # Check if navigated from Global Monitor
@@ -121,6 +123,10 @@ def _evaluate(trigger: MonitorTrigger, data: dict) -> dict:
         return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "aisstream":
         return aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
+    elif trigger.data_source == "usgs_water":
+        return noaa_flood.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "noaa_nhc":
+        return noaa_nhc.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
