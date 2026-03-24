@@ -13,3 +13,4 @@ data/series/flights/
 data/basis_risk/
 registry/determinations/*.json
 registry/oracle_log.jsonl
+.gstack/

@@ -10,7 +10,7 @@ import streamlit as st
 
 from gad.engine.oracle import GENESIS_HASH, ORACLE_JSONL_PATH, ORACLE_LOG_PATH, verify_chain
 
-st.set_page_config(page_title="Oracle | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Oracle | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""

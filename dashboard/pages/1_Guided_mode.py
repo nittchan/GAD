@@ -16,7 +16,7 @@ from dashboard.components import (
     timeline_fig, scatter_fig, confusion_matrix_fig, render_lloyds_checklist,
 )
 
-st.set_page_config(page_title="Build Trigger | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Build Trigger | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""
@@ -80,9 +80,12 @@ st.divider()
 # ── Step 1: Peril ──
 if step == 1:
     st.markdown("### What are you covering?")
-    cols = st.columns(len(PERIL_CONFIG))
-    for i, (key, cfg) in enumerate(PERIL_CONFIG.items()):
-        with cols[i]:
+    peril_items = list(PERIL_CONFIG.items())
+    row1 = st.columns(4)
+    row2 = st.columns(4)
+    all_cols = row1 + row2
+    for i, (key, cfg) in enumerate(peril_items):
+        with all_cols[i]:
             if st.button(f"{cfg['icon']}\n\n{cfg['label']}", key=f"peril_{key}", use_container_width=True):
                 st.session_state["wizard_peril"] = key
                 st.session_state["wizard_step"] = 2

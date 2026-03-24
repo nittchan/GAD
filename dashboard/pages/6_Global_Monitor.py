@@ -60,7 +60,7 @@ def _rho_badge(rho: float | None) -> str:
         f'margin-left:6px;">ρ={rho:.2f}</span>'
     )
 
-st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Dark theme CSS ──
 st.markdown("""
@@ -110,6 +110,66 @@ st.markdown("""
         letter-spacing: 0.1em;
         color: #8b949e;
         margin: 24px 0 12px 0;
+    }
+
+    /* ── Dark-themed multiselect (override Streamlit defaults) ── */
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] {
+        background-color: rgba(88,166,255,0.15) !important;
+        border: 1px solid #58a6ff !important;
+        color: #58a6ff !important;
+        border-radius: 4px !important;
+    }
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] span {
+        color: #58a6ff !important;
+    }
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
+        fill: #58a6ff !important;
+    }
+    [data-testid="stMultiSelect"] [data-baseweb="select"] {
+        background-color: #161b22 !important;
+        border-color: #30363d !important;
+    }
+    [data-testid="stMultiSelect"] [data-baseweb="popover"] {
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+    }
+    [data-testid="stMultiSelect"] input {
+        color: #e6edf3 !important;
+    }
+
+    /* ── Dark-themed selectbox dropdown ── */
+    [data-testid="stSelectbox"] [data-baseweb="select"] {
+        background-color: #161b22 !important;
+        border-color: #30363d !important;
+        color: #e6edf3 !important;
+    }
+    [data-baseweb="popover"] li {
+        color: #e6edf3 !important;
+    }
+    [data-baseweb="popover"] li:hover {
+        background-color: rgba(88,166,255,0.1) !important;
+    }
+
+    /* ── Sidebar touch targets and mobile ── */
+    [data-testid="stSidebar"] a {
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 8px 12px !important;
+    }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            min-width: 0 !important;
+            width: 250px !important;
+        }
+        .trigger-card .value-large {
+            font-size: 22px;
+        }
+        .trigger-card {
+            padding: 12px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -198,7 +258,7 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 st.markdown(
     '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
     '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
-    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports + 10 ports and 7 peril categories. All data from open sources.</p>',
+    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across {len(PERIL_LABELS)} peril categories. All data from open sources.</p>',
     unsafe_allow_html=True,
 )
 

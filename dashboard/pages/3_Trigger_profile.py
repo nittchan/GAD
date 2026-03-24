@@ -18,7 +18,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, 
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
 
-st.set_page_config(page_title="Trigger Profile | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Trigger Profile | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""
@@ -37,6 +37,12 @@ st.markdown("""
     .status-critical { color: #f85149; }
     .status-normal { color: #3fb950; }
     .status-no-data { color: #8b949e; }
+
+    /* Dark-themed dropdowns */
+    [data-testid="stSelectbox"] [data-baseweb="select"] { background-color: #161b22 !important; border-color: #30363d !important; color: #e6edf3 !important; }
+    [data-baseweb="popover"] li { color: #e6edf3 !important; }
+    [data-baseweb="popover"] li:hover { background-color: rgba(88,166,255,0.1) !important; }
+    [data-testid="stSidebar"] a { min-height: 44px !important; display: flex !important; align-items: center !important; }
 </style>
 """, unsafe_allow_html=True)
 

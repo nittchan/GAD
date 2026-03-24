@@ -8,7 +8,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, 
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
 
-st.set_page_config(page_title="Compare | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Compare | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""

@@ -18,7 +18,7 @@ from dashboard.components import (
     timeline_fig, scatter_fig, confusion_matrix_fig, render_lloyds_checklist,
 )
 
-st.set_page_config(page_title="Expert Mode | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Expert Mode | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""

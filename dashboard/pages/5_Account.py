@@ -8,7 +8,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, get_triggers_by_
 from gad.monitor.cache import read_cache_with_staleness, list_cached_entries
 from gad.monitor.airports import ALL_AIRPORTS, INDIA_AIRPORTS, GLOBAL_AIRPORTS
 
-st.set_page_config(page_title="Account | Parametric Data", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Account | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 
 # ── Theme ──
 st.markdown("""

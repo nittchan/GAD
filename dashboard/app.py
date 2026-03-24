@@ -8,6 +8,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from dashboard.components.auth import handle_oauth_callback
+from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS
 
 load_dotenv()
 
@@ -107,8 +108,8 @@ st.markdown(
 )
 st.markdown(
     '<p class="hero-sub">'
-    '436 parametric triggers across 144 airports (50 Indian + 94 global), '
-    'air quality, wildfire, drought, extreme weather, and earthquake — '
+    f'{len(GLOBAL_TRIGGERS)} parametric triggers across 144 airports + 10 ports, '
+    'air quality, wildfire, drought, extreme weather, earthquake, and marine shipping — '
     'all scored with Spearman basis risk, Lloyd\'s alignment, and '
     'cryptographic attestation. Open-source. Free forever.'
     '</p>',
@@ -127,10 +128,10 @@ with col2:
         st.switch_page("pages/1_Guided_mode.py")
 
 # ── Stats ──
-st.markdown("""
+st.markdown(f"""
 <div class="stats-row">
     <div class="stat-item">
-        <div class="stat-number">436</div>
+        <div class="stat-number">{len(GLOBAL_TRIGGERS)}</div>
         <div class="stat-label">Live triggers</div>
     </div>
     <div class="stat-item">
@@ -138,7 +139,7 @@ st.markdown("""
         <div class="stat-label">Airports monitored</div>
     </div>
     <div class="stat-item">
-        <div class="stat-number">5</div>
+        <div class="stat-number">{len(PERIL_LABELS)}</div>
         <div class="stat-label">Peril categories</div>
     </div>
     <div class="stat-item">
