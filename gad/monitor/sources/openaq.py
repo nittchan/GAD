@@ -33,6 +33,17 @@ def fetch_aqi(lat: float, lon: float, trigger_id: str) -> dict | None:
         result["lat"] = lat
         result["lon"] = lon
         write_cache("aqi", trigger_id, result, ttl_seconds=3600)  # 1h TTL
+    else:
+        # Mark trigger as having no nearby station so dashboard shows "NO STATION"
+        unavailable = {
+            "aqi": None,
+            "status": "data_source_unavailable",
+            "source": "none",
+            "reason": "No PM2.5 station within 15km",
+            "lat": lat,
+            "lon": lon,
+        }
+        write_cache("aqi", trigger_id, unavailable, ttl_seconds=3600)
 
     return result
 
@@ -128,6 +139,9 @@ def _pm25_to_aqi(pm25: float) -> int:
 
 def evaluate_trigger(data: dict, threshold: float) -> dict:
     """Evaluate an AQI trigger."""
+    if data.get("status") == "data_source_unavailable":
+        return {"fired": False, "value": None, "status": "data_source_unavailable"}
+
     aqi = data.get("aqi")
     if aqi is None:
         return {"fired": False, "value": None, "status": "no_data"}

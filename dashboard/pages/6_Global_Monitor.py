@@ -169,6 +169,7 @@ def _status_badge(status: str) -> str:
         "no_flights": "NO FLIGHTS",
         "stale": "UPDATING",
         "no_api_key": "NO API KEY",
+        "data_source_unavailable": "NO STATION",
     }
     css_class = {
         "critical": "status-critical",
@@ -177,6 +178,7 @@ def _status_badge(status: str) -> str:
         "no_flights": "status-no-data",
         "stale": "status-stale",
         "no_api_key": "status-no-data",
+        "data_source_unavailable": "status-no-data",
     }
     label = labels.get(status, status.upper())
     cls = css_class.get(status, "status-no-data")
@@ -295,6 +297,8 @@ for trigger in GLOBAL_TRIGGERS:
         status_label = "NORMAL"
     elif status == "stale":
         status_label = "UPDATING"
+    elif status == "data_source_unavailable":
+        status_label = "NO STATION"
     else:
         status_label = "NO DATA"
 

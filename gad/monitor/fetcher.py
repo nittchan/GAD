@@ -340,7 +340,7 @@ def _init_oracle_signing() -> None:
         log.info("Oracle signing DISABLED (no GAD_ORACLE_PRIVATE_KEY_HEX)")
 
 
-def fetch_all() -> dict:
+def fetch_all(diagnostic: bool = False) -> dict:
     """Fetch all triggers that need updating. Sign determinations if key is available."""
     global _oracle_signing_enabled
 
@@ -353,6 +353,11 @@ def fetch_all() -> dict:
     skipped = 0
     errors = 0
     signed = 0
+
+    # Diagnostic mode: track AQI trigger results
+    aqi_diag_rows: list[dict] = []
+    aqi_total = 0
+    aqi_got_data = 0
 
     prev_hash = read_last_hash() if _oracle_signing_enabled else GENESIS_HASH
 
@@ -368,6 +373,28 @@ def fetch_all() -> dict:
 
         try:
             result = fetch_fn(trigger)
+
+            # Diagnostic: collect AQI trigger info
+            if diagnostic and trigger.data_source == "openaq":
+                aqi_total += 1
+                if result is not None:
+                    aqi_got_data += 1
+                    aqi_diag_rows.append({
+                        "trigger_id": trigger.id,
+                        "source": result.get("source", "unknown"),
+                        "station": result.get("station_name", "—"),
+                        "lat": trigger.lat,
+                        "lon": trigger.lon,
+                    })
+                else:
+                    aqi_diag_rows.append({
+                        "trigger_id": trigger.id,
+                        "source": "none",
+                        "station": "—",
+                        "lat": trigger.lat,
+                        "lon": trigger.lon,
+                    })
+
             if result is not None:
                 fetched += 1
 
@@ -397,6 +424,17 @@ def fetch_all() -> dict:
 
         time.sleep(0.3)
 
+    # Diagnostic: print AQI table and summary
+    if diagnostic and aqi_diag_rows:
+        print("\n── AQI Diagnostic ──")
+        print(f"{'TRIGGER_ID':<25} {'SOURCE':<10} {'STATION':<40} COORDS")
+        print("─" * 100)
+        for row in aqi_diag_rows:
+            print(f"{row['trigger_id']:<25} {row['source']:<10} {row['station']:<40} {row['lat']},{row['lon']}")
+        print("─" * 100)
+        aqi_no_data = aqi_total - aqi_got_data
+        print(f"AQI summary: {aqi_total} total, {aqi_got_data} got data, {aqi_no_data} no data\n")
+
     summary = {"fetched": fetched, "skipped": skipped, "errors": errors, "signed": signed}
     log.info(f"Fetch complete: {summary}")
     return summary
@@ -414,6 +452,7 @@ def run_loop(interval_seconds: int = 900) -> None:
 
 
 if __name__ == "__main__":
+    _diagnostic_mode = "--diagnostic" in sys.argv
     if "--loop" in sys.argv:
         interval = 900
         for i, arg in enumerate(sys.argv):
@@ -421,4 +460,4 @@ if __name__ == "__main__":
                 interval = int(sys.argv[i + 1])
         run_loop(interval)
     else:
-        fetch_all()
+        fetch_all(diagnostic=_diagnostic_mode)
