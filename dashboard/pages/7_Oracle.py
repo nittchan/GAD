@@ -73,6 +73,7 @@ st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile")
 st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers")
 st.sidebar.page_link("pages/5_Account.py", label="Account")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger")
+st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest")
 
 # ── Header ──
 st.markdown(

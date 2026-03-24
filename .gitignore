@@ -11,6 +11,8 @@ data/series/weather/
 data/series/aqi/
 data/series/flights/
 data/basis_risk/
+data/intelligence_cache/
+data/digest/
 registry/determinations/*.json
 registry/oracle_log.jsonl
 .gstack/
