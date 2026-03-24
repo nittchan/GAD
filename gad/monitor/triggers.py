@@ -12,7 +12,7 @@ from typing import Literal
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "solar"]
 
 
 @dataclass(frozen=True)
@@ -213,6 +213,14 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="crop-ukraine-grain", name="Ukraine Chernozem Grain", peril="crop", lat=49.4444, lon=32.0598, location_label="Cherkasy, Ukraine", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating grain crop stress in Ukrainian chernozem."),
     MonitorTrigger(id="crop-sahel-millet", name="Sahel Millet/Sorghum", peril="crop", lat=13.5116, lon=2.1254, location_label="Niamey region, Niger", threshold=0.2, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.2 indicating millet/sorghum crop failure in the Sahel."),
     MonitorTrigger(id="crop-ethiopia-coffee", name="Ethiopia Coffee/Teff", peril="crop", lat=9.1450, lon=40.4897, location_label="Ethiopian Highlands", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating coffee/teff crop stress in Ethiopian highlands."),
+
+    # ── Solar / Space Weather (NOAA SWPC) ──
+    # Planetary Kp index: global geomagnetic storm detection
+    MonitorTrigger(id="solar-global-storm", name="Global Geomagnetic Storm", peril="solar", lat=0.0, lon=0.0, location_label="Global", threshold=5, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="NOAA SWPC Kp index >= 5 (G1 minor geomagnetic storm). Affects HF radio, satellite drag, power grid fluctuations."),
+    MonitorTrigger(id="solar-severe", name="Severe Geomagnetic Storm", peril="solar", lat=0.0, lon=0.0, location_label="Global", threshold=7, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="NOAA SWPC Kp index >= 7 (G3 strong storm). Widespread HF radio blackout, satellite surface charging, power grid alerts."),
+    MonitorTrigger(id="solar-extreme", name="Extreme Geomagnetic Storm", peril="solar", lat=0.0, lon=0.0, location_label="Global", threshold=8, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="NOAA SWPC Kp index >= 8 (G4 severe storm). GPS degraded, widespread voltage control problems, satellite orientation anomalies."),
+    MonitorTrigger(id="solar-aviation-polar", name="Polar Route Aviation Risk", peril="solar", lat=70.0, lon=0.0, location_label="Polar Route (Arctic)", threshold=5, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="Kp >= 5 affects polar aviation routes. HF radio blackout forces rerouting of transpolar flights, increasing fuel costs and delays."),
+    MonitorTrigger(id="solar-grid-risk", name="Power Grid Risk (North America)", peril="solar", lat=40.0, lon=-90.0, location_label="North America Grid", threshold=7, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="Kp >= 7 creates geomagnetically induced currents (GICs) that stress high-voltage transformers in mid-latitude power grids."),
 ]
 
 
@@ -283,6 +291,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "flood": "Flood",
     "cyclone": "Tropical Cyclone",
     "crop": "Crop / NDVI",
+    "solar": "Solar / Space Weather",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -296,4 +305,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "flood": "water_drop",
     "cyclone": "cyclone",
     "crop": "eco",
+    "solar": "sunny",
 }

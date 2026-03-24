@@ -20,7 +20,7 @@ from gad.monitor.triggers import (
     get_triggers_by_peril,
 )
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc
 
 import json as _json
 from pathlib import Path as _Path
@@ -126,6 +126,7 @@ SOURCE_KEY_MAP = {
     "usgs_water": "flood",
     "noaa_nhc": "cyclone",
     "ndvi": "ndvi",
+    "noaa_swpc": "solar",
 }
 
 
@@ -157,6 +158,8 @@ def _evaluate_trigger(trigger: MonitorTrigger, data: dict) -> dict:
         return noaa_nhc.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "ndvi":
         return ndvi.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "noaa_swpc":
+        return noaa_swpc.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
