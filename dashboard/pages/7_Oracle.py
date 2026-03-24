@@ -20,8 +20,8 @@ st.markdown("""
     .stApp { background-color: #F5F0EB; }
     [data-testid="stSidebar"] { background: #EDE7E0; border-right: 1px solid #D4CCC0; }
     header[data-testid="stHeader"] { background: transparent; }
-    .stat-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 8px; padding: 20px; text-align: center; }
-    .stat-num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #467B6B; }
+    .stat-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px; padding: 20px; text-align: center; }
+    .stat-num { font-family: 'JetBrains Mono', ui-monospace, monospace !important; font-size: 32px !important; font-weight: 700 !important; color: #467B6B !important; font-variant-numeric: tabular-nums; }
     .stat-lbl { color: #7A7267; font-size: 12px; margin-top: 4px; }
     .seal-valid { background: #E8F0ED; border: 1px solid #467B6B; color: #467B6B;
                   padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
@@ -31,6 +31,7 @@ st.markdown("""
         background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
         padding: 18px 20px; margin-bottom: 12px;
         font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
+        font-variant-numeric: tabular-nums;
         position: relative;
     }
     /* Corner crop marks — notarial artifact feel */

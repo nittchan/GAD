@@ -97,6 +97,18 @@ st.markdown("""
         margin: 4px 0;
     }
     .value-unit { color: #7A7267; font-size: 12px; }
+
+    /* Peril filter pills — parchment style */
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] {
+        background: #EDE7E0 !important;
+        border: 1px solid #D4CCC0 !important;
+        color: #1E1B18 !important;
+        border-radius: 3px !important;
+        font-family: 'Instrument Sans', sans-serif !important;
+        font-size: 12px !important;
+    }
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] span { color: #1E1B18 !important; }
+    [data-testid="stMultiSelect"] [data-baseweb="tag"] svg { fill: #7A7267 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -357,7 +369,7 @@ if map_rows:
     deck = pdk.Deck(
         layers=layers,
         initial_view_state=view_state,
-        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        map_style="light",
         tooltip=tooltip,
     )
     st.pydeck_chart(deck, use_container_width=True, height=500)

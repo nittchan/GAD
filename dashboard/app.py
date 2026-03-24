@@ -32,16 +32,16 @@ st.markdown("""
     /* Hero */
     .hero-tag { color: #C8553D; font-size: 13px; letter-spacing: 3px;
                 text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
-    .hero-title { font-size: 3rem; font-weight: 700; color: #1E1B18;
-                  line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.03em;
-                  font-family: 'Fraunces', Georgia, serif; text-wrap: balance; }
+    .hero-title { font-size: 3rem !important; font-weight: 700 !important; color: #1E1B18 !important;
+                  line-height: 1.15 !important; margin-bottom: 16px; letter-spacing: -0.03em;
+                  font-family: 'Fraunces', Georgia, serif !important; text-wrap: balance; }
     .hero-sub { font-size: 17px; color: #7A7267; max-width: 580px; line-height: 1.7; }
 
     /* Stats */
     .stats-row { display: flex; gap: 48px; margin: 32px 0; }
     .stat-item { }
-    .stat-number { font-family: 'JetBrains Mono', ui-monospace, monospace;
-                   font-size: 32px; font-weight: 700; color: #7A2E1F;
+    .stat-number { font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+                   font-size: 32px !important; font-weight: 700 !important; color: #7A2E1F !important;
                    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
                    animation: countUp 150ms ease-out; }
     .stat-label { color: #7A7267; font-size: 12px; margin-top: 2px; }
@@ -60,11 +60,11 @@ st.markdown("""
         border-radius: 3px !important; padding: 12px 24px !important;
     }
     .stButton > button[kind="primary"]:hover {
-        background: #79b8ff !important;
+        background: #A8432E !important;
     }
     .stButton > button:not([kind="primary"]) {
-        background: transparent !important; color: #1E1B18 !important;
-        border: 1px solid #D4CCC0 !important; border-radius: 3px !important;
+        background: transparent !important; color: #C8553D !important;
+        border: 1px solid #C8553D !important; border-radius: 3px !important;
         padding: 12px 24px !important;
     }
     .stButton > button:not([kind="primary"]):hover {
