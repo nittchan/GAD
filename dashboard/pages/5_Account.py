@@ -67,8 +67,7 @@ st.markdown("### Triggers by Peril")
 
 for peril_key, label in PERIL_LABELS.items():
     triggers = get_triggers_by_peril(peril_key)
-    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine", "flood": "flood", "cyclone": "cyclone", "crop": "ndvi", "solar": "solar"}.get(peril_key, peril_key)
-    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine", "flood": "flood", "cyclone": "cyclone", "crop": "ndvi", "health": "health"}.get(peril_key, peril_key)
+    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine", "flood": "flood", "cyclone": "cyclone", "crop": "ndvi", "solar": "solar", "health": "health"}.get(peril_key, peril_key)
 
     cached = 0
     stale = 0
