@@ -408,77 +408,74 @@ for peril in selected_perils:
     if not peril_triggers:
         continue
 
-    st.markdown(f'<div class="peril-header">{PERIL_LABELS[peril]} ({len(peril_triggers)})</div>', unsafe_allow_html=True)
+    with st.expander(f"{PERIL_LABELS[peril]} ({len(peril_triggers)})", expanded=False):
+        # Flight delay: compact table (144 airports — cards don't scale)
+        if peril == "flight_delay":
+            table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
+            table_html += '<tr style="border-bottom:1px solid #D4CCC0;color:#7A7267;text-align:left;">'
+            table_html += '<th style="padding:8px 12px;">Airport</th><th style="padding:8px;">Location</th>'
+            table_html += '<th style="padding:8px;text-align:right;">Departures</th>'
+            table_html += '<th style="padding:8px;text-align:right;">Metric</th><th style="padding:8px;">Status</th></tr>'
 
-    # Flight delay: compact table (144 airports — cards don't scale)
-    if peril == "flight_delay":
-        table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
-        table_html += '<tr style="border-bottom:1px solid #D4CCC0;color:#7A7267;text-align:left;">'
-        table_html += '<th style="padding:8px 12px;">Airport</th><th style="padding:8px;">Location</th>'
-        table_html += '<th style="padding:8px;text-align:right;">Departures</th>'
-        table_html += '<th style="padding:8px;text-align:right;">Metric</th><th style="padding:8px;">Status</th></tr>'
-
-        for tid, trigger, data, result, is_stale in peril_triggers:
-            status = result.get("status", "no_data")
-            value = result.get("value")
-            total_flights = result.get("total_flights", data.get("total_flights", 0) if data else 0)
-            metric_type = result.get("metric", "avg_delay")
-
-            # Show the right label based on data source metric
-            if metric_type == "avg_delay" and value is not None:
-                value_str = f"{value} min delay"
-            elif metric_type == "departure_count" and value is not None:
-                value_str = f"{value} flights"
-            else:
-                value_str = "—"
-
-            color = "#A63D40" if status == "critical" else "#2E8B6F" if status == "normal" else "#7A7267"
-
-            rho_html = _rho_badge(rho_map.get(tid))
-            table_html += f'<tr style="border-bottom:1px solid #E3DCD3;">'
-            table_html += f'<td style="padding:8px 12px;color:#1E1B18;font-weight:600;">{trigger.name}{rho_html}</td>'
-            table_html += f'<td style="padding:8px;color:#7A7267;font-size:12px;">{trigger.location_label}</td>'
-            table_html += f'<td style="padding:8px;text-align:right;color:#7A7267;">{total_flights}</td>'
-            table_html += f'<td style="padding:8px;text-align:right;color:{color};font-weight:700;">{value_str}</td>'
-            table_html += f'<td style="padding:8px;">{_status_badge(status)}</td>'
-            table_html += '</tr>'
-
-        table_html += '</table>'
-        st.markdown(table_html, unsafe_allow_html=True)
-
-        # View buttons for flight triggers (Streamlit can't put buttons in HTML tables)
-        flight_cols = st.columns(6)
-        for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers[:6]):
-            with flight_cols[i % 6]:
-                if st.button(f"View {trigger.name}", key=f"view_{tid}", use_container_width=True):
-                    st.session_state["selected_trigger_id"] = tid
-                    st.switch_page("pages/3_Trigger_profile.py")
-
-    # Other perils: card layout (fewer items, richer display)
-    else:
-        cols = st.columns(min(len(peril_triggers), 3))
-        for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers):
-            with cols[i % len(cols)]:
-                value = result.get("value")
-                unit = result.get("unit", trigger.threshold_unit)
+            for tid, trigger, data, result, is_stale in peril_triggers:
                 status = result.get("status", "no_data")
+                value = result.get("value")
+                total_flights = result.get("total_flights", data.get("total_flights", 0) if data else 0)
+                metric_type = result.get("metric", "avg_delay")
 
-                value_display = f"{value}" if value is not None else "—"
+                if metric_type == "avg_delay" and value is not None:
+                    value_str = f"{value} min delay"
+                elif metric_type == "departure_count" and value is not None:
+                    value_str = f"{value} flights"
+                else:
+                    value_str = "—"
+
                 color = "#A63D40" if status == "critical" else "#2E8B6F" if status == "normal" else "#7A7267"
 
                 rho_html = _rho_badge(rho_map.get(tid))
-                st.markdown(f"""
-                <div class="trigger-card">
-                    <h4>{trigger.name} {_status_badge(status)}</h4>
-                    <div class="location">{trigger.location_label}{rho_html}</div>
-                    <div class="value-large" style="color: {color}">{value_display}</div>
-                    <div class="value-unit">{unit} (threshold: {trigger.threshold})</div>
-                </div>
-                """, unsafe_allow_html=True)
+                table_html += f'<tr style="border-bottom:1px solid #E3DCD3;">'
+                table_html += f'<td style="padding:8px 12px;color:#1E1B18;font-weight:600;">{trigger.name}{rho_html}</td>'
+                table_html += f'<td style="padding:8px;color:#7A7267;font-size:12px;">{trigger.location_label}</td>'
+                table_html += f'<td style="padding:8px;text-align:right;color:#7A7267;">{total_flights}</td>'
+                table_html += f'<td style="padding:8px;text-align:right;color:{color};font-weight:700;">{value_str}</td>'
+                table_html += f'<td style="padding:8px;">{_status_badge(status)}</td>'
+                table_html += '</tr>'
 
-                if st.button("View profile →", key=f"view_{tid}", use_container_width=True):
-                    st.session_state["selected_trigger_id"] = tid
-                    st.switch_page("pages/3_Trigger_profile.py")
+            table_html += '</table>'
+            st.markdown(table_html, unsafe_allow_html=True)
+
+            flight_cols = st.columns(6)
+            for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers[:6]):
+                with flight_cols[i % 6]:
+                    if st.button(f"View {trigger.name}", key=f"view_{tid}", use_container_width=True):
+                        st.session_state["selected_trigger_id"] = tid
+                        st.switch_page("pages/3_Trigger_profile.py")
+
+        # Other perils: card layout (fewer items, richer display)
+        else:
+            cols = st.columns(min(len(peril_triggers), 3))
+            for i, (tid, trigger, data, result, is_stale) in enumerate(peril_triggers):
+                with cols[i % len(cols)]:
+                    value = result.get("value")
+                    unit = result.get("unit", trigger.threshold_unit)
+                    status = result.get("status", "no_data")
+
+                    value_display = f"{value}" if value is not None else "—"
+                    color = "#A63D40" if status == "critical" else "#2E8B6F" if status == "normal" else "#7A7267"
+
+                    rho_html = _rho_badge(rho_map.get(tid))
+                    st.markdown(f"""
+                    <div class="trigger-card">
+                        <h4>{trigger.name} {_status_badge(status)}</h4>
+                        <div class="location">{trigger.location_label}{rho_html}</div>
+                        <div class="value-large" style="color: {color}">{value_display}</div>
+                        <div class="value-unit">{unit} (threshold: {trigger.threshold})</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if st.button("View profile →", key=f"view_{tid}", use_container_width=True):
+                        st.session_state["selected_trigger_id"] = tid
+                        st.switch_page("pages/3_Trigger_profile.py")
 
 # ── Footer ──
 from dashboard.components.footer import render_footer
