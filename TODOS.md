@@ -45,46 +45,37 @@
 - [x] Flood: 20 USGS river gauges
 - [x] Cyclone: 20 NOAA NHC location triggers
 - [x] Crop/NDVI: 10 agricultural zones, Copernicus/MODIS
+- [x] Solar/Space Weather: 5 NOAA SWPC Kp index triggers
+- [x] Health/Pandemic: 10 WHO Disease Outbreak News triggers
 </details>
 
 <details>
-<summary>P5 Intelligence — PREI done</summary>
+<summary>P5 Intelligence — PREI + AI briefs done</summary>
 
 - [x] INTEL-02: Country Risk Exposure Index on Global Monitor
+- [x] INTEL-01: AI risk briefs (Claude API + template fallback), daily digest page, brief on Trigger Profile
 </details>
 
 <details>
-<summary>P7 Tests — 2240 tests</summary>
+<summary>P7 Infrastructure — 2256 tests, env audit, AQI diagnostics</summary>
 
-- [x] INFRA-01a-c + new d/e: fetcher, oracle chain, AQI coords, triggers, risk_index
+- [x] INFRA-01a-c + new d/e: fetcher, oracle chain, AQI coords, triggers, risk_index (2256 tests)
+- [x] INFRA-03: Env var reference table (19 vars) + startup health check
+- [x] DATA-02: AQI diagnostic mode + NO STATION status for unavailable triggers
 </details>
 
 ---
 
-## Track A — Safe Now (no dependencies, any order)
+## Track A — COMPLETE (all shipped 2026-03-24)
 
-These can be done immediately without affecting anything else.
+- [x] **DATA-02a/b:** AQI diagnostic mode + NO STATION status
+- [x] **INTEL-01a-d:** AI risk briefs (Claude API), daily digest page (8_Digest.py), brief on Trigger Profile
+- [x] **INFRA-03a/b:** Env var reference table (19 vars in DEPLOYMENT.md) + startup health check
+- [x] **SRC-04:** Health/Pandemic peril — 10 WHO Disease Outbreak News triggers
+- [x] **SRC-05:** Solar/Space Weather peril — 5 NOAA SWPC Kp index triggers
 
-### DATA-01c: OpenSky flight history
-- [ ] `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable, multi-day job)
-
-### DATA-02: AQI source diagnostics
-- [ ] **DATA-02a:** Add `diagnostic_mode` to fetcher showing source, distance, station name
-- [ ] **DATA-02b:** Mark triggers with no station within 25km as `data_source_unavailable`
-
-### INTEL-01: AI risk briefs
-- [ ] **INTEL-01a:** `gad/monitor/intelligence.py` — Claude API brief generator (cached daily)
-- [ ] **INTEL-01b:** Brief on Trigger Profile page
-- [ ] **INTEL-01c:** `generate_global_digest()` — daily summary to `data/digest/`
-- [ ] **INTEL-01d:** Digest page (`dashboard/pages/8_Digest.py`)
-
-### INFRA-03: Env var audit
-- [ ] **INFRA-03a:** Document every env var with consequences of absence
-- [ ] **INFRA-03b:** Startup health check logging which data sources are available
-
-### SRC-04/05: New perils (standalone)
-- [ ] **SRC-04:** Health / Pandemic peril — WHO Disease Outbreak News (free). Medium effort.
-- [ ] **SRC-05:** Solar / Space Weather peril — NOAA SWPC (free, no key). Kp index, solar flare alerts. Small effort.
+### Still pending (Track A):
+- [ ] **DATA-01c:** `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable, multi-day job)
 
 ### SRC-01/02/03: Additional data sources (standalone)
 - [ ] **SRC-01:** NOAA HRRR Smoke data — wildfire impact, GRIB format. Medium effort.
