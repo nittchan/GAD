@@ -8,7 +8,7 @@ Fast context file for agents and contributors who need the essentials in under a
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 10 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone, crop/NDVI) using free open data.
+1. **Global Monitor** — live risk map across 12 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone, crop/NDVI, solar/space weather, health/pandemic) using free open data.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -16,10 +16,10 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 506 triggers, 144 airports + 10 ports, multi-source data (13 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 521 triggers, 144 airports + 10 ports, multi-source data (15 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
 - v0.3: Self-Learning Actuary — DuckDB analytical datastore, distribution tracking, drift detection, threshold optimization, peer calibration, correlation matrix.
-- v0.4: Platform — API on CF Workers (community service), Redis for API cache, new perils (health, solar), verification SDK.
+- v0.4: Platform — API on CF Workers (community service), Redis for API cache, verification SDK.
 
 ## Development Workflow
 
@@ -40,7 +40,7 @@ All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. GitHub A
 
 ```
 Background fetcher (cron every 15 min)
-  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI
+  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI, NOAA SWPC, WHO DON
   → Writes to data/monitor_cache/ (JSON files)
 
 Dashboard (Streamlit)
@@ -56,7 +56,7 @@ Compute engine: gad/engine/ package
 
 - gad/engine/ — compute core (basis risk, lloyds, oracle, models)
 - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources)
-- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi)
+- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don)
 - dashboard/ — Streamlit app with 7 pages
 - oracle_ledger/ — Cloudflare Worker
 
@@ -78,6 +78,8 @@ Compute engine: gad/engine/ package
 | USGS Water Services | Flood river gauge levels | No key needed |
 | NOAA NHC | Tropical cyclone tracking | No key needed |
 | Copernicus/MODIS | Crop / NDVI vegetation health | No key needed |
+| NOAA SWPC | Solar/space weather alerts | No key needed |
+| WHO DON | Health/pandemic outbreak alerts | No key needed |
 
 ## Env Vars
 
@@ -91,7 +93,7 @@ Compute engine: gad/engine/ package
 
 1. Basis risk precomputed for 221 triggers (done). Flight history and remaining AQI coverage pending.
 2. Oracle signing + R2 upload + Oracle Ledger page (done).
-3. All 10 perils live (flight, AQI, wildfire, drought, weather, earthquake, marine, flood, cyclone, crop).
+3. All 12 perils live (flight, AQI, wildfire, drought, weather, earthquake, marine, flood, cyclone, crop, solar, health).
 4. v0.3 Self-Learning Actuary — DuckDB, distribution tracking, drift detection, threshold optimization.
 5. v0.4 Platform — API layer (CF Workers), community service model.
 5. Parametric Data Pro (enterprise tier).

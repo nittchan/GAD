@@ -4,7 +4,7 @@
 
 [parametricdata.io](https://parametricdata.io)
 
-Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, and crop stress — and evaluates how well parametric insurance triggers perform against them. 506 triggers. 144 airports. 10 ports. 10 peril categories. 13 data sources. All open. All free.
+Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, crop stress, solar storms, and disease outbreaks — and evaluates how well parametric insurance triggers perform against them. 521 triggers. 144 airports. 10 ports. 12 peril categories. 15 data sources. All open. All free.
 
 ## What you see
 
@@ -30,6 +30,8 @@ Every trigger determination can be cryptographically signed, hash-chained, and i
 | Flood | 20 | USGS Water Services | 20 river gauge locations across US flood-prone zones |
 | Cyclone | 20 | NOAA NHC | 20 high-exposure coastal locations, active storm proximity |
 | Crop / NDVI | 10 | Copernicus/MODIS | Vegetation health index for key agricultural regions |
+| Solar / Space Weather | 5 | NOAA SWPC | Geomagnetic storm and solar flare monitoring |
+| Health / Pandemic | 10 | WHO DON | Disease outbreak alerts from WHO global surveillance |
 
 ## Run it yourself
 
@@ -64,7 +66,7 @@ print(verify_determination(det, public_key_bytes))  # True
 
 ```
 parametricdata.io
-├── Global Monitor        Live risk map (506 triggers, 10 perils)
+├── Global Monitor        Live risk map (521 triggers, 12 perils)
 ├── Trigger Profile       Click any trigger → full basis risk analysis
 ├── Compare               Side-by-side trigger comparison
 ├── Build Your Own        4-step wizard → custom trigger
@@ -85,7 +87,9 @@ Background fetcher (every 15 min)
 ├── AISstream             Marine vessel tracking (WebSocket)
 ├── USGS Water Services   Flood river gauge levels
 ├── NOAA NHC              Tropical cyclone tracking
-└── Copernicus/MODIS      Crop / NDVI vegetation health
+├── Copernicus/MODIS      Crop / NDVI vegetation health
+├── NOAA SWPC             Solar/space weather alerts
+└── WHO DON               Health/pandemic outbreak alerts
 
 Oracle layer (v0.2.2)
 ├── Ed25519 signing       Every determination cryptographically signed
