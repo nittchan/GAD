@@ -12,7 +12,7 @@ from typing import Literal
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "health"]
 
 
 @dataclass(frozen=True)
@@ -213,6 +213,18 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="crop-ukraine-grain", name="Ukraine Chernozem Grain", peril="crop", lat=49.4444, lon=32.0598, location_label="Cherkasy, Ukraine", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating grain crop stress in Ukrainian chernozem."),
     MonitorTrigger(id="crop-sahel-millet", name="Sahel Millet/Sorghum", peril="crop", lat=13.5116, lon=2.1254, location_label="Niamey region, Niger", threshold=0.2, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.2 indicating millet/sorghum crop failure in the Sahel."),
     MonitorTrigger(id="crop-ethiopia-coffee", name="Ethiopia Coffee/Teff", peril="crop", lat=9.1450, lon=40.4897, location_label="Ethiopian Highlands", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating coffee/teff crop stress in Ethiopian highlands."),
+
+    # ── Health / Pandemic (WHO DON) ──
+    MonitorTrigger(id="health-delhi", name="Delhi Health Alert", peril="health", lat=28.6139, lon=77.2090, location_label="Delhi, India", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in India within 7 days."),
+    MonitorTrigger(id="health-mumbai", name="Mumbai Health Alert", peril="health", lat=19.0760, lon=72.8777, location_label="Mumbai, India", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in India within 7 days."),
+    MonitorTrigger(id="health-lagos", name="Lagos Health Alert", peril="health", lat=6.5244, lon=3.3792, location_label="Lagos, Nigeria", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Nigeria within 7 days."),
+    MonitorTrigger(id="health-dhaka", name="Dhaka Health Alert", peril="health", lat=23.8103, lon=90.4125, location_label="Dhaka, Bangladesh", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Bangladesh within 7 days."),
+    MonitorTrigger(id="health-jakarta", name="Jakarta Health Alert", peril="health", lat=-6.2088, lon=106.8456, location_label="Jakarta, Indonesia", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Indonesia within 7 days."),
+    MonitorTrigger(id="health-cairo", name="Cairo Health Alert", peril="health", lat=30.0444, lon=31.2357, location_label="Cairo, Egypt", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Egypt within 7 days."),
+    MonitorTrigger(id="health-kinshasa", name="Kinshasa Health Alert", peril="health", lat=-4.4419, lon=15.2663, location_label="Kinshasa, DRC", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in DRC within 7 days."),
+    MonitorTrigger(id="health-lima", name="Lima Health Alert", peril="health", lat=-12.0464, lon=-77.0428, location_label="Lima, Peru", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Peru within 7 days."),
+    MonitorTrigger(id="health-bangkok", name="Bangkok Health Alert", peril="health", lat=13.7563, lon=100.5018, location_label="Bangkok, Thailand", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Thailand within 7 days."),
+    MonitorTrigger(id="health-nairobi", name="Nairobi Health Alert", peril="health", lat=-1.2921, lon=36.8219, location_label="Nairobi, Kenya", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Kenya within 7 days."),
 ]
 
 
@@ -283,6 +295,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "flood": "Flood",
     "cyclone": "Tropical Cyclone",
     "crop": "Crop / NDVI",
+    "health": "Health / Pandemic",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -296,4 +309,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "flood": "water_drop",
     "cyclone": "cyclone",
     "crop": "eco",
+    "health": "medical_services",
 }
