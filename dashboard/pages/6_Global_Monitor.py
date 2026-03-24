@@ -97,14 +97,6 @@ st.markdown("""
         margin: 4px 0;
     }
     .value-unit { color: #7A7267; font-size: 12px; }
-    .peril-header {
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #7A7267;
-        margin: 24px 0 12px 0;
-    }
 </style>
 """, unsafe_allow_html=True)
 

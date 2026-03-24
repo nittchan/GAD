@@ -193,7 +193,7 @@ The most distinctive UI element. Each signed determination renders as an embosse
 ## Global Monitor
 - **Map:** PyDeck ScatterplotLayer. Marker colors use semantic tokens (verdigris normal, carmine triggered, amber stale).
 - **Trigger cards:** `surface` background, `rule` border, 6px rounded corners.
-- **Layout:** Full-width map above trigger cards in grid per peril category.
+- **Layout:** Full-width map above trigger data. Each peril category wrapped in a collapsible `st.expander` (collapsed by default). PREI country risk index also collapsible.
 - **Tooltips:** Parchment card with subtle shadow, JetBrains Mono text.
 
 ## Oracle / Settlement
