@@ -120,6 +120,9 @@ All work on `dev`. Never push to `staging` or `main` directly. GitHub Actions au
 | Staging | gad-dashboard-staging | gad-dashboard-staging.fly.dev | staging |
 | Production | gad-dashboard | parametricdata.io | main |
 
+## Design System
+Always read `DESIGN.md` before making any visual or UI decisions. All font choices, colors, spacing, and aesthetic direction are defined there. Do not deviate without explicit user approval. In QA mode, flag any code that doesn't match DESIGN.md.
+
 ## Build and Runtime
 
 - Python: >=3.12
@@ -161,8 +164,8 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. Historical basis risk precomputed for 221 of 506 triggers (done). Flight history pending.
-2. Oracle signing wired to live monitor (done). R2 upload + Oracle Ledger page (done).
-3. Marine peril live with 10 ports (done). Flood (USGS Water Services), cyclone (NOAA NHC), and crop/NDVI (Copernicus/MODIS) live.
-4. REST API (FastAPI) + MCP server.
-5. Parametric Data Pro: premium data sources, API access, enterprise features.
+1. **v0.2 remaining:** Historical basis risk for all 506 triggers. Oracle signing wired to live monitor.
+2. **v0.3 — Self-Learning Actuary:** DuckDB on Fly.io persistent volume (+$1.50/mo). Single-writer pattern (fetcher). TriggerObservation time series. Distribution tracker (90d + 365d rolling). Drift detector (CUSUM). Seasonal decomposition (STL). Threshold optimizer. Peer calibration (Koppen zones). Cold-start inference. Co-firing correlation matrix. Model versioning. See TODOS.md P8 for full task breakdown.
+3. **v0.4 — Platform:** API product layer on CF Workers (community service). Redis (Upstash) for API cache + rate limiting. New perils: health (WHO), solar (NOAA SWPC). Verification SDK + CLI.
+
+**Storage decision:** DuckDB supersedes Redis for all analytical data. Redis deferred to v0.4 API layer (CF Workers can't read DuckDB).

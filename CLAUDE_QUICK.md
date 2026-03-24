@@ -18,7 +18,8 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
 - v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 506 triggers, 144 airports + 10 ports, multi-source data (13 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
-- v0.3: New perils (health, solar), enterprise tier.
+- v0.3: Self-Learning Actuary — DuckDB analytical datastore, distribution tracking, drift detection, threshold optimization, peer calibration, correlation matrix.
+- v0.4: Platform — API on CF Workers (community service), Redis for API cache, new perils (health, solar), verification SDK.
 
 ## Development Workflow
 
@@ -88,8 +89,9 @@ Compute engine: gad/engine/ package
 
 ## Near-Term Priorities
 
-1. Basis risk precomputed for 221 triggers (done). Flight history (DATA-01c) and remaining AQI coverage pending.
+1. Basis risk precomputed for 221 triggers (done). Flight history and remaining AQI coverage pending.
 2. Oracle signing + R2 upload + Oracle Ledger page (done).
-3. Marine peril live with 10 ports (done). Flood (USGS Water Services), cyclone (NOAA NHC), and crop/NDVI (Copernicus/MODIS) live.
-4. REST API (FastAPI) + MCP server.
+3. All 10 perils live (flight, AQI, wildfire, drought, weather, earthquake, marine, flood, cyclone, crop).
+4. v0.3 Self-Learning Actuary — DuckDB, distribution tracking, drift detection, threshold optimization.
+5. v0.4 Platform — API layer (CF Workers), community service model.
 5. Parametric Data Pro (enterprise tier).
