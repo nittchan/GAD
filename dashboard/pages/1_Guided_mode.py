@@ -63,6 +63,7 @@ PERIL_CONFIG = {
     "marine": {"label": "Marine / Shipping", "icon": "⚓", "unit": "vessels", "default": 20.0, "above": True, "source": "aisstream"},
     "flood": {"label": "Flood", "icon": "🌊", "unit": "metres", "default": 5.0, "above": True, "source": "usgs_water"},
     "cyclone": {"label": "Tropical Cyclone", "icon": "🌀", "unit": "knots", "default": 64.0, "above": True, "source": "noaa_nhc"},
+    "crop": {"label": "Crop / NDVI", "icon": "🌾", "unit": "NDVI", "default": 0.3, "above": False, "source": "ndvi"},
 }
 
 # ── Header ──

@@ -8,7 +8,7 @@ Fast context file for agents and contributors who need the essentials in under a
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 9 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone) using free open data.
+1. **Global Monitor** — live risk map across 10 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone, crop/NDVI) using free open data.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -16,7 +16,7 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 496 triggers, 144 airports + 10 ports, multi-source data (12 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 506 triggers, 144 airports + 10 ports, multi-source data (13 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
 - v0.3: New perils (health, solar), enterprise tier.
 
@@ -39,7 +39,7 @@ All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. GitHub A
 
 ```
 Background fetcher (cron every 15 min)
-  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC
+  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI
   → Writes to data/monitor_cache/ (JSON files)
 
 Dashboard (Streamlit)
@@ -55,7 +55,7 @@ Compute engine: gad/engine/ package
 
 - gad/engine/ — compute core (basis risk, lloyds, oracle, models)
 - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources)
-- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc)
+- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi)
 - dashboard/ — Streamlit app with 7 pages
 - oracle_ledger/ — Cloudflare Worker
 
@@ -76,6 +76,7 @@ Compute engine: gad/engine/ package
 | USGS Earthquake | Earthquake detection | No key needed |
 | USGS Water Services | Flood river gauge levels | No key needed |
 | NOAA NHC | Tropical cyclone tracking | No key needed |
+| Copernicus/MODIS | Crop / NDVI vegetation health | No key needed |
 
 ## Env Vars
 
@@ -89,6 +90,6 @@ Compute engine: gad/engine/ package
 
 1. Basis risk precomputed for 221 triggers (done). Flight history (DATA-01c) and remaining AQI coverage pending.
 2. Oracle signing + R2 upload + Oracle Ledger page (done).
-3. Marine peril live with 10 ports (done). Flood (USGS Water Services) and cyclone (NOAA NHC) live. Next: crop/NDVI.
+3. Marine peril live with 10 ports (done). Flood (USGS Water Services), cyclone (NOAA NHC), and crop/NDVI (Copernicus/MODIS) live.
 4. REST API (FastAPI) + MCP server.
 5. Parametric Data Pro (enterprise tier).

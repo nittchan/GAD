@@ -130,9 +130,9 @@
 - [x] **PERIL-02c:** Proximity evaluation (haversine + wind threshold) implemented in noaa_nhc.py evaluator.
 
 ### PERIL-03: Crop / NDVI drought index
-- [ ] **PERIL-03a:** NASA MODIS NDVI fetcher via AppEEARS or Copernicus WCS
-- [ ] **PERIL-03b:** 10 agricultural zone triggers
-- [ ] **PERIL-03c:** NDVI threshold evaluation with 16-day composite window
+- [x] **PERIL-03a:** `gad/monitor/sources/ndvi.py` — Copernicus WCS primary, MODIS proxy fallback. Free, no auth. 24h cache TTL.
+- [x] **PERIL-03b:** 10 agricultural zone triggers — Punjab wheat, Maharashtra sugarcane, Andhra rice, Iowa corn, Kansas wheat, Mato Grosso soy, Pampas wheat, Ukraine grain, Sahel millet, Ethiopia coffee.
+- [x] **PERIL-03c:** NDVI threshold evaluation — fires when NDVI drops below threshold (0.3 default, 0.2 for Sahel). `fires_when_above=False`.
 
 ---
 

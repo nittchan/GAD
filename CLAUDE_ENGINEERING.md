@@ -8,7 +8,7 @@ Engineering-focused scope summary for implementation, debugging, and refactor de
 
 GAD operates as four integrated layers:
 
-1. **Global Monitor** — live risk dashboard with 9 peril categories, background data fetching, cache-based reads.
+1. **Global Monitor** — live risk dashboard with 10 peril categories, background data fetching, cache-based reads.
 2. **Basis risk engine** — Spearman correlation, bootstrap CI, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — Ed25519 signed determinations, hash-chained log, Cloudflare Worker read surface.
 4. **Account/telemetry** — Supabase-backed auth, saved triggers, activity events.
@@ -36,7 +36,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 ### gad/monitor/ — Global Monitor
 - airports.py: Master airport registry (50 Indian + 94 global = 144 airports). Each airport has `lat`/`lon` (runway) and optional `city_lat`/`city_lon` (city centre). AQI triggers use city coordinates via `effective_city_lat`/`effective_city_lon` properties; flight/weather triggers use airport coordinates.
 - ports.py: Port registry (10 tier-1 global ports with anchorage bounding boxes)
-- triggers.py: Auto-generates flight delay, weather, AQI, earthquake, marine, flood, and cyclone triggers (496 triggers across 9 perils)
+- triggers.py: Auto-generates flight delay, weather, AQI, earthquake, marine, flood, cyclone, and crop/NDVI triggers (506 triggers across 10 perils)
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
@@ -48,6 +48,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - sources/aisstream.py: Marine vessel tracking (AISstream WebSocket — vessel count, anchor status, speed)
 - sources/noaa_flood.py: Flood river gauge data (USGS Water Services API — free, no key)
 - sources/noaa_nhc.py: Tropical cyclone tracking (NOAA NHC GeoJSON — free, no key)
+- sources/ndvi.py: Crop / vegetation health (Copernicus/MODIS NDVI — free, no key)
 - risk_index.py: Parametric Risk Exposure Index (PREI) computation per country
 
 ### Security model
@@ -74,7 +75,7 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 
 ### Monitor triggers (gad/monitor/triggers.py)
 Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
-496 triggers across 9 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone). Add new airports/ports to the registries to expand coverage.
+506 triggers across 10 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone + 10 crop/NDVI). Add new airports/ports to the registries to expand coverage.
 **Coordinate split:** AQI triggers use city centre coordinates (where AQI monitors are); flight/weather triggers use airport runway coordinates. When adding an airport far from its city (>15km), set `city_lat`/`city_lon` on the Airport entry.
 **Flight delay dual metric:** Evaluation is source-aware. AviationStack (tier-1 airports) provides real delay in minutes — fires when avg delay exceeds threshold. OpenSky (all airports, fallback) provides departure count only — fires when 0 departures in 2h (airport disruption proxy). The `evaluate_trigger` result includes a `metric` field (`"avg_delay"` or `"departure_count"`) so the UI shows the correct label.
 
@@ -95,9 +96,9 @@ determination_id, policy_id, trigger_id, fired, fired_at, data_snapshot_hash, co
 - tests/test_oracle_chain.py: 5-entry chain, tamper detection, canonical hash (12 tests)
 - tests/test_reproducibility.py: deterministic outputs (1 test)
 - tests/test_import_hygiene.py: no legacy imports (1 test)
-- tests/test_monitor_fetcher.py: evaluate_fired all 9 sources, FETCH_MAP, determination creation (32 tests)
+- tests/test_monitor_fetcher.py: evaluate_fired all 10 sources, FETCH_MAP, determination creation (32 tests)
 - tests/test_aqi_coordinates.py: all airports city coords, haversine sanity, AQI coord verification (~700 tests)
-- tests/test_triggers.py: 496 count, unique IDs, field validation, marine/flood/cyclone integrity (~1500 tests)
+- tests/test_triggers.py: 506 count, unique IDs, field validation, marine/flood/cyclone/crop integrity (~1500 tests)
 - tests/test_risk_index.py: PREI formula, near-threshold, edge cases (17 tests)
 
 Remaining gaps:
@@ -160,8 +161,8 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. Historical basis risk precomputed for 221 of 496 triggers (done). Flight history pending.
+1. Historical basis risk precomputed for 221 of 506 triggers (done). Flight history pending.
 2. Oracle signing wired to live monitor (done). R2 upload + Oracle Ledger page (done).
-3. Marine peril live with 10 ports (done). Flood (USGS Water Services) and cyclone (NOAA NHC) live. Next: crop/NDVI.
+3. Marine peril live with 10 ports (done). Flood (USGS Water Services), cyclone (NOAA NHC), and crop/NDVI (Copernicus/MODIS) live.
 4. REST API (FastAPI) + MCP server.
 5. Parametric Data Pro: premium data sources, API access, enterprise features.

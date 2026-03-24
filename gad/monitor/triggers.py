@@ -12,7 +12,7 @@ from typing import Literal
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop"]
 
 
 @dataclass(frozen=True)
@@ -200,6 +200,19 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="cyclone-cairns", name="Cairns Cyclone", peril="cyclone", lat=-16.9186, lon=145.7781, location_label="Cairns, Australia", threshold=64, threshold_unit="knots", fires_when_above=True, data_source="noaa_nhc", description="Active tropical cyclone with wind >64 knots within 200km of Cairns."),
     MonitorTrigger(id="cyclone-nadi", name="Nadi Cyclone", peril="cyclone", lat=-17.7765, lon=177.9649, location_label="Nadi, Fiji", threshold=64, threshold_unit="knots", fires_when_above=True, data_source="noaa_nhc", description="Active tropical cyclone with wind >64 knots within 200km of Nadi."),
     MonitorTrigger(id="cyclone-yangon", name="Yangon Cyclone", peril="cyclone", lat=16.8661, lon=96.1951, location_label="Yangon, Myanmar", threshold=64, threshold_unit="knots", fires_when_above=True, data_source="noaa_nhc", description="Active tropical cyclone with wind >64 knots within 200km of Yangon."),
+
+    # ── Crop / NDVI (agricultural zones) ──
+    # NDVI < threshold during growing season = crop stress / drought
+    MonitorTrigger(id="crop-punjab-wheat", name="Punjab Wheat", peril="crop", lat=30.9010, lon=75.8573, location_label="Punjab, India", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating wheat crop stress in Punjab."),
+    MonitorTrigger(id="crop-maharashtra-sugarcane", name="Maharashtra Sugarcane", peril="crop", lat=19.7515, lon=75.7139, location_label="Maharashtra, India", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating sugarcane crop stress in Maharashtra."),
+    MonitorTrigger(id="crop-andhra-rice", name="Andhra Pradesh Rice", peril="crop", lat=15.9129, lon=79.7400, location_label="Andhra Pradesh, India", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating rice crop stress in Andhra Pradesh."),
+    MonitorTrigger(id="crop-iowa-corn", name="Iowa Corn Belt", peril="crop", lat=42.0046, lon=-93.2140, location_label="Iowa, USA", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating corn crop stress in Iowa."),
+    MonitorTrigger(id="crop-kansas-wheat", name="Kansas Wheat", peril="crop", lat=38.5266, lon=-96.7265, location_label="Kansas, USA", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating wheat crop stress in Kansas."),
+    MonitorTrigger(id="crop-mato-grosso-soy", name="Mato Grosso Soy", peril="crop", lat=-12.6819, lon=-56.9211, location_label="Mato Grosso, Brazil", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating soy crop stress in Mato Grosso."),
+    MonitorTrigger(id="crop-pampas-wheat", name="Pampas Wheat", peril="crop", lat=-35.6566, lon=-63.3667, location_label="La Pampa, Argentina", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating wheat crop stress in Argentine Pampas."),
+    MonitorTrigger(id="crop-ukraine-grain", name="Ukraine Chernozem Grain", peril="crop", lat=49.4444, lon=32.0598, location_label="Cherkasy, Ukraine", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating grain crop stress in Ukrainian chernozem."),
+    MonitorTrigger(id="crop-sahel-millet", name="Sahel Millet/Sorghum", peril="crop", lat=13.5116, lon=2.1254, location_label="Niamey region, Niger", threshold=0.2, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.2 indicating millet/sorghum crop failure in the Sahel."),
+    MonitorTrigger(id="crop-ethiopia-coffee", name="Ethiopia Coffee/Teff", peril="crop", lat=9.1450, lon=40.4897, location_label="Ethiopian Highlands", threshold=0.3, threshold_unit="NDVI", fires_when_above=False, data_source="ndvi", description="NDVI drops below 0.3 indicating coffee/teff crop stress in Ethiopian highlands."),
 ]
 
 
@@ -269,6 +282,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "marine": "Marine / Shipping",
     "flood": "Flood",
     "cyclone": "Tropical Cyclone",
+    "crop": "Crop / NDVI",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -281,4 +295,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "marine": "anchor",
     "flood": "water_drop",
     "cyclone": "cyclone",
+    "crop": "eco",
 }

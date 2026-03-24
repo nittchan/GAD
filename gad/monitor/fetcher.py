@@ -36,7 +36,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
-from gad.monitor.sources import noaa_flood, noaa_nhc
+from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi
 from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
@@ -190,6 +190,11 @@ def fetch_cyclone(trigger: MonitorTrigger) -> dict | None:
     return noaa_nhc.fetch_active_storms(trigger.lat, trigger.lon, trigger.id)
 
 
+def fetch_crop_ndvi(trigger: MonitorTrigger) -> dict | None:
+    """Crop/NDVI: Copernicus or MODIS (free, no key)."""
+    return ndvi.fetch_ndvi(trigger.lat, trigger.lon, trigger.id)
+
+
 # ── Peril → fetch function mapping ──
 FETCH_MAP = {
     "opensky": fetch_flight_delay,
@@ -201,6 +206,7 @@ FETCH_MAP = {
     "aisstream": fetch_marine,
     "usgs_water": fetch_flood,
     "noaa_nhc": fetch_cyclone,
+    "ndvi": fetch_crop_ndvi,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -214,6 +220,7 @@ SOURCE_CACHE_KEY = {
     "aisstream": "marine",
     "usgs_water": "flood",
     "noaa_nhc": "cyclone",
+    "ndvi": "ndvi",
 }
 
 
@@ -243,6 +250,8 @@ def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
         r = noaa_flood.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "noaa_nhc":
         r = noaa_nhc.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "ndvi":
+        r = ndvi.evaluate_trigger(data, trigger.threshold)
     else:
         return False
     return r.get("fired", False)

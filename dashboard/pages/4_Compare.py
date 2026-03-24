@@ -7,7 +7,7 @@ import streamlit as st
 from dashboard.components.theme import inject_theme
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi
 
 st.set_page_config(page_title="Compare | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 inject_theme(st)
@@ -49,6 +49,7 @@ SOURCE_KEY_MAP = {
     "aisstream": "marine",
     "usgs_water": "flood",
     "noaa_nhc": "cyclone",
+    "ndvi": "ndvi",
 }
 
 def _evaluate(trigger, data):
@@ -70,6 +71,8 @@ def _evaluate(trigger, data):
         return noaa_flood.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "noaa_nhc":
         return noaa_nhc.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "ndvi":
+        return ndvi.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 def _get_data(trigger):
