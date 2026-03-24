@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from typing import Literal
 
 from gad.monitor.airports import ALL_AIRPORTS, Airport
+from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine"]
 
 
 @dataclass(frozen=True)
@@ -156,10 +157,51 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
 
 
 # ──────────────────────────────────────────────────────────────
+# Marine triggers (auto-generated from port registry)
+# ──────────────────────────────────────────────────────────────
+
+def _generate_marine_triggers(ports: list[Port]) -> list[MonitorTrigger]:
+    """Generate congestion and dwell-time triggers for each port."""
+    triggers = []
+    for p in ports:
+        # Port congestion: vessel count at anchor > threshold
+        triggers.append(MonitorTrigger(
+            id=f"marine-congestion-{p.id}",
+            name=f"{p.name} Congestion",
+            peril="marine",
+            lat=p.lat, lon=p.lon,
+            location_label=f"{p.name}, {p.country}",
+            threshold=20,
+            threshold_unit="vessels",
+            fires_when_above=True,
+            data_source="aisstream",
+            description=f"Parametric trigger fires when more than 20 vessels are at anchor in {p.name} anchorage area.",
+        ))
+        # Port dwell time: mean time at anchor > threshold hours
+        triggers.append(MonitorTrigger(
+            id=f"marine-dwell-{p.id}",
+            name=f"{p.name} Dwell Time",
+            peril="marine",
+            lat=p.lat, lon=p.lon,
+            location_label=f"{p.name}, {p.country}",
+            threshold=48,
+            threshold_unit="hours",
+            fires_when_above=True,
+            data_source="aisstream",
+            description=f"Parametric trigger fires when mean vessel dwell time exceeds 48 hours at {p.name} anchorage.",
+        ))
+    return triggers
+
+
+# ──────────────────────────────────────────────────────────────
 # Assemble all triggers
 # ──────────────────────────────────────────────────────────────
 
-GLOBAL_TRIGGERS: list[MonitorTrigger] = _generate_airport_triggers(ALL_AIRPORTS) + STANDALONE_TRIGGERS
+GLOBAL_TRIGGERS: list[MonitorTrigger] = (
+    _generate_airport_triggers(ALL_AIRPORTS)
+    + STANDALONE_TRIGGERS
+    + _generate_marine_triggers(ALL_PORTS)
+)
 
 
 def get_triggers_by_peril(peril: PerilType) -> list[MonitorTrigger]:
@@ -177,6 +219,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "drought": "Drought",
     "extreme_weather": "Extreme Weather",
     "earthquake": "Earthquake",
+    "marine": "Marine / Shipping",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -186,4 +229,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "drought": "water_drop",
     "extreme_weather": "thunderstorm",
     "earthquake": "globe_with_meridians",
+    "marine": "anchor",
 }

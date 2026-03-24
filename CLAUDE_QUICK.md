@@ -8,7 +8,7 @@ Fast context file for agents and contributors who need the essentials in under a
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 6 peril categories (flights, AQI, wildfire, drought, weather, earthquake) using free open data.
+1. **Global Monitor** — live risk map across 7 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping) using free open data.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -16,7 +16,7 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 436 triggers, 144 airports, multi-source data (9 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 456 triggers, 144 airports + 10 ports, multi-source data (10 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
 - v0.3: New perils (shipping, health, solar), enterprise tier.
 
@@ -72,18 +72,21 @@ Compute engine: gad/engine/ package
 | Open-Meteo | Weather forecasts | No key needed |
 | CHIRPS | Monthly rainfall | No key needed |
 | NASA GPM IMERG | Daily precipitation | Earthdata token (configured) |
+| AISstream | Marine vessel tracking | API key (required) |
+| USGS | Earthquake detection | No key needed |
 
 ## Env Vars
 
 - SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 - NASA_FIRMS_MAP_KEY, WAQI_API_TOKEN, OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
 - AVIATIONSTACK_API_KEY, OPENAQ_API_KEY, AIRNOW_API_KEY, NASA_EARTHDATA_TOKEN
+- AISSTREAM_API_KEY — marine vessel tracking
 - GAD_ORACLE_PRIVATE_KEY_HEX, GAD_ORACLE_PUBLIC_KEY_HEX, GAD_ORACLE_KEY_ID (v0.2.2)
 
 ## Near-Term Priorities
 
 1. Basis risk precomputed for 221 triggers (done). Flight history (DATA-01c) and remaining AQI coverage pending.
 2. Oracle signing + R2 upload + Oracle Ledger page (done).
-3. New perils: shipping/marine (AIS), flood (NOAA), cyclone (NHC).
+3. Marine peril live with 10 ports (done). Next: flood (NOAA), cyclone (NHC), crop/NDVI.
 4. REST API (FastAPI) + MCP server.
 5. Parametric Data Pro (enterprise tier).

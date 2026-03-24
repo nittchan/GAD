@@ -35,7 +35,8 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 
 ### gad/monitor/ — Global Monitor
 - airports.py: Master airport registry (50 Indian + 94 global = 144 airports). Each airport has `lat`/`lon` (runway) and optional `city_lat`/`city_lon` (city centre). AQI triggers use city coordinates via `effective_city_lat`/`effective_city_lon` properties; flight/weather triggers use airport coordinates.
-- triggers.py: Auto-generates flight delay, weather, AQI, and earthquake triggers for all airports (436 triggers across 6 perils)
+- ports.py: Port registry (10 tier-1 global ports with anchorage bounding boxes)
+- triggers.py: Auto-generates flight delay, weather, AQI, earthquake, and marine triggers (456 triggers across 7 perils)
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
@@ -44,6 +45,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - sources/airnow.py: Air quality (US EPA authoritative, 15mi radius from city centre)
 - sources/firms.py: Wildfire detection (NASA FIRMS)
 - sources/openmeteo.py: Weather forecasts (Open-Meteo)
+- sources/aisstream.py: Marine vessel tracking (AISstream WebSocket — vessel count, anchor status, speed)
 
 ### Security model
 ```
@@ -68,8 +70,8 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 ## Data Contracts
 
 ### Monitor triggers (gad/monitor/triggers.py)
-Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
-436 triggers across 6 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake). Add new airports to the registry to expand coverage.
+Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
+456 triggers across 7 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine). Add new airports/ports to the registries to expand coverage.
 **Coordinate split:** AQI triggers use city centre coordinates (where AQI monitors are); flight/weather triggers use airport runway coordinates. When adding an airport far from its city (>15km), set `city_lat`/`city_lon` on the Airport entry.
 **Flight delay dual metric:** Evaluation is source-aware. AviationStack (tier-1 airports) provides real delay in minutes — fires when avg delay exceeds threshold. OpenSky (all airports, fallback) provides departure count only — fires when 0 departures in 2h (airport disruption proxy). The `evaluate_trigger` result includes a `metric` field (`"avg_delay"` or `"departure_count"`) so the UI shows the correct label.
 
@@ -131,6 +133,7 @@ Global Monitor data sources (all configured):
 - OPENAQ_API_KEY — air quality (open data)
 - AIRNOW_API_KEY — air quality (US EPA authoritative)
 - NASA_EARTHDATA_TOKEN — GPM IMERG (daily precipitation)
+- AISSTREAM_API_KEY — marine vessel tracking (AISstream WebSocket)
 
 Oracle (v0.2.2+):
 - GAD_ORACLE_PRIVATE_KEY_HEX, GAD_ORACLE_PUBLIC_KEY_HEX, GAD_ORACLE_KEY_ID

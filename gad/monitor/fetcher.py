@@ -35,7 +35,8 @@ from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
-from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake
+from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
+from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
     data_snapshot_hash, _load_private_key, GENESIS_HASH,
@@ -164,6 +165,19 @@ def fetch_earthquake(trigger: MonitorTrigger) -> dict | None:
     return usgs_earthquake.fetch_earthquakes(trigger.lat, trigger.lon, trigger.id)
 
 
+def fetch_marine(trigger: MonitorTrigger) -> dict | None:
+    """Marine: AISstream WebSocket (requires API key)."""
+    # Extract port ID from trigger ID: "marine-congestion-port-singapore" -> "port-singapore"
+    parts = trigger.id.split("-", 2)  # ["marine", "congestion", "port-singapore"]
+    if len(parts) < 3:
+        return None
+    port_id = parts[2]
+    port = get_port_by_id(port_id)
+    if not port:
+        return None
+    return aisstream.fetch_port_vessels(port.id, port.anchor_bbox)
+
+
 # ── Peril → fetch function mapping ──
 FETCH_MAP = {
     "opensky": fetch_flight_delay,
@@ -172,6 +186,7 @@ FETCH_MAP = {
     "openmeteo": fetch_weather,
     "chirps": fetch_drought,
     "usgs": fetch_earthquake,
+    "aisstream": fetch_marine,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -182,6 +197,7 @@ SOURCE_CACHE_KEY = {
     "openmeteo": "weather",
     "chirps": "drought",
     "usgs": "earthquake",
+    "aisstream": "marine",
 }
 
 
@@ -205,6 +221,8 @@ def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
         r = chirps_monitor.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "usgs":
         r = usgs_earthquake.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "aisstream":
+        r = aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
     else:
         return False
     return r.get("fired", False)

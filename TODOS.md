@@ -70,16 +70,16 @@
 ## P3 — New Peril: Marine and Shipping
 
 ### MARINE-01: Port registry
-- [ ] **MARINE-01a:** Create `gad/monitor/ports.py` with `Port` dataclass
-- [ ] **MARINE-01b:** Populate 10 tier-1 ports with anchorage bounding boxes
-- [ ] **MARINE-01c:** Auto-generate congestion triggers (2 per port)
+- [x] **MARINE-01a:** `gad/monitor/ports.py` with `Port` dataclass (id, name, city, country, lat/lon, anchor_bbox, un_locode, tier)
+- [x] **MARINE-01b:** 10 tier-1 ports with anchorage bounding boxes (Singapore, Rotterdam, Shanghai, LA, JNPT, Jebel Ali, Hamburg, Colombo, Port Klang, Busan)
+- [x] **MARINE-01c:** 20 marine triggers auto-generated (congestion + dwell time per port)
 
 ### MARINE-02: AISstream connector
-- [ ] **MARINE-02a:** `gad/monitor/sources/aisstream.py` — WebSocket fetcher
-- [ ] **MARINE-02b:** `evaluate_trigger` for vessel count threshold
-- [ ] **MARINE-02c:** Add `AISSTREAM_API_KEY` to env docs
-- [ ] **MARINE-02d:** Integrate into `fetcher.py` as marine peril cycle
-- [ ] **MARINE-02e:** Add "marine" to peril filters and labels
+- [x] **MARINE-02a:** `gad/monitor/sources/aisstream.py` — WebSocket fetcher. Connects to AISstream, subscribes to anchor_bbox, collects position reports for 90s window, deduplicates by MMSI, returns vessel stats.
+- [x] **MARINE-02b:** `evaluate_trigger` — congestion (vessels at anchor > threshold) and dwell time (proxy via vessel count)
+- [x] **MARINE-02c:** `AISSTREAM_API_KEY` added to env docs (DEPLOYMENT.md, CLAUDE_ENGINEERING.md)
+- [x] **MARINE-02d:** Integrated into `fetcher.py` — `fetch_marine()` extracts port_id from trigger_id, looks up port, calls `fetch_port_vessels`
+- [x] **MARINE-02e:** "marine" / "Marine / Shipping" added to PERIL_LABELS, PERIL_ICONS, SOURCE_KEY_MAP on all pages, evaluate functions in Global Monitor and fetcher
 
 ---
 
@@ -162,7 +162,7 @@
 | 7 | DATA-01b | **DONE** — AQI triggers have history (coverage depends on OpenAQ station availability) |
 | 8 | DATA-01c | Flight history fetched |
 | 9 | DATA-01d–01f | **DONE** — 221 precomputed reports, rho badges on map, profile page wired |
-| 10 | MARINE-01, MARINE-02 | Marine peril live with 10 ports |
+| 10 | MARINE-01, MARINE-02 | **DONE** — Marine peril: 10 ports, 20 triggers, AISstream connector |
 | 11 | PERIL-01 | Flood peril live |
 | 12 | PERIL-02 | Cyclone peril live |
 | 13 | INTEL-01 | AI risk briefs per trigger |

@@ -131,6 +131,7 @@ fly secrets set AVIATIONSTACK_API_KEY=<key> --app gad-dashboard
 fly secrets set OPENAQ_API_KEY=<key> --app gad-dashboard
 fly secrets set AIRNOW_API_KEY=<key> --app gad-dashboard
 fly secrets set NASA_EARTHDATA_TOKEN=<token> --app gad-dashboard
+fly secrets set AISSTREAM_API_KEY=<key> --app gad-dashboard
 
 # Supabase (required for auth and analytics)
 fly secrets set SUPABASE_URL=<url> --app gad-dashboard

@@ -62,6 +62,7 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 SOURCE_KEY_MAP = {
     "openmeteo": "weather", "openaq": "aqi", "firms": "fire",
     "opensky": "flights", "chirps": "drought", "usgs": "earthquake",
+    "aisstream": "marine",
 }
 
 # Check if navigated from Global Monitor

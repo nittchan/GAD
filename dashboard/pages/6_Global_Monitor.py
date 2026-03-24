@@ -18,7 +18,7 @@ from gad.monitor.triggers import (
     get_triggers_by_peril,
 )
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
 
 import json as _json
 from pathlib import Path as _Path
@@ -124,6 +124,7 @@ SOURCE_KEY_MAP = {
     "opensky": "flights",
     "chirps": "drought",
     "usgs": "earthquake",
+    "aisstream": "marine",
 }
 
 
@@ -147,6 +148,8 @@ def _evaluate_trigger(trigger: MonitorTrigger, data: dict) -> dict:
         return chirps_monitor.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "usgs":
         return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "aisstream":
+        return aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
