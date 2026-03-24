@@ -21,15 +21,15 @@ st.markdown("""
     [data-testid="stSidebar"] { background: #EDE7E0; border-right: 1px solid #D4CCC0; }
     header[data-testid="stHeader"] { background: transparent; }
     .stat-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 8px; padding: 20px; text-align: center; }
-    .stat-num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #C8553D; }
+    .stat-num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #467B6B; }
     .stat-lbl { color: #7A7267; font-size: 12px; margin-top: 4px; }
-    .seal-valid { background: #F5EDEA; border: 1px solid #C8553D; color: #C8553D;
+    .seal-valid { background: #E8F0ED; border: 1px solid #467B6B; color: #467B6B;
                   padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
     .seal-invalid { background: #F8EAEA; border: 1px solid #A63D40; color: #A63D40;
                     padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
     .det-row { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
                padding: 14px 18px; margin-bottom: 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
-    .det-id { color: #C8553D; font-size: 11px; }
+    .det-id { color: #467B6B; font-size: 11px; }
     .det-fired { color: #A63D40; font-weight: 700; }
     .det-normal { color: #2E8B6F; }
     .det-meta { color: #7A7267; font-size: 11px; }
@@ -167,7 +167,7 @@ else:
                 {time_str}
             </div>
             <div class="det-meta" style="margin-top:4px;">
-                <a href="{oracle_base_url}/{det_id}" target="_blank" style="color:#C8553D;text-decoration:none;">
+                <a href="{oracle_base_url}/{det_id}" target="_blank" style="color:#467B6B;text-decoration:none;">
                     View on Oracle Ledger &rarr;
                 </a>
             </div>
