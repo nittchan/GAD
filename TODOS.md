@@ -39,7 +39,7 @@
 ## P1 — Data Integrity and Coverage
 
 ### DATA-01: Historical data download pipeline
-**Why:** 434 of 436 triggers show "no historical data". Platform needs Spearman rho for all triggers.
+**Why:** Most triggers had "no historical data". Platform needs Spearman rho for all triggers. Now 221 of 456 have precomputed reports.
 
 - [x] **DATA-01a:** `scripts/fetch_historical_openmeteo.py` — 5yr daily weather for 144 airports. Open-Meteo Archive API, no key. Output: `data/series/weather/{IATA}_daily.csv`. Gitignored.
 - [x] **DATA-01b:** `scripts/fetch_historical_openaq.py` — 2yr daily AQI per city. OpenAQ v3 /sensors/{id}/days endpoint. Probes for best sensor with recent data. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes station mapping log for audit.

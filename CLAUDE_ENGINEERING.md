@@ -8,7 +8,7 @@ Engineering-focused scope summary for implementation, debugging, and refactor de
 
 GAD operates as four integrated layers:
 
-1. **Global Monitor** — live risk dashboard with 6 peril categories, background data fetching, cache-based reads.
+1. **Global Monitor** — live risk dashboard with 7 peril categories, background data fetching, cache-based reads.
 2. **Basis risk engine** — Spearman correlation, bootstrap CI, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — Ed25519 signed determinations, hash-chained log, Cloudflare Worker read surface.
 4. **Account/telemetry** — Supabase-backed auth, saved triggers, activity events.
@@ -153,8 +153,8 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. Historical basis risk for all 436 triggers (download historical series, pre-compute).
-2. NOAA data sources: HRRR Smoke (wildfire), GFS (weather), SPI (drought).
-3. Oracle signing (v0.2.2): wire Ed25519 to live monitor, determination status page.
-4. New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
+1. Historical basis risk precomputed for 221 of 456 triggers (done). Flight history pending.
+2. Oracle signing wired to live monitor (done). R2 upload + Oracle Ledger page (done).
+3. Marine peril live with 10 ports (done). Next: flood (NOAA), cyclone (NHC), crop/NDVI.
+4. REST API (FastAPI) + MCP server.
 5. Parametric Data Pro: premium data sources, API access, enterprise features.

@@ -61,7 +61,7 @@ print(verify_determination(det, public_key_bytes))  # True
 
 ```
 parametricdata.io
-├── Global Monitor        Live risk map (436 triggers, 6 perils)
+├── Global Monitor        Live risk map (456 triggers, 7 perils)
 ├── Trigger Profile       Click any trigger → full basis risk analysis
 ├── Compare               Side-by-side trigger comparison
 ├── Build Your Own        4-step wizard → custom trigger
