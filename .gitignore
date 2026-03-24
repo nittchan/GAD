@@ -16,3 +16,4 @@ data/digest/
 registry/determinations/*.json
 registry/oracle_log.jsonl
 .gstack/
+.claude/worktrees/
