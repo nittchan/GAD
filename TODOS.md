@@ -54,19 +54,22 @@
 
 ---
 
-## P0.5 — Design: Light Theme + Performance ← CURRENT SESSION
+## P0.5 — Design: Identity Upgrade ← CURRENT SESSION
 
-### DESIGN-01: Switch to light theme with sub-200ms load
-**Why:** Dark theme fights Streamlit defaults (broken dropdowns, unreadable selects, white flash on load). Light theme aligns natively, needs zero CSS overrides for form elements, loads faster.
+### DESIGN-01: Initial light theme (DONE)
+- [x] All sub-tasks completed — basic light theme with system fonts.
 
-- [x] **DESIGN-01a:** `.streamlit/config.toml` — light base, `#0969da` accent, system sans-serif, `#ffffff` bg, `#f6f8fa` secondary. All dark CSS overrides removed.
-- [x] **DESIGN-01b:** DESIGN.md rewritten for light theme — full palette, system fonts, performance targets.
-- [x] **DESIGN-01c:** All 8 dashboard pages restyled — 19 color replacements per file, system monospace (`ui-monospace`), all dark hex codes replaced.
-- [x] **DESIGN-01d:** Map tooltip switched to white card with shadow. Map markers use high-contrast RGBA on any tile style.
-- [x] **DESIGN-01e:** Trigger cards, status badges, flight tables — all use light-bg semantic colors (`#dafbe1`, `#ffebe9`, `#fff8c5`).
-- [x] **DESIGN-01f:** Oracle Ledger page — `#00d4d4` accent replaced with `#0969da`, dark backgrounds replaced with light.
-- [x] **DESIGN-01g:** Loading state on Global Monitor — shows info message when cache is empty instead of blank space. Map tiles switched to `positron` (light).
-- [x] **DESIGN-01h:** System fonts only (zero CDN requests). Minimal CSS. Performance verified on deploy.
+### DESIGN-02: Parchment + Burnt Vermillion identity upgrade
+**Why:** DESIGN.md overhauled with "Industrial-Editorial" direction. Warm parchment palette, Fraunces serif, Instrument Sans body, JetBrains Mono data, copper accents, oracle notarial artifacts. Competitive gap: no one owns "warm, authoritative, light" in insurance/data.
+
+- [x] **DESIGN-02a:** `.streamlit/config.toml` updated — parchment `#F5F0EB`, vellum `#EDE7E0`, burnt vermillion `#C8553D`, obsidian `#1E1B18`.
+- [x] **DESIGN-02b:** `dashboard/components/theme.py` — shared Google Fonts loader (Fraunces + Instrument Sans + JetBrains Mono) + font CSS. `inject_theme(st)` called on all pages.
+- [x] **DESIGN-02c:** 17 color replacements across all 8 pages — full parchment palette applied. All old Primer/system colors gone.
+- [x] **DESIGN-02d:** Status badges updated — TRIGGERED carmine, NORMAL verdigris, NO DATA warm gray, STALE amber. All with semantic bg colors.
+- [x] **DESIGN-02e:** Rho badges updated — verdigris/amber/carmine with matching bg tints.
+- [x] **DESIGN-02f:** Global Monitor — tooltip parchment, flight table, trigger cards, PREI table all use new palette.
+- [x] **DESIGN-02g:** Oracle Ledger page — patina green `#467B6B` for oracle elements, warm palette throughout.
+- [x] **DESIGN-02h:** Homepage — Fraunces via inject_theme, burnt vermillion CTAs, parchment bg.
 
 ---
 

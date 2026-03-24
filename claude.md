@@ -409,3 +409,9 @@ Additional runtime credentials/configs are required for full production deployme
 - [ ] Oracle signing wired to live monitor
 - [ ] Determination status page with verification proof
 - [ ] Historical basis risk for all triggers
+
+## Design System
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.

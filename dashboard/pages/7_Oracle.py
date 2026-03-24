@@ -8,41 +8,39 @@ from pathlib import Path
 
 import streamlit as st
 
+from dashboard.components.theme import inject_theme
 from gad.engine.oracle import GENESIS_HASH, ORACLE_JSONL_PATH, ORACLE_LOG_PATH, verify_chain
 
 st.set_page_config(page_title="Oracle | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
+inject_theme(st)
 
-# ── Theme ──
+# ── Page-specific styles ──
 st.markdown("""
 <style>
-    [data-testid="stSidebarNav"] { display: none; }
+    .stApp { background-color: #F5F0EB; }
+    [data-testid="stSidebar"] { background: #EDE7E0; border-right: 1px solid #D4CCC0; }
     header[data-testid="stHeader"] { background: transparent; }
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    .stApp { background-color: #ffffff; }
-    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
-    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
-    .stat-card { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px; padding: 20px; text-align: center; }
-    .stat-num { font-family: ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #0969da; }
-    .stat-lbl { color: #656d76; font-size: 12px; margin-top: 4px; }
-    .seal-valid { background: #ddf4ff; border: 1px solid #0969da; color: #0969da;
-                  padding: 12px 20px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 13px; }
-    .seal-invalid { background: #ffebe9; border: 1px solid #d1242f; color: #d1242f;
-                    padding: 12px 20px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 13px; }
-    .det-row { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 6px;
-               padding: 14px 18px; margin-bottom: 8px; font-family: ui-monospace, monospace; font-size: 12px; }
-    .det-id { color: #0969da; font-size: 11px; }
-    .det-fired { color: #d1242f; font-weight: 700; }
-    .det-normal { color: #1a7f37; }
-    .det-meta { color: #656d76; font-size: 11px; }
+    .stat-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 8px; padding: 20px; text-align: center; }
+    .stat-num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #C8553D; }
+    .stat-lbl { color: #7A7267; font-size: 12px; margin-top: 4px; }
+    .seal-valid { background: #F5EDEA; border: 1px solid #C8553D; color: #C8553D;
+                  padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
+    .seal-invalid { background: #F8EAEA; border: 1px solid #A63D40; color: #A63D40;
+                    padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
+    .det-row { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
+               padding: 14px 18px; margin-bottom: 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
+    .det-id { color: #C8553D; font-size: 11px; }
+    .det-fired { color: #A63D40; font-weight: 700; }
+    .det-normal { color: #2E8B6F; }
+    .det-meta { color: #7A7267; font-size: 11px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1E1B18;margin:0;">Parametric Data</p>'
     '</div>', unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -57,9 +55,9 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger")
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Oracle Ledger</h1>'
-    '<p style="color:#656d76;font-size:14px;">Cryptographically signed trigger determinations. Every evaluation is Ed25519 signed and hash-chained.</p>',
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1E1B18;margin-bottom:8px;">Oracle Ledger</h1>'
+    '<p style="color:#7A7267;font-size:14px;">Cryptographically signed trigger determinations. Every evaluation is Ed25519 signed and hash-chained.</p>',
     unsafe_allow_html=True,
 )
 
@@ -115,7 +113,7 @@ with c2:
 with c3:
     signing_enabled = os.environ.get("GAD_ORACLE_PRIVATE_KEY_HEX") is not None
     status_text = "ACTIVE" if signing_enabled else "INACTIVE"
-    status_color = "#1a7f37" if signing_enabled else "#656d76"
+    status_color = "#2E8B6F" if signing_enabled else "#7A7267"
     st.markdown(f'<div class="stat-card"><div class="stat-num" style="color:{status_color};font-size:24px;">{status_text}</div><div class="stat-lbl">Oracle Signing</div></div>', unsafe_allow_html=True)
 
 st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
@@ -169,7 +167,7 @@ else:
                 {time_str}
             </div>
             <div class="det-meta" style="margin-top:4px;">
-                <a href="{oracle_base_url}/{det_id}" target="_blank" style="color:#0969da;text-decoration:none;">
+                <a href="{oracle_base_url}/{det_id}" target="_blank" style="color:#C8553D;text-decoration:none;">
                     View on Oracle Ledger &rarr;
                 </a>
             </div>
@@ -179,7 +177,7 @@ else:
 # ── Footer ──
 st.markdown('<div style="height:48px"></div>', unsafe_allow_html=True)
 st.markdown(
-    '<p style="color:#8b949e;font-size:11px;text-align:center;">'
+    '<p style="color:#9B9286;font-size:11px;text-align:center;">'
     'World\'s first open-source actuarial data platform. '
     'Powered by <a href="https://orbitcover.com" style="color:#6b7280;">OrbitCover</a> '
     '(MedPiper — backed by Y Combinator). '

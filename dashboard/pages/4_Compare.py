@@ -4,33 +4,31 @@ from __future__ import annotations
 
 import streamlit as st
 
+from dashboard.components.theme import inject_theme
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc
 
 st.set_page_config(page_title="Compare | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
+inject_theme(st)
 
-# ── Theme ──
+# ── Page-specific styles ──
 st.markdown("""
 <style>
-    [data-testid="stSidebarNav"] { display: none; }
+    .stApp { background-color: #F5F0EB; }
+    [data-testid="stSidebar"] { background: #EDE7E0; border-right: 1px solid #D4CCC0; }
     header[data-testid="stHeader"] { background: transparent; }
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    .stApp { background-color: #ffffff; }
-    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
-    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
-    .compare-card { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px; padding: 20px; }
-    .compare-label { color: #656d76; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-    .compare-value { font-family: ui-monospace, monospace; font-size: 24px; font-weight: 700; }
+    .compare-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 8px; padding: 20px; }
+    .compare-label { color: #7A7267; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .compare-value { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 24px; font-weight: 700; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1E1B18;margin:0;">Parametric Data</p>'
     '</div>',
     unsafe_allow_html=True,
 )
@@ -86,9 +84,9 @@ def _get_data(trigger):
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Compare Triggers</h1>'
-    '<p style="color:#656d76;font-size:14px;">Select any two triggers to compare side-by-side.</p>',
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1E1B18;margin-bottom:8px;">Compare Triggers</h1>'
+    '<p style="color:#7A7267;font-size:14px;">Select any two triggers to compare side-by-side.</p>',
     unsafe_allow_html=True,
 )
 
@@ -121,24 +119,24 @@ for col, trigger, data, result in [(col1, t1, data1, result1), (col2, t2, data2,
         status = result.get("status", "no_data")
         value = result.get("value")
         unit = result.get("unit", trigger.threshold_unit)
-        color = "#d1242f" if status == "critical" else "#1a7f37" if status == "normal" else "#656d76"
+        color = "#A63D40" if status == "critical" else "#2E8B6F" if status == "normal" else "#7A7267"
         status_label = "TRIGGERED" if status == "critical" else "NORMAL" if status == "normal" else "NO DATA"
 
         st.markdown(f"""
         <div class="compare-card" style="margin-bottom:16px;">
-            <div style="font-size:18px;font-weight:700;color:#1f2328;margin-bottom:4px;">{trigger.name}</div>
-            <div style="color:#656d76;font-size:12px;margin-bottom:12px;">{trigger.location_label} · {PERIL_LABELS[trigger.peril]}</div>
+            <div style="font-size:18px;font-weight:700;color:#1E1B18;margin-bottom:4px;">{trigger.name}</div>
+            <div style="color:#7A7267;font-size:12px;margin-bottom:12px;">{trigger.location_label} · {PERIL_LABELS[trigger.peril]}</div>
             <div class="compare-label">Current Value</div>
             <div class="compare-value" style="color:{color}">{value if value is not None else '—'}</div>
-            <div style="color:#656d76;font-size:12px;">{unit}</div>
+            <div style="color:#7A7267;font-size:12px;">{unit}</div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown(f"""
         <div class="compare-card">
             <div class="compare-label">Threshold</div>
-            <div style="font-size:16px;font-weight:600;color:#1f2328;">{trigger.threshold} {trigger.threshold_unit}</div>
-            <div style="color:#656d76;font-size:12px;margin-top:8px;">Fires when {'above' if trigger.fires_when_above else 'below'} · Status: <span style="color:{color};font-weight:600;">{status_label}</span></div>
+            <div style="font-size:16px;font-weight:600;color:#1E1B18;">{trigger.threshold} {trigger.threshold_unit}</div>
+            <div style="color:#7A7267;font-size:12px;margin-top:8px;">Fires when {'above' if trigger.fires_when_above else 'below'} · Status: <span style="color:{color};font-weight:600;">{status_label}</span></div>
         </div>
         """, unsafe_allow_html=True)
 

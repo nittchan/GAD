@@ -11,31 +11,29 @@ from gad.engine.loader import load_weather_data_from_csv
 from gad.engine.models import DataSourceProvenance
 from gad.engine.pdf_export import generate_lloyds_report
 from gad.monitor.triggers import MonitorTrigger, PERIL_LABELS
+from dashboard.components.theme import inject_theme
 from dashboard.components import (
     chart_summary, confusion_matrix_markdown, render_score_card,
     timeline_fig, scatter_fig, confusion_matrix_fig, render_lloyds_checklist,
 )
 
 st.set_page_config(page_title="Build Trigger | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
+inject_theme(st)
 
-# ── Theme ──
+# ── Page-specific styles ──
 st.markdown("""
 <style>
-    [data-testid="stSidebarNav"] { display: none; }
+    .stApp { background-color: #F5F0EB; }
+    [data-testid="stSidebar"] { background: #EDE7E0; border-right: 1px solid #D4CCC0; }
     header[data-testid="stHeader"] { background: transparent; }
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    .stApp { background-color: #ffffff; }
-    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
-    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1E1B18;margin:0;">Parametric Data</p>'
     '</div>', unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -69,9 +67,9 @@ PERIL_CONFIG = {
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Build a Trigger</h1>'
-    '<p style="color:#656d76;font-size:14px;">Four steps. Plain English. About 60 seconds.</p>',
+    '<p style="font-size:11px;color:#C8553D;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1E1B18;margin-bottom:8px;">Build a Trigger</h1>'
+    '<p style="color:#7A7267;font-size:14px;">Four steps. Plain English. About 60 seconds.</p>',
     unsafe_allow_html=True,
 )
 
@@ -172,10 +170,10 @@ elif step == 4:
 
     st.markdown("### Your Trigger")
     st.markdown(f"""
-    <div style="background:#f6f8fa;border:1px solid #d1d9e0;border-radius:8px;padding:20px;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:700;color:#1f2328;margin-bottom:4px;">{monitor_trigger.name}</div>
-        <div style="color:#656d76;font-size:13px;margin-bottom:8px;">{monitor_trigger.description}</div>
-        <div style="color:#0969da;font-size:12px;">
+    <div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:700;color:#1E1B18;margin-bottom:4px;">{monitor_trigger.name}</div>
+        <div style="color:#7A7267;font-size:13px;margin-bottom:8px;">{monitor_trigger.description}</div>
+        <div style="color:#C8553D;font-size:12px;">
             {PERIL_LABELS[peril]} · Threshold: {threshold} {cfg['unit']} · Fires when {'above' if cfg['above'] else 'below'}
         </div>
     </div>
