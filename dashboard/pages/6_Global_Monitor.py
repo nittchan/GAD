@@ -149,6 +149,7 @@ st.sidebar.page_link("pages/2_Expert_mode.py", label="Expert mode", icon="📝")
 st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon="📊")
 st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
+st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 
 # ── Page Header ──
 st.markdown(
@@ -208,25 +209,44 @@ for trigger in GLOBAL_TRIGGERS:
 
     if data is not None:
         result = _evaluate_trigger(trigger, data)
-        if is_stale:
+        # BUG-03 fix: preserve fired status when data is stale.
+        # A fired trigger going stale should still show as critical, not "stale".
+        if is_stale and result.get("status") != "critical":
             result["status"] = "stale"
     else:
         result = {"fired": False, "value": None, "status": "no_data"}
 
     trigger_results[trigger.id] = (trigger, data, result, is_stale)
 
-    # Map marker color: red=triggered, green=normal, gray=no data
-    color = [248, 81, 73, 200] if result["status"] == "critical" else \
-            [63, 185, 80, 200] if result["status"] == "normal" else \
-            [210, 153, 34, 200] if result["status"] == "stale" else \
-            [139, 148, 158, 200]
+    # Map marker color
+    # critical (fired) = red, even if stale
+    # stale (not fired) = amber
+    # normal = green
+    # no_data = gray
+    status = result["status"]
+    if status == "critical":
+        color = [248, 81, 73, 200]
+    elif status == "normal":
+        color = [63, 185, 80, 200]
+    elif status == "stale":
+        color = [210, 153, 34, 200]
+    else:
+        color = [139, 148, 158, 200]
 
+    # Stale-but-fired: still red marker, but status label indicates staleness
     value = result.get("value")
     unit = result.get("unit", trigger.threshold_unit)
     value_str = f"{value} {unit}" if value is not None else "No data"
-    status_label = "TRIGGERED" if result["status"] == "critical" else \
-                   "NORMAL" if result["status"] == "normal" else \
-                   "UPDATING" if result["status"] == "stale" else "NO DATA"
+    if status == "critical" and is_stale:
+        status_label = "TRIGGERED (stale)"
+    elif status == "critical":
+        status_label = "TRIGGERED"
+    elif status == "normal":
+        status_label = "NORMAL"
+    elif status == "stale":
+        status_label = "UPDATING"
+    else:
+        status_label = "NO DATA"
 
     map_rows.append({
         "lat": trigger.lat,
@@ -316,14 +336,23 @@ for peril in selected_perils:
         table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
         table_html += '<tr style="border-bottom:1px solid #30363d;color:#8b949e;text-align:left;">'
         table_html += '<th style="padding:8px 12px;">Airport</th><th style="padding:8px;">Location</th>'
-        table_html += '<th style="padding:8px;text-align:right;">Flights</th>'
-        table_html += '<th style="padding:8px;text-align:right;">Avg Delay</th><th style="padding:8px;">Status</th></tr>'
+        table_html += '<th style="padding:8px;text-align:right;">Departures</th>'
+        table_html += '<th style="padding:8px;text-align:right;">Metric</th><th style="padding:8px;">Status</th></tr>'
 
         for tid, trigger, data, result, is_stale in peril_triggers:
             status = result.get("status", "no_data")
             value = result.get("value")
             total_flights = result.get("total_flights", data.get("total_flights", 0) if data else 0)
-            value_str = f"{value} min" if value is not None else "—"
+            metric_type = result.get("metric", "avg_delay")
+
+            # Show the right label based on data source metric
+            if metric_type == "avg_delay" and value is not None:
+                value_str = f"{value} min delay"
+            elif metric_type == "departure_count" and value is not None:
+                value_str = f"{value} flights"
+            else:
+                value_str = "—"
+
             color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
 
             table_html += f'<tr style="border-bottom:1px solid #21262d;">'

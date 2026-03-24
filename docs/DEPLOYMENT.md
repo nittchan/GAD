@@ -122,18 +122,52 @@ npx wrangler deploy --env production
 Set on BOTH staging and production:
 
 ```bash
-# Production
+# Data source keys (required for full monitor coverage)
 fly secrets set NASA_FIRMS_MAP_KEY=<key> --app gad-dashboard
 fly secrets set OPENSKY_CLIENT_ID=<id> --app gad-dashboard
 fly secrets set OPENSKY_CLIENT_SECRET=<secret> --app gad-dashboard
 fly secrets set WAQI_API_TOKEN=<token> --app gad-dashboard
+fly secrets set AVIATIONSTACK_API_KEY=<key> --app gad-dashboard
+fly secrets set OPENAQ_API_KEY=<key> --app gad-dashboard
+fly secrets set AIRNOW_API_KEY=<key> --app gad-dashboard
+fly secrets set NASA_EARTHDATA_TOKEN=<token> --app gad-dashboard
 
-# Staging (same keys)
-fly secrets set NASA_FIRMS_MAP_KEY=<key> --app gad-dashboard-staging
-fly secrets set OPENSKY_CLIENT_ID=<id> --app gad-dashboard-staging
-fly secrets set OPENSKY_CLIENT_SECRET=<secret> --app gad-dashboard-staging
-fly secrets set WAQI_API_TOKEN=<token> --app gad-dashboard-staging
+# Supabase (required for auth and analytics)
+fly secrets set SUPABASE_URL=<url> --app gad-dashboard
+fly secrets set SUPABASE_ANON_KEY=<key> --app gad-dashboard
+fly secrets set SUPABASE_SERVICE_KEY=<key> --app gad-dashboard
+
+# Oracle signing (v0.2.2+ — generate with scripts/generate_oracle_keypair.py)
+fly secrets set GAD_ORACLE_PRIVATE_KEY_HEX=<hex> --app gad-dashboard
+fly secrets set GAD_ORACLE_PUBLIC_KEY_HEX=<hex> --app gad-dashboard
+fly secrets set GAD_ORACLE_KEY_ID=<uuid> --app gad-dashboard
+
+# Repeat all above for staging: --app gad-dashboard-staging
 ```
+
+### Oracle key setup
+
+```bash
+# 1. Generate a key pair (run once, locally)
+python3 scripts/generate_oracle_keypair.py
+
+# 2. Set the keys on Fly.io (copy commands from script output)
+
+# 3. Publish the public key to R2 (requires R2 credentials)
+python3 scripts/publish_oracle_key.py
+```
+
+### R2 credentials (for oracle uploads)
+
+The fetcher automatically uploads signed determinations to R2 when these are set:
+
+```bash
+fly secrets set R2_ACCOUNT_ID=<cloudflare_account_id> --app gad-dashboard
+fly secrets set R2_ACCESS_KEY_ID=<r2_token_access_key> --app gad-dashboard
+fly secrets set R2_SECRET_ACCESS_KEY=<r2_token_secret_key> --app gad-dashboard
+```
+
+Without these, determinations are still signed and logged locally but not uploaded to R2.
 
 ## Background fetcher
 

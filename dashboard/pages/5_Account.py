@@ -41,6 +41,7 @@ st.sidebar.page_link("pages/2_Expert_mode.py", label="Expert mode", icon="📝")
 st.sidebar.page_link("pages/3_Trigger_profile.py", label="Trigger profile", icon="📊")
 st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖️")
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
+st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 
 # ── Header ──
 st.markdown(

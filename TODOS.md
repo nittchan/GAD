@@ -1,103 +1,175 @@
 # TODOS
 
-## Sprint 1: Close the Actuarial Gap (NEXT SESSION — PRIORITY 1)
+## P0 — Bugs (wrong data, silent failures)
 
-The product is called an actuarial data platform. It needs to actually compute actuarial math for more than 2 triggers. This sprint makes every trigger on the map show real Spearman rho, Lloyd's scores, and confusion matrices.
+### BUG-01: AQI triggers use airport coordinates, not city coordinates ← CURRENT SESSION
+**Files:** `gad/monitor/airports.py`, `gad/monitor/triggers.py`, `gad/monitor/sources/openaq.py`
+**Problem:** Airport lat/lon is the runway. AQI monitors are in city centres. BLR airport is 38km north of Bengaluru. DEL is in Dwarka, not Anand Vihar. 125 AQI triggers pull data for the wrong location.
 
-### Task 1.1: Historical data download pipeline
-**What:** One script per data source that downloads historical time series for all triggers and writes to `data/series/{trigger_id}.csv` in the format `load_weather_data_from_csv()` already expects (columns: period, trigger_value/index_value, loss_proxy/loss_event).
-**Sources and methods:**
-- **Open-Meteo** `/v1/archive` endpoint — takes `start_date`/`end_date`, free, no key. Pull 5 years of daily temp/rainfall/wind for all 144 airports. Easiest source.
-- **OpenAQ** `/v2/measurements` — takes `date_from`/`date_to` and `location_id`. Pull 2-3 years of daily AQI. Need to first resolve nearest station per airport, then batch download.
-- **OpenSky** `/flights/departure` — has `begin`/`end` time window (max 2 hours per call). Pull 1 year of departure history per airport. Must batch carefully to respect 4000 credits/day.
-- **USGS Earthquake** API already returns historical data by date range natively. Pull 5 years of M2+ within 200km of each earthquake zone.
-- **CHIRPS/GPM IMERG** — pipeline already exists in `gad/pipeline.py`. Extend to download multi-year monthly series for drought triggers.
-- **NASA FIRMS** — FIRMS archive endpoint provides historical fire data. Pull 1 year for each wildfire zone.
-**Output:** `data/series/{trigger_id}.csv` per trigger. Gitignored (large files). Script: `python -m gad.monitor.historical`
-**Effort with CC:** ~2-3 hours (one fetcher per source, they're all REST APIs returning JSON/CSV).
+- [x] **BUG-01a:** Add `city_lat`/`city_lon` fields to `Airport` dataclass, default to `lat`/`lon`
+- [x] **BUG-01b:** Populate correct `city_lat`/`city_lon` for 30+ airports where distance > 15km. Audit script: `scripts/audit_airport_city_distance.py`
+- [x] **BUG-01c:** AQI trigger generation uses `airport.effective_city_lat`/`effective_city_lon` instead of `airport.lat`/`lon`
+- [x] **BUG-01d:** OpenAQ radius tightened from 50km to 15km; AirNow tightened from 50mi to 15mi
 
-### Task 1.2: Precompute basis risk for all triggers
-**What:** Once CSVs exist, run `compute_basis_risk()` across all 436 triggers. Serialize `BasisRiskReport` to JSON. Store at `data/basis_risk/{trigger_id}.json`.
-**Implementation:**
-```bash
-python -m gad.monitor.precompute   # runs once, ~5 min
-```
-Script reads each `data/series/{trigger_id}.csv`, builds a `TriggerDef`, calls `compute_basis_risk()`, writes the report JSON. Refresh monthly via cron.
-**Effort with CC:** ~30 min (the engine already works, just need the orchestration script).
+### BUG-02: Flight delay metric is flight count, not delay minutes
+**Files:** `gad/monitor/sources/opensky.py`, `gad/monitor/triggers.py`, `dashboard/pages/6_Global_Monitor.py`
+**Problem:** OpenSky returns flight objects, not delay minutes. Threshold "60 minutes" is compared against wrong metric.
 
-### Task 1.3: Wire precomputed reports into Trigger Profile
-**What:** Load precomputed `BasisRiskReport` from `data/basis_risk/{trigger_id}.json` on the Trigger Profile page. Replaces the current "Historical basis risk analysis requires time-series data" placeholder with actual Spearman rho, back-test timeline, scatter plot, confusion matrix, Lloyd's checklist, and PDF export — for every trigger.
-**Implementation:** In `dashboard/pages/3_Trigger_profile.py`, check for `data/basis_risk/{trigger_id}.json` before falling back to the legacy CSV check. If found, deserialize `BasisRiskReport` and render with existing dashboard components.
-**Effort with CC:** ~15 min (the components already exist, just need to load from JSON instead of computing live).
+- [x] **BUG-02a:** Confirmed: OpenSky has no scheduled times, delay cannot be computed. `avg_delay_min` was always 0.
+- [x] **BUG-02b:** AviationStack already computes real delay correctly. No change needed.
+- [x] **BUG-02c:** OpenSky `fetch_departures` now returns `departure_count` (honest metric), `avg_delay_min: None`. `evaluate_trigger` is source-aware: fires on 0 departures (disruption).
+- [x] **BUG-02d:** Global Monitor column changed from "Avg Delay" to "Metric" with source-aware labels: "X min delay" (AviationStack) or "X flights" (OpenSky).
 
-## v0.2 — Remaining
+### BUG-03: Stale cache shows wrong status label
+**Files:** `gad/monitor/cache.py`, `dashboard/pages/6_Global_Monitor.py`
+**Problem:** Staleness overwrites fired status — a critical trigger going stale shows as "stale" not "critical + stale".
 
-### NOAA HRRR Smoke data (wildfire impact)
-**What:** Add NOAA HRRR smoke plume data for wildfire impact assessment.
-**Why:** Fire count alone doesn't capture impact. Smoke data shows which populations are affected.
-**API:** Free via NOAA NOMADS. Complex GRIB format — needs processing.
-**Effort:** Medium.
+- [x] **BUG-03a:** Staleness no longer overwrites fired status. `result["status"]` stays `"critical"` when trigger is stale-but-fired.
+- [x] **BUG-03b:** Stale-but-fired markers stay red on the map. Status label shows "TRIGGERED (stale)" to indicate both states.
 
-### NOAA GFS weather fallback
-**What:** Add NOAA GFS as secondary weather source behind Open-Meteo.
-**Why:** Direct access to the authoritative global weather model gives more control.
-**API:** Free, no key needed. GRIB format — needs processing.
-**Effort:** Medium.
+### BUG-04: Oracle log hash chain not started (GENESIS_HASH unused)
+**Files:** `gad/engine/oracle.py`, `tests/test_oracle.py`
+**Problem:** First entry may write empty `prev_hash` instead of `GENESIS_HASH`.
 
-### NOAA SPI drought index
-**What:** Add Standardized Precipitation Index as supplementary drought metric.
-**Why:** SPI normalizes anomalies — "how dry vs normal?" More meaningful than raw mm for insurance triggers.
-**Depends on:** GPM IMERG working (done).
-**Effort:** Medium.
+- [x] **BUG-04a:** Confirmed: `read_last_hash()` already returns `GENESIS_HASH` for empty logs. Added 4 tests: genesis return, first-entry prev_hash, chain verification, and broken-genesis detection.
+- [x] **BUG-04b:** Confirmed: `verify_chain()` already validates first entry's `prev_hash == GENESIS_HASH`. Test added for broken genesis case.
 
-## v0.2.2 — Oracle Layer
+---
 
-### Wire oracle signing to live monitor (next session)
-**What:** Each successful data fetch in the monitor produces a `TriggerDetermination`, signs it with Ed25519, and appends to the oracle log. This connects the existing signing primitives to the live data flow.
-**Implementation:**
-1. After each trigger evaluation in the fetcher, create a `TriggerDetermination`
-2. Call `sign_determination()` with the private key from env
-3. Call `append_to_oracle_log()` (dual write: JSONL + per-file JSON)
-4. Upload per-file JSON to R2 via Cloudflare API
-**Infrastructure already in place:** `sign_determination()`, `verify_determination()`, `append_to_oracle_log()`, `read_last_hash()`, `verify_chain()`, `GENESIS_HASH`, `key_id` field — all built.
-**Effort:** Medium — mostly wiring, not new primitives.
-**Depends on:** Generate an Ed25519 key pair and set `GAD_ORACLE_PRIVATE_KEY_HEX` + `GAD_ORACLE_PUBLIC_KEY_HEX` in Fly.io secrets.
+## P1 — Data Integrity and Coverage
 
-### Determination status page upgrade
-**What:** Upgrade `oracle_ledger/worker.js` to verification proof page (green/red seal, hash chain, in-browser WebCrypto).
-**Context:** Design decisions from /plan-design-review. Seal-first hierarchy, oracle palette (#0a0e1a, #00d4d4).
-**Depends on:** Signed determinations wired.
-**Effort:** Medium.
+### DATA-01: Historical data download pipeline
+**Why:** 434 of 436 triggers show "no historical data". Platform needs Spearman rho for all triggers.
 
-## v0.3 — Platform & New Perils
+- [x] **DATA-01a:** `scripts/fetch_historical_openmeteo.py` — 5yr daily weather for 144 airports. Open-Meteo Archive API, no key. Output: `data/series/weather/{IATA}_daily.csv`. Gitignored.
+- [x] **DATA-01b:** `scripts/fetch_historical_openaq.py` — 2yr daily AQI per city. OpenAQ v3 /sensors/{id}/days endpoint. Probes for best sensor with recent data. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes station mapping log for audit.
+- [ ] **DATA-01c:** `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable)
+- [ ] **DATA-01d:** `scripts/precompute_basis_risk.py` — batch `compute_basis_risk()` for all triggers
+- [ ] **DATA-01e:** Wire precomputed reports into Trigger Profile page
+- [ ] **DATA-01f:** Add rho badge on Global Monitor trigger cards (green/amber/red)
 
-### New peril: Earthquake (USGS)
-**API:** https://earthquake.usgs.gov/fdsnws/event/1/ — free, no auth, GeoJSON.
-**Triggers:** Magnitude-based (M5+ within 200km). **Effort:** Small.
+### DATA-02: AQI source fallback order is unverified
+- [ ] **DATA-02a:** Add `diagnostic_mode` to fetcher showing source, distance, station name
+- [ ] **DATA-02b:** Mark triggers with no station within 25km as `data_source_unavailable`
 
-### New peril: Shipping / Marine (AIS)
-**API:** MarineTraffic (paid), explore free AIS sources. **Effort:** Large.
+---
 
-### New peril: Health / Pandemic
-**API:** WHO Disease Outbreak News (free), ECDC, ProMED. **Effort:** Medium.
+## P2 — Oracle Wiring (trust layer)
 
-### New peril: Solar / Space Weather
-**API:** NOAA SWPC (free, no key). Kp index, solar flare alerts. **Effort:** Small.
+### ORACLE-01: Wire Ed25519 signing to live fetcher
+**Prerequisite:** BUG-04 fixed.
 
-### Verification SDK and CLI
-**What:** `gad.verify` submodule + `python -m gad.verify <url>` CLI. **Effort:** Small.
+- [x] **ORACLE-01a:** `scripts/generate_oracle_keypair.py` — generates Ed25519 key pair with Fly.io secret commands. User runs once, never committed.
+- [x] **ORACLE-01b:** Already wired in `fetcher.py` (lines 212-283). Creates TriggerDetermination, signs with Ed25519, appends to oracle log after each trigger evaluation. Also fixed inconsistent genesis hash in `seed_oracle_determination.py`.
+- [x] **ORACLE-01c:** `scripts/publish_oracle_key.py` — standalone script to upload `oracle-keys.json` to R2 via S3-compatible API.
+- [x] **ORACLE-01d:** `gad/engine/r2_upload.py` — uploads per-determination JSON to R2 after signing. Optional (requires R2 credentials). Wired into fetcher, never blocks on failure.
+- [x] **ORACLE-01e:** `dashboard/pages/7_Oracle.py` — Oracle Ledger page showing chain status, stats, and 20 most recent determinations with links to the Cloudflare Worker. Added to sidebar nav on all pages.
 
-### Webhook delivery with HMAC-SHA256 auth
-**What:** POST signed determinations to settlement endpoints with retries and dead-letter queue. **Effort:** Medium.
+---
 
-### Deploy to Oracle button (dashboard)
-**What:** "Deploy to Oracle" in guided mode wizard → registers trigger for live monitoring. **Effort:** Medium.
+## P3 — New Peril: Marine and Shipping
 
-### Parametric Data Pro (enterprise tier)
-**What:** Paid tier: premium data (FlightAware), higher refresh, custom triggers, API access, white-label reports. **Effort:** Large.
+### MARINE-01: Port registry
+- [ ] **MARINE-01a:** Create `gad/monitor/ports.py` with `Port` dataclass
+- [ ] **MARINE-01b:** Populate 10 tier-1 ports with anchorage bounding boxes
+- [ ] **MARINE-01c:** Auto-generate congestion triggers (2 per port)
 
-### FlightAware AeroAPI (premium flight data)
-**What:** Most accurate flight data. Paid only (~$1/query). For enterprise tier. **Effort:** Medium + cost.
+### MARINE-02: AISstream connector
+- [ ] **MARINE-02a:** `gad/monitor/sources/aisstream.py` — WebSocket fetcher
+- [ ] **MARINE-02b:** `evaluate_trigger` for vessel count threshold
+- [ ] **MARINE-02c:** Add `AISSTREAM_API_KEY` to env docs
+- [ ] **MARINE-02d:** Integrate into `fetcher.py` as marine peril cycle
+- [ ] **MARINE-02e:** Add "marine" to peril filters and labels
+
+---
+
+## P4 — New Perils (high commercial value)
+
+### PERIL-01: Flood (NOAA NWS river gauge)
+- [ ] **PERIL-01a:** 20 flood gauge locations via USGS Water Services API (free)
+- [ ] **PERIL-01b:** `gad/monitor/sources/noaa_flood.py` — fetcher + evaluator
+- [ ] **PERIL-01c:** Flood trigger generation in `triggers.py`
+
+### PERIL-02: Tropical cyclone (NOAA NHC)
+- [ ] **PERIL-02a:** Active storms fetcher from NHC GeoJSON (free)
+- [ ] **PERIL-02b:** 20 high-exposure location triggers
+- [ ] **PERIL-02c:** Proximity evaluation (haversine + wind threshold)
+
+### PERIL-03: Crop / NDVI drought index
+- [ ] **PERIL-03a:** NASA MODIS NDVI fetcher via AppEEARS or Copernicus WCS
+- [ ] **PERIL-03b:** 10 agricultural zone triggers
+- [ ] **PERIL-03c:** NDVI threshold evaluation with 16-day composite window
+
+---
+
+## P5 — Intelligence Layer
+
+### INTEL-01: AI risk brief per trigger
+- [ ] **INTEL-01a:** `gad/monitor/intelligence.py` — Claude API brief generator (cached daily)
+- [ ] **INTEL-01b:** Brief on Trigger Profile page
+- [ ] **INTEL-01c:** `generate_global_digest()` — daily summary to `data/digest/`
+- [ ] **INTEL-01d:** Digest page (`dashboard/pages/7_Digest.py`)
+
+### INTEL-02: Parametric Risk Exposure Index per country
+- [ ] **INTEL-02a:** PREI score computation per country
+- [ ] **INTEL-02b:** Choropleth toggle on Global Monitor map
+
+---
+
+## P6 — API and Distribution
+
+### API-01: FastAPI REST surface
+- [ ] **API-01a:** `gad/api/main.py` — triggers, basis-risk, determinations, status routes
+- [ ] **API-01b:** API key auth middleware (Supabase `api_keys` table)
+- [ ] **API-01c:** Deploy alongside Streamlit on Fly.io
+- [ ] **API-01d:** Auto-generated OpenAPI docs at `/v1/docs`
+
+### API-02: MCP server
+- [ ] **API-02a:** `gad/mcp/server.py` — check_trigger_status, list_triggers_by_location, etc.
+- [ ] **API-02b:** Deploy as Cloudflare Worker or `/mcp` route
+
+---
+
+## P7 — Infrastructure and Tests
+
+### INFRA-01: Test coverage gaps
+- [ ] **INFRA-01a:** `tests/test_monitor_fetcher.py` — mocked HTTP integration test
+- [ ] **INFRA-01b:** `tests/test_oracle_chain.py` — 5 signed determinations, tamper detection (partially done: 3-entry chain + broken genesis tests already in `test_oracle.py`)
+- [ ] **INFRA-01c:** `tests/test_aqi_coordinates.py` — haversine sanity for all airports
+- [ ] **INFRA-01d:** `tests/test_worker_contract.py` — Wrangler dev contract test
+- [ ] **INFRA-01e:** `tests/test_marine_aisstream.py` — mock WebSocket test
+
+### INFRA-02: Dockerfile and process management
+- [ ] **INFRA-02a:** Replace `&` pattern with `supervisord` or restart-on-failure script
+- [ ] **INFRA-02b:** Add FastAPI as third supervised process when API-01 ships
+
+### INFRA-03: Fly.io secrets audit
+- [ ] **INFRA-03a:** Document every env var with consequences of absence
+- [ ] **INFRA-03b:** Startup health check logging which data sources are available
+
+---
+
+## Session Sequencing
+
+| Session | Tasks | Outcome |
+|---------|-------|---------|
+| 1 | BUG-01 (all) | **DONE** — AQI data correct for all 144 airports |
+| 2 | BUG-02 (all) | **DONE** — Flight metric accurate or correctly relabelled |
+| 3 | BUG-03, BUG-04 | **DONE** — Stale status correct, oracle chain verified with tests |
+| 4 | ORACLE-01a–01c | **DONE** — Key gen script, fetcher signing verified, key publish script |
+| 5 | ORACLE-01d–01e | **DONE** — R2 upload wired, Oracle Ledger dashboard page |
+| 6 | DATA-01a | **DONE** — 144 airports have 5yr weather history |
+| 7 | DATA-01b | **DONE** — AQI triggers have history (coverage depends on OpenAQ station availability) |
+| 8 | DATA-01c | Flight history fetched |
+| 9 | DATA-01d–01f | All triggers show Spearman rho |
+| 10 | MARINE-01, MARINE-02 | Marine peril live with 10 ports |
+| 11 | PERIL-01 | Flood peril live |
+| 12 | PERIL-02 | Cyclone peril live |
+| 13 | INTEL-01 | AI risk briefs per trigger |
+| 14 | API-01 | REST API live |
+| 15 | INFRA-01 | Test coverage closes major gaps |
+
+---
 
 ## Completed
 
@@ -122,7 +194,7 @@ Script reads each `data/series/{trigger_id}.csv`, builds a `TriggerDef`, calls `
 - OpenAQ v3 auth fix (API key headers)
 - FIRMS dual satellite (VIIRS + MODIS merged, deduplicated)
 - GPM IMERG connector (daily precipitation)
-- Multi-source fetcher: AviationStack→OpenSky, AirNow→WAQI, VIIRS+MODIS, GPM→CHIRPS
+- Multi-source fetcher: AviationStack->OpenSky, AirNow->WAQI, VIIRS+MODIS, GPM->CHIRPS
 - All 8 API keys configured (FIRMS, OpenSky OAuth2, WAQI, AviationStack, OpenAQ, Earthdata, AirNow)
 
 ### v0.2 — Page Updates (2026-03-23)
@@ -131,7 +203,7 @@ Script reads each `data/series/{trigger_id}.csv`, builds a `TriggerDef`, calls `
 - Compare: searchable dropdown of all 436 triggers, side-by-side with delta table
 - Guided Mode: 6 perils (incl. earthquake), outputs MonitorTrigger, computes basis risk
 - Expert Mode: JSON editor, validates as MonitorTrigger, "View trigger profile"
-- Account → Monitor Status: per-peril data health, source table, platform stats
+- Account -> Monitor Status: per-peril data health, source table, platform stats
 
 ### v0.2 — Oracle Primitives + Earthquake + Verify CLI (2026-03-23)
 - key_id: Optional[UUID] added to TriggerDetermination model
@@ -144,7 +216,7 @@ Script reads each `data/series/{trigger_id}.csv`, builds a `TriggerDef`, calls `
 
 ### Infrastructure (2026-03-23)
 - Domain parametricdata.io live with Cloudflare SSL + DDoS protection
-- Dev → staging → production workflow with GitHub Actions auto-deploy
+- Dev -> staging -> production workflow with GitHub Actions auto-deploy
 - Fly.io hosting with auto-stop, connection limits, cost protection
 - Consistent dark theme, hidden Streamlit chrome, shared footer on all pages
 - Author attribution: "World's first open-source actuarial data platform. Powered by OrbitCover (MedPiper — YC-backed). Built by Nitthin Chandran Nair using Claude Code."

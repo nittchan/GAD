@@ -18,6 +18,16 @@ class Airport:
     lat: float
     lon: float
     tier: int  # 1 = global hub, 2 = major, 3 = regional
+    city_lat: float | None = None  # city centre lat (for AQI); defaults to airport lat
+    city_lon: float | None = None  # city centre lon (for AQI); defaults to airport lon
+
+    @property
+    def effective_city_lat(self) -> float:
+        return self.city_lat if self.city_lat is not None else self.lat
+
+    @property
+    def effective_city_lon(self) -> float:
+        return self.city_lon if self.city_lon is not None else self.lon
 
 
 # ──────────────────────────────────────────────────────────────
@@ -25,12 +35,12 @@ class Airport:
 # ──────────────────────────────────────────────────────────────
 INDIA_AIRPORTS: list[Airport] = [
     # Tier 1 — Metro hubs
-    Airport("VIDP", "DEL", "Indira Gandhi International", "Delhi", "India", 28.5562, 77.1000, 1),
+    Airport("VIDP", "DEL", "Indira Gandhi International", "Delhi", "India", 28.5562, 77.1000, 1, city_lat=28.6139, city_lon=77.2090),
     Airport("VABB", "BOM", "Chhatrapati Shivaji Maharaj International", "Mumbai", "India", 19.0896, 72.8656, 1),
-    Airport("VOBL", "BLR", "Kempegowda International", "Bengaluru", "India", 13.1986, 77.7066, 1),
-    Airport("VOMM", "MAA", "Chennai International", "Chennai", "India", 12.9941, 80.1709, 1),
-    Airport("VECC", "CCU", "Netaji Subhas Chandra Bose International", "Kolkata", "India", 22.6547, 88.4467, 1),
-    Airport("VOHS", "HYD", "Rajiv Gandhi International", "Hyderabad", "India", 17.2403, 78.4294, 1),
+    Airport("VOBL", "BLR", "Kempegowda International", "Bengaluru", "India", 13.1986, 77.7066, 1, city_lat=12.9716, city_lon=77.5946),
+    Airport("VOMM", "MAA", "Chennai International", "Chennai", "India", 12.9941, 80.1709, 1, city_lat=13.0827, city_lon=80.2707),
+    Airport("VECC", "CCU", "Netaji Subhas Chandra Bose International", "Kolkata", "India", 22.6547, 88.4467, 1, city_lat=22.5726, city_lon=88.3639),
+    Airport("VOHS", "HYD", "Rajiv Gandhi International", "Hyderabad", "India", 17.2403, 78.4294, 1, city_lat=17.3850, city_lon=78.4867),
     # Tier 2 — Major
     Airport("VAAH", "AMD", "Sardar Vallabhbhai Patel International", "Ahmedabad", "India", 23.0772, 72.6347, 2),
     Airport("VOCI", "COK", "Cochin International", "Kochi", "India", 10.1520, 76.4019, 2),
@@ -85,18 +95,18 @@ INDIA_AIRPORTS: list[Airport] = [
 GLOBAL_AIRPORTS: list[Airport] = [
     # ── East & Southeast Asia ──
     Airport("WSSS", "SIN", "Changi Airport", "Singapore", "Singapore", 1.3644, 103.9915, 1),
-    Airport("VHHH", "HKG", "Hong Kong International", "Hong Kong", "China", 22.3080, 113.9185, 1),
-    Airport("RJAA", "NRT", "Narita International", "Tokyo", "Japan", 35.7647, 140.3864, 1),
+    Airport("VHHH", "HKG", "Hong Kong International", "Hong Kong", "China", 22.3080, 113.9185, 1, city_lat=22.3193, city_lon=114.1694),
+    Airport("RJAA", "NRT", "Narita International", "Tokyo", "Japan", 35.7647, 140.3864, 1, city_lat=35.6762, city_lon=139.6503),
     Airport("RJTT", "HND", "Haneda Airport", "Tokyo", "Japan", 35.5494, 139.7798, 1),
-    Airport("RKSI", "ICN", "Incheon International", "Seoul", "South Korea", 37.4602, 126.4407, 1),
-    Airport("VTBS", "BKK", "Suvarnabhumi Airport", "Bangkok", "Thailand", 13.6900, 100.7501, 1),
-    Airport("ZBAA", "PEK", "Beijing Capital International", "Beijing", "China", 40.0799, 116.6031, 1),
-    Airport("ZSPD", "PVG", "Pudong International", "Shanghai", "China", 31.1443, 121.8083, 1),
+    Airport("RKSI", "ICN", "Incheon International", "Seoul", "South Korea", 37.4602, 126.4407, 1, city_lat=37.5665, city_lon=126.9780),
+    Airport("VTBS", "BKK", "Suvarnabhumi Airport", "Bangkok", "Thailand", 13.6900, 100.7501, 1, city_lat=13.7563, city_lon=100.5018),
+    Airport("ZBAA", "PEK", "Beijing Capital International", "Beijing", "China", 40.0799, 116.6031, 1, city_lat=39.9042, city_lon=116.4074),
+    Airport("ZSPD", "PVG", "Pudong International", "Shanghai", "China", 31.1443, 121.8083, 1, city_lat=31.2304, city_lon=121.4737),
     Airport("ZGGG", "CAN", "Baiyun International", "Guangzhou", "China", 23.3924, 113.2988, 1),
     Airport("RCTP", "TPE", "Taoyuan International", "Taipei", "Taiwan", 25.0777, 121.2330, 1),
-    Airport("WMKK", "KUL", "Kuala Lumpur International", "Kuala Lumpur", "Malaysia", 2.7456, 101.7099, 1),
+    Airport("WMKK", "KUL", "Kuala Lumpur International", "Kuala Lumpur", "Malaysia", 2.7456, 101.7099, 1, city_lat=3.1390, city_lon=101.6869),
     Airport("RPLL", "MNL", "Ninoy Aquino International", "Manila", "Philippines", 14.5086, 121.0198, 1),
-    Airport("WIII", "CGK", "Soekarno-Hatta International", "Jakarta", "Indonesia", -6.1256, 106.6559, 1),
+    Airport("WIII", "CGK", "Soekarno-Hatta International", "Jakarta", "Indonesia", -6.1256, 106.6559, 1, city_lat=-6.2088, city_lon=106.8456),
     Airport("VVNB", "HAN", "Noi Bai International", "Hanoi", "Vietnam", 21.2212, 105.8070, 2),
     Airport("VVTS", "SGN", "Tan Son Nhat International", "Ho Chi Minh City", "Vietnam", 10.8188, 106.6520, 2),
     Airport("RPVM", "CEB", "Mactan-Cebu International", "Cebu", "Philippines", 10.3075, 123.9791, 2),
@@ -106,48 +116,48 @@ GLOBAL_AIRPORTS: list[Airport] = [
     Airport("OTHH", "DOH", "Hamad International", "Doha", "Qatar", 25.2731, 51.6081, 1),
     Airport("OMAA", "AUH", "Zayed International", "Abu Dhabi", "UAE", 24.4330, 54.6511, 1),
     Airport("OEJN", "JED", "King Abdulaziz International", "Jeddah", "Saudi Arabia", 21.6796, 39.1565, 1),
-    Airport("OERK", "RUH", "King Khalid International", "Riyadh", "Saudi Arabia", 24.9576, 46.6988, 1),
-    Airport("OIIE", "IKA", "Imam Khomeini International", "Tehran", "Iran", 35.4161, 51.1522, 2),
+    Airport("OERK", "RUH", "King Khalid International", "Riyadh", "Saudi Arabia", 24.9576, 46.6988, 1, city_lat=24.7136, city_lon=46.6753),
+    Airport("OIIE", "IKA", "Imam Khomeini International", "Tehran", "Iran", 35.4161, 51.1522, 2, city_lat=35.6892, city_lon=51.3890),
     Airport("LLBG", "TLV", "Ben Gurion International", "Tel Aviv", "Israel", 32.0114, 34.8867, 2),
     Airport("OLBA", "BEY", "Rafic Hariri International", "Beirut", "Lebanon", 33.8209, 35.4884, 2),
-    Airport("LTFM", "IST", "Istanbul Airport", "Istanbul", "Turkey", 41.2753, 28.7519, 1),
+    Airport("LTFM", "IST", "Istanbul Airport", "Istanbul", "Turkey", 41.2753, 28.7519, 1, city_lat=41.0082, city_lon=28.9784),
     Airport("OBBI", "BAH", "Bahrain International", "Manama", "Bahrain", 26.2708, 50.6336, 2),
     Airport("OKBK", "KWI", "Kuwait International", "Kuwait City", "Kuwait", 29.2266, 47.9689, 2),
     Airport("OOMS", "MCT", "Muscat International", "Muscat", "Oman", 23.5933, 58.2844, 2),
 
     # ── Europe ──
-    Airport("EGLL", "LHR", "Heathrow Airport", "London", "UK", 51.4700, -0.4543, 1),
-    Airport("EGKK", "LGW", "Gatwick Airport", "London", "UK", 51.1537, -0.1821, 1),
-    Airport("LFPG", "CDG", "Charles de Gaulle", "Paris", "France", 49.0097, 2.5479, 1),
+    Airport("EGLL", "LHR", "Heathrow Airport", "London", "UK", 51.4700, -0.4543, 1, city_lat=51.5074, city_lon=-0.1278),
+    Airport("EGKK", "LGW", "Gatwick Airport", "London", "UK", 51.1537, -0.1821, 1, city_lat=51.5074, city_lon=-0.1278),
+    Airport("LFPG", "CDG", "Charles de Gaulle", "Paris", "France", 49.0097, 2.5479, 1, city_lat=48.8566, city_lon=2.3522),
     Airport("EDDF", "FRA", "Frankfurt Airport", "Frankfurt", "Germany", 50.0379, 8.5622, 1),
     Airport("EHAM", "AMS", "Schiphol Airport", "Amsterdam", "Netherlands", 52.3105, 4.7683, 1),
     Airport("LEMD", "MAD", "Adolfo Suárez Madrid–Barajas", "Madrid", "Spain", 40.4983, -3.5676, 1),
     Airport("LEBL", "BCN", "Barcelona–El Prat", "Barcelona", "Spain", 41.2971, 2.0785, 1),
     Airport("LIRF", "FCO", "Leonardo da Vinci–Fiumicino", "Rome", "Italy", 41.8003, 12.2389, 1),
-    Airport("LIMC", "MXP", "Milano Malpensa", "Milan", "Italy", 45.6306, 8.7281, 1),
+    Airport("LIMC", "MXP", "Milano Malpensa", "Milan", "Italy", 45.6306, 8.7281, 1, city_lat=45.4642, city_lon=9.1900),
     Airport("EDDM", "MUC", "Munich Airport", "Munich", "Germany", 48.3538, 11.7861, 1),
     Airport("LSZH", "ZRH", "Zurich Airport", "Zurich", "Switzerland", 47.4647, 8.5492, 1),
     Airport("EKCH", "CPH", "Copenhagen Airport", "Copenhagen", "Denmark", 55.6180, 12.6560, 1),
-    Airport("ESSA", "ARN", "Stockholm Arlanda", "Stockholm", "Sweden", 59.6519, 17.9186, 1),
+    Airport("ESSA", "ARN", "Stockholm Arlanda", "Stockholm", "Sweden", 59.6519, 17.9186, 1, city_lat=59.3293, city_lon=18.0686),
     Airport("EFHK", "HEL", "Helsinki-Vantaa", "Helsinki", "Finland", 60.3172, 24.9633, 2),
-    Airport("ENGM", "OSL", "Oslo Gardermoen", "Oslo", "Norway", 60.1939, 11.1004, 2),
+    Airport("ENGM", "OSL", "Oslo Gardermoen", "Oslo", "Norway", 60.1939, 11.1004, 2, city_lat=59.9139, city_lon=10.7522),
     Airport("EIDW", "DUB", "Dublin Airport", "Dublin", "Ireland", 53.4213, -6.2701, 1),
     Airport("LPPT", "LIS", "Lisbon Portela", "Lisbon", "Portugal", 38.7813, -9.1359, 1),
-    Airport("LOWW", "VIE", "Vienna International", "Vienna", "Austria", 48.1103, 16.5697, 1),
+    Airport("LOWW", "VIE", "Vienna International", "Vienna", "Austria", 48.1103, 16.5697, 1, city_lat=48.2082, city_lon=16.3738),
     Airport("EPWA", "WAW", "Warsaw Chopin", "Warsaw", "Poland", 52.1657, 20.9671, 2),
     Airport("LKPR", "PRG", "Václav Havel Airport", "Prague", "Czech Republic", 50.1008, 14.2600, 2),
     Airport("LHBP", "BUD", "Budapest Ferenc Liszt", "Budapest", "Hungary", 47.4369, 19.2556, 2),
-    Airport("LGAV", "ATH", "Athens International", "Athens", "Greece", 37.9364, 23.9445, 2),
+    Airport("LGAV", "ATH", "Athens International", "Athens", "Greece", 37.9364, 23.9445, 2, city_lat=37.9838, city_lon=23.7275),
     Airport("LROP", "OTP", "Henri Coandă International", "Bucharest", "Romania", 44.5711, 26.0850, 2),
-    Airport("UUEE", "SVO", "Sheremetyevo International", "Moscow", "Russia", 55.9726, 37.4146, 1),
+    Airport("UUEE", "SVO", "Sheremetyevo International", "Moscow", "Russia", 55.9726, 37.4146, 1, city_lat=55.7558, city_lon=37.6173),
 
     # ── North America ──
-    Airport("KJFK", "JFK", "John F. Kennedy International", "New York", "USA", 40.6413, -73.7781, 1),
-    Airport("KLAX", "LAX", "Los Angeles International", "Los Angeles", "USA", 33.9416, -118.4085, 1),
-    Airport("KORD", "ORD", "O'Hare International", "Chicago", "USA", 41.9742, -87.9073, 1),
+    Airport("KJFK", "JFK", "John F. Kennedy International", "New York", "USA", 40.6413, -73.7781, 1, city_lat=40.7128, city_lon=-74.0060),
+    Airport("KLAX", "LAX", "Los Angeles International", "Los Angeles", "USA", 33.9416, -118.4085, 1, city_lat=34.0522, city_lon=-118.2437),
+    Airport("KORD", "ORD", "O'Hare International", "Chicago", "USA", 41.9742, -87.9073, 1, city_lat=41.8781, city_lon=-87.6298),
     Airport("KATL", "ATL", "Hartsfield-Jackson International", "Atlanta", "USA", 33.6407, -84.4277, 1),
     Airport("KDFW", "DFW", "Dallas/Fort Worth International", "Dallas", "USA", 32.8998, -97.0403, 1),
-    Airport("KDEN", "DEN", "Denver International", "Denver", "USA", 39.8561, -104.6737, 1),
+    Airport("KDEN", "DEN", "Denver International", "Denver", "USA", 39.8561, -104.6737, 1, city_lat=39.7392, city_lon=-104.9903),
     Airport("KSFO", "SFO", "San Francisco International", "San Francisco", "USA", 37.6213, -122.3790, 1),
     Airport("KMIA", "MIA", "Miami International", "Miami", "USA", 25.7959, -80.2870, 1),
     Airport("KEWR", "EWR", "Newark Liberty International", "Newark", "USA", 40.6895, -74.1745, 1),
@@ -157,35 +167,35 @@ GLOBAL_AIRPORTS: list[Airport] = [
     Airport("KMSP", "MSP", "Minneapolis-Saint Paul International", "Minneapolis", "USA", 44.8820, -93.2218, 2),
     Airport("KIAH", "IAH", "George Bush Intercontinental", "Houston", "USA", 29.9902, -95.3368, 1),
     Airport("KPHL", "PHL", "Philadelphia International", "Philadelphia", "USA", 39.8721, -75.2411, 2),
-    Airport("CYYZ", "YYZ", "Toronto Pearson International", "Toronto", "Canada", 43.6777, -79.6248, 1),
+    Airport("CYYZ", "YYZ", "Toronto Pearson International", "Toronto", "Canada", 43.6777, -79.6248, 1, city_lat=43.6532, city_lon=-79.3832),
     Airport("CYUL", "YUL", "Montréal-Trudeau International", "Montreal", "Canada", 45.4706, -73.7408, 1),
     Airport("CYVR", "YVR", "Vancouver International", "Vancouver", "Canada", 49.1947, -123.1792, 1),
     Airport("MMMX", "MEX", "Benito Juárez International", "Mexico City", "Mexico", 19.4363, -99.0721, 1),
     Airport("MMUN", "CUN", "Cancún International", "Cancún", "Mexico", 21.0365, -86.8771, 2),
 
     # ── South America ──
-    Airport("SBGR", "GRU", "São Paulo/Guarulhos International", "São Paulo", "Brazil", -23.4356, -46.4731, 1),
+    Airport("SBGR", "GRU", "São Paulo/Guarulhos International", "São Paulo", "Brazil", -23.4356, -46.4731, 1, city_lat=-23.5505, city_lon=-46.6333),
     Airport("SBGL", "GIG", "Rio de Janeiro/Galeão International", "Rio de Janeiro", "Brazil", -22.8100, -43.2506, 1),
     Airport("SCEL", "SCL", "Arturo Merino Benítez International", "Santiago", "Chile", -33.3930, -70.7858, 1),
-    Airport("SAEZ", "EZE", "Ministro Pistarini International", "Buenos Aires", "Argentina", -34.8222, -58.5358, 1),
+    Airport("SAEZ", "EZE", "Ministro Pistarini International", "Buenos Aires", "Argentina", -34.8222, -58.5358, 1, city_lat=-34.6037, city_lon=-58.3816),
     Airport("SKBO", "BOG", "El Dorado International", "Bogotá", "Colombia", 4.7016, -74.1469, 1),
     Airport("SPJC", "LIM", "Jorge Chávez International", "Lima", "Peru", -12.0219, -77.1143, 1),
 
     # ── Africa ──
-    Airport("FAOR", "JNB", "OR Tambo International", "Johannesburg", "South Africa", -26.1392, 28.2460, 1),
+    Airport("FAOR", "JNB", "OR Tambo International", "Johannesburg", "South Africa", -26.1392, 28.2460, 1, city_lat=-26.2041, city_lon=28.0473),
     Airport("FACT", "CPT", "Cape Town International", "Cape Town", "South Africa", -33.9649, 18.6017, 1),
-    Airport("HECA", "CAI", "Cairo International", "Cairo", "Egypt", 30.1219, 31.4056, 1),
+    Airport("HECA", "CAI", "Cairo International", "Cairo", "Egypt", 30.1219, 31.4056, 1, city_lat=30.0444, city_lon=31.2357),
     Airport("DNMM", "LOS", "Murtala Muhammed International", "Lagos", "Nigeria", 6.5774, 3.3213, 1),
     Airport("HKJK", "NBO", "Jomo Kenyatta International", "Nairobi", "Kenya", -1.3192, 36.9278, 1),
     Airport("HAAB", "ADD", "Addis Ababa Bole International", "Addis Ababa", "Ethiopia", 8.9779, 38.7993, 1),
     Airport("GMMN", "CMN", "Mohammed V International", "Casablanca", "Morocco", 33.3675, -7.5898, 2),
     Airport("DTTA", "TUN", "Tunis–Carthage International", "Tunis", "Tunisia", 36.8510, 10.2272, 2),
-    Airport("GOOY", "DSS", "Blaise Diagne International", "Dakar", "Senegal", 14.6700, -17.0733, 2),
+    Airport("GOOY", "DSS", "Blaise Diagne International", "Dakar", "Senegal", 14.6700, -17.0733, 2, city_lat=14.7167, city_lon=-17.4677),
     Airport("FMEE", "MRU", "Sir Seewoosagur Ramgoolam International", "Mauritius", "Mauritius", -20.4302, 57.6836, 2),
 
     # ── Oceania ──
-    Airport("YSSY", "SYD", "Kingsford Smith Airport", "Sydney", "Australia", -33.9461, 151.1772, 1),
-    Airport("YMML", "MEL", "Melbourne Airport", "Melbourne", "Australia", -37.6690, 144.8410, 1),
+    Airport("YSSY", "SYD", "Kingsford Smith Airport", "Sydney", "Australia", -33.9461, 151.1772, 1, city_lat=-33.8688, city_lon=151.2093),
+    Airport("YMML", "MEL", "Melbourne Airport", "Melbourne", "Australia", -37.6690, 144.8410, 1, city_lat=-37.8136, city_lon=144.9631),
     Airport("YBBN", "BNE", "Brisbane Airport", "Brisbane", "Australia", -27.3842, 153.1175, 1),
     Airport("YPPH", "PER", "Perth Airport", "Perth", "Australia", -31.9403, 115.9670, 2),
     Airport("NZAA", "AKL", "Auckland Airport", "Auckland", "New Zealand", -37.0082, 174.7850, 1),

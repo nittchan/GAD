@@ -7,7 +7,6 @@ Usage:
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import subprocess
@@ -18,7 +17,12 @@ import boto3
 from dotenv import load_dotenv
 
 from gad.engine.models import DataSourceProvenance, TriggerDef, TriggerDetermination
-from gad.engine.oracle import append_to_oracle_log, data_snapshot_hash, sign_determination
+from gad.engine.oracle import (
+    GENESIS_HASH,
+    append_to_oracle_log,
+    data_snapshot_hash,
+    sign_determination,
+)
 
 
 def main() -> None:
@@ -66,7 +70,7 @@ def main() -> None:
         data_snapshot_hash=snapshot_hash,
         computation_version=git_hash,
         determined_at=datetime(2023, 11, 30, 6, 0, 0, tzinfo=timezone.utc),
-        prev_hash=hashlib.sha256(b"GENESIS").hexdigest(),
+        prev_hash=GENESIS_HASH,
         signature="",
     )
 

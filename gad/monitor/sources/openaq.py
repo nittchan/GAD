@@ -17,7 +17,7 @@ from gad.monitor.cache import write_cache
 OPENAQ_V3_URL = "https://api.openaq.org/v3/locations"
 WAQI_URL = "https://api.waqi.info/feed/geo:{lat};{lon}/"
 TIMEOUT = 15
-RADIUS_KM = 50
+RADIUS_KM = 15  # tightened from 50km — queries now use city centre coordinates (BUG-01)
 
 
 def fetch_aqi(lat: float, lon: float, trigger_id: str) -> dict | None:

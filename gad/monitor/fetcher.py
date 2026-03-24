@@ -41,6 +41,7 @@ from gad.engine.oracle import (
     data_snapshot_hash, _load_private_key, GENESIS_HASH,
 )
 from gad.engine.models import TriggerDetermination
+from gad.engine.r2_upload import upload_determination as r2_upload
 from gad.engine.version import get_gad_version
 
 logging.basicConfig(
@@ -279,6 +280,11 @@ def fetch_all() -> dict:
                         signed_det = sign_determination(det, _private_key, prev_hash, _key_id)
                         prev_hash = append_to_oracle_log(signed_det)
                         signed += 1
+                        # Upload to R2 (optional — skipped if no R2 credentials)
+                        r2_upload(
+                            str(signed_det.determination_id),
+                            signed_det.model_dump_json(indent=2),
+                        )
                     except Exception as e:
                         log.warning(f"Oracle signing failed for {trigger.id}: {e}")
 

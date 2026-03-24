@@ -31,7 +31,7 @@ def fetch_aqi(lat: float, lon: float, trigger_id: str) -> dict | None:
             "format": "application/json",
             "latitude": lat,
             "longitude": lon,
-            "distance": 50,  # miles
+            "distance": 15,  # miles — tightened; queries now use city centre coordinates (BUG-01)
             "API_KEY": api_key,
         }
         resp = httpx.get(AIRNOW_URL, params=params, timeout=TIMEOUT)

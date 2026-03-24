@@ -16,7 +16,7 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 436 triggers, 144 airports, multi-source data (8 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 436 triggers, 144 airports, multi-source data (9 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
 - v0.3: New perils (shipping, health, solar), enterprise tier.
 
@@ -39,7 +39,7 @@ All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. GitHub A
 
 ```
 Background fetcher (cron every 15 min)
-  → Fetches from OpenSky, OpenAQ, NASA FIRMS, Open-Meteo
+  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS
   → Writes to data/monitor_cache/ (JSON files)
 
 Dashboard (Streamlit)
@@ -55,8 +55,8 @@ Compute engine: gad/engine/ package
 
 - gad/engine/ — compute core (basis risk, lloyds, oracle, models)
 - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources)
-- gad/monitor/sources/ — API fetchers (opensky, openaq, firms, openmeteo)
-- dashboard/ — Streamlit app with 6 pages
+- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake)
+- dashboard/ — Streamlit app with 7 pages
 - oracle_ledger/ — Cloudflare Worker
 
 ## Data Sources (all free)
@@ -82,7 +82,8 @@ Compute engine: gad/engine/ package
 
 ## Near-Term Priorities
 
-1. Historical basis risk for all 436 triggers (needs data download pipeline).
-2. Oracle signing (v0.2.2) wired to live monitor.
-3. New perils: shipping, health, solar.
-4. Parametric Data Pro (enterprise tier).
+1. Historical basis risk for all 436 triggers (weather data downloaded; AQI in progress; precompute pending).
+2. Oracle signing wired to live monitor (done). Determination status page + R2 upload (done).
+3. New perils: shipping/marine (AIS), flood (NOAA), cyclone (NHC).
+4. REST API (FastAPI) + MCP server.
+5. Parametric Data Pro (enterprise tier).

@@ -35,7 +35,13 @@ def _generate_airport_triggers(airports: list[Airport]) -> list[MonitorTrigger]:
     triggers = []
     for a in airports:
         # Flight delay trigger
+        # Tier-1 airports use AviationStack (real delay in minutes) with OpenSky fallback.
+        # Tier-2/3 airports use OpenSky only (departure count — disruption proxy).
         threshold = 45 if a.tier == 1 else 60
+        if a.tier == 1:
+            description = f"Parametric trigger: fires when average departure delay exceeds {threshold} min at {a.iata} (AviationStack), or when 0 departures in 2h (OpenSky fallback)."
+        else:
+            description = f"Parametric trigger: fires when 0 departures observed in 2h at {a.iata} (airport disruption via OpenSky)."
         triggers.append(MonitorTrigger(
             id=f"flight-delay-{a.iata.lower()}",
             name=f"{a.city} {a.iata}",
@@ -46,7 +52,7 @@ def _generate_airport_triggers(airports: list[Airport]) -> list[MonitorTrigger]:
             threshold_unit="minutes",
             fires_when_above=True,
             data_source="opensky",
-            description=f"Parametric trigger fires when average departure delay exceeds {threshold} minutes at {a.iata}.",
+            description=description,
         ))
 
         # Weather trigger (extreme heat/cold based on latitude)
@@ -94,12 +100,14 @@ def _generate_airport_triggers(airports: list[Airport]) -> list[MonitorTrigger]:
             ))
 
         # AQI trigger (only for tier 1 and 2 airports to stay within rate limits)
+        # Uses city centre coordinates, not airport runway coordinates — AQI monitors
+        # are in urban areas, not at airfields (see BUG-01).
         if a.tier <= 2:
             triggers.append(MonitorTrigger(
                 id=f"aqi-{a.iata.lower()}",
                 name=f"{a.city} AQI",
                 peril="air_quality",
-                lat=a.lat, lon=a.lon,
+                lat=a.effective_city_lat, lon=a.effective_city_lon,
                 location_label=f"{a.city}, {a.country}",
                 threshold=150,
                 threshold_unit="AQI",

@@ -21,15 +21,15 @@ The strongest production-ready capability is the Global Monitor (live risk map) 
 ### Product UI (dashboard/)
 - dashboard/app.py: home page and navigation.
 - dashboard/pages/6_Global_Monitor.py: live risk map — the main public-facing page.
-- dashboard/pages/1-5: guided mode, expert mode, trigger profile, compare, account.
+- dashboard/pages/1-7: guided mode, expert mode, trigger profile, compare, account, global monitor, oracle ledger.
 - dashboard/components/: score cards, charts, checklist, auth helpers.
 
 ### Global Monitor (gad/monitor/)
-- gad/monitor/airports.py: Master airport registry (50 Indian + 94 global = 144 airports).
+- gad/monitor/airports.py: Master airport registry (50 Indian + 94 global = 144 airports). Each airport has runway coordinates (`lat`/`lon`) and optional city centre coordinates (`city_lat`/`city_lon`) — AQI triggers use city coordinates since AQI monitors are in urban areas, not at airfields.
 - gad/monitor/triggers.py: Auto-generates 436 triggers across 6 perils from the airport registry.
 - gad/monitor/cache.py: local JSON cache — dashboard reads from here, never from APIs.
 - gad/monitor/fetcher.py: background worker that fetches data from external APIs on a schedule.
-- gad/monitor/sources/: API connectors (OpenSky, OpenAQ, NASA FIRMS, Open-Meteo).
+- gad/monitor/sources/: API connectors (OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG).
 - gad/monitor/security.py: rate limiting, input sanitization.
 
 ### Compute Engine (gad/engine/)
@@ -82,7 +82,7 @@ dev → staging (gad-dashboard-staging.fly.dev) → main (parametricdata.io)
 
 - tests/test_basis_risk.py: core compute.
 - tests/test_lloyds.py: checklist behavior.
-- tests/test_oracle.py: sign/verify.
+- tests/test_oracle.py: sign/verify, genesis hash, chain verification.
 - tests/test_reproducibility.py: deterministic outputs.
 - tests/test_import_hygiene.py: no legacy imports.
 
@@ -91,10 +91,9 @@ dev → staging (gad-dashboard-staging.fly.dev) → main (parametricdata.io)
 Required for full functionality:
 - SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 
-Optional (improve Global Monitor data quality):
-- NASA_FIRMS_MAP_KEY — wildfire data (free at firms.modaps.eosdis.nasa.gov)
-- WAQI_API_TOKEN — air quality (free at aqicn.org/api)
-- OPENSKY_USERNAME, OPENSKY_PASSWORD — flight data (free at opensky-network.org)
+Global Monitor data sources (all configured):
+- NASA_FIRMS_MAP_KEY, WAQI_API_TOKEN, OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
+- AVIATIONSTACK_API_KEY, OPENAQ_API_KEY, AIRNOW_API_KEY, NASA_EARTHDATA_TOKEN
 
 ## Deployment
 
@@ -104,8 +103,8 @@ Optional (improve Global Monitor data quality):
 
 ## Good First Tasks
 
-1. Add earthquake peril (USGS API — free, no key, GeoJSON format).
-2. Add airports to `gad/monitor/airports.py` (auto-generates triggers).
-3. Add a new data source connector in `gad/monitor/sources/`.
-4. Add integration tests for the Global Monitor page.
-5. Add contract tests for oracle worker response behavior.
+1. Add airports to `gad/monitor/airports.py` (auto-generates triggers). Set `city_lat`/`city_lon` if the airport is >15km from the city centre.
+2. Add a new data source connector in `gad/monitor/sources/`.
+3. Add integration tests for the Global Monitor page.
+4. Add contract tests for oracle worker response behavior.
+5. Run `python3 scripts/audit_airport_city_distance.py` to check for airports missing city coordinates.

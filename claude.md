@@ -29,7 +29,7 @@ main branch       → auto-deploys to parametricdata.io (production)
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 6 peril categories (flights, AQI, wildfire, drought, weather, earthquake) with 436 triggers across 144 airports (50 Indian + 94 global), data-driven from airport registry (`gad/monitor/airports.py`).
+1. **Global Monitor** — live risk map across 6 peril categories (flights, AQI, wildfire, drought, weather, earthquake) with 436 triggers across 144 airports (50 Indian + 94 global), data-driven from airport registry (`gad/monitor/airports.py`). AQI triggers use city centre coordinates (not airport runway) for accurate monitoring station proximity.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export, guided/expert modes.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -54,7 +54,7 @@ Current capabilities:
 Not yet complete (v0.2.2+):
   - Oracle signing wired to live monitor (Ed25519 primitives exist, not yet connected).
   - Determination status page upgrade (verification proof UI).
-  - Historical basis risk for all 436 triggers (only 2 legacy triggers have CSVs).
+  - Historical basis risk for all 436 triggers (weather data downloaded for 144 airports; AQI and flight history pending).
   - New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
   - Parametric Data Pro (enterprise tier).
 
@@ -69,14 +69,14 @@ Top-level domains and responsibilities:
 - dashboard/
   - Primary Streamlit product UI.
   - app.py home/landing + multipage navigation.
-  - pages/ global monitor, guided, expert, profile, compare, account.
+  - pages/ global monitor, guided, expert, profile, compare, account, oracle.
   - components/ auth and visual rendering helpers.
 
 - gad/
   - Core Python package.
   - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export).
   - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources).
-  - gad/monitor/sources/ — API fetchers (opensky, openaq, firms, openmeteo).
+  - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg).
   - gad/pipeline.py — CHIRPS raster fetch and extraction.
 
 - data/
@@ -133,6 +133,9 @@ User flows:
    - Side-by-side comparison of up to two triggers.
 
 5. Account (dashboard/pages/5_Account.py)
+6. Oracle Ledger (dashboard/pages/7_Oracle.py)
+   - Chain verification status, total determinations, recent entries.
+   - Links to Cloudflare Worker URLs for each determination.
    - OAuth callback/session management.
    - Reads saved triggers and notification subscriptions from Supabase.
 
@@ -283,6 +286,7 @@ Current tests cover:
 
 - tests/test_oracle.py
   - Ed25519 sign/verify round-trip and tamper detection.
+  - Genesis hash validation, hash chain verification, broken-genesis detection.
 
 - tests/test_reproducibility.py
   - Deterministic compute outputs for selected trigger/data inputs.

@@ -7,5 +7,9 @@ __pycache__/
 data/gad_registry.db
 data/cache/
 data/monitor_cache/
+data/series/weather/
+data/series/aqi/
+data/series/flights/
+data/basis_risk/
 registry/determinations/*.json
 registry/oracle_log.jsonl

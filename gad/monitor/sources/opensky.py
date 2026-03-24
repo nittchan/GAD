@@ -78,9 +78,16 @@ def _auth() -> tuple[str, str] | None:
 
 def fetch_departures(airport_icao: str, trigger_id: str) -> dict | None:
     """
-    Fetch recent departures for an airport and compute average delay.
+    Fetch recent departures for an airport.
     Uses the /flights/departure endpoint.
-    Returns dict with: avg_delay_min, delayed_count, total_flights, airport.
+
+    OpenSky provides observed departure times (firstSeen/lastSeen) but NOT
+    scheduled times, so actual delay cannot be computed. The useful metric
+    from OpenSky is departure count — 0 departures in 2 hours indicates
+    airport disruption.
+
+    Returns dict with: departure_count, total_flights, airport, source.
+    avg_delay_min is None (unknown from OpenSky).
     """
     try:
         now = int(time.time())
@@ -103,10 +110,10 @@ def fetch_departures(airport_icao: str, trigger_id: str) -> dict | None:
         )
 
         if resp.status_code == 404:
-            # No flights in this window
+            # No flights in this window — potential disruption
             result = {
-                "avg_delay_min": 0,
-                "delayed_count": 0,
+                "avg_delay_min": None,
+                "departure_count": 0,
                 "total_flights": 0,
                 "airport": airport_icao,
                 "source": "opensky",
@@ -117,34 +124,11 @@ def fetch_departures(airport_icao: str, trigger_id: str) -> dict | None:
         resp.raise_for_status()
         flights = resp.json()
 
-        if not flights:
-            result = {
-                "avg_delay_min": 0,
-                "delayed_count": 0,
-                "total_flights": 0,
-                "airport": airport_icao,
-                "source": "opensky",
-            }
-            write_cache("flights", trigger_id, result, ttl_seconds=1800)
-            return result
-
-        # Compute delays from scheduled vs actual departure times
-        delays = []
-        for f in flights:
-            scheduled = f.get("firstSeen")  # actual departure
-            estimated = f.get("estDepartureAirport")
-            # OpenSky departure endpoint gives firstSeen (actual takeoff)
-            # and lastSeen. We approximate delay from gap if available.
-            if scheduled:
-                delays.append(0)  # OpenSky doesn't give schedule; approximate
-
-        total = len(flights)
-        delayed = sum(1 for d in delays if d > 15) if delays else 0
-        avg = sum(delays) / len(delays) if delays else 0
+        total = len(flights) if flights else 0
 
         result = {
-            "avg_delay_min": round(avg, 1),
-            "delayed_count": delayed,
+            "avg_delay_min": None,  # OpenSky cannot compute delay (no scheduled times)
+            "departure_count": total,
             "total_flights": total,
             "airport": airport_icao,
             "source": "opensky",
@@ -166,23 +150,57 @@ AIRPORT_ICAO_MAP = _build_icao_map()
 
 
 def evaluate_trigger(data: dict, threshold: float) -> dict:
-    """Evaluate a flight delay trigger."""
+    """
+    Evaluate a flight trigger. Source-aware:
+    - AviationStack: evaluate avg delay in minutes vs threshold.
+    - OpenSky: evaluate departure count (disruption proxy). Fires when
+      0 departures observed in the 2-hour window.
+    """
+    source = data.get("source", "opensky")
     total = data.get("total_flights", 0)
-    if total == 0:
+
+    # AviationStack provides real delay data
+    if source == "aviationstack":
+        avg_delay = data.get("avg_delay_min", 0)
+        if avg_delay is None:
+            avg_delay = 0
+        if total == 0:
+            return {
+                "fired": False,
+                "value": 0,
+                "status": "no_flights",
+                "total_flights": 0,
+                "metric": "avg_delay",
+            }
+        fired = avg_delay >= threshold
         return {
-            "fired": False,
-            "value": 0,
-            "status": "no_flights",
-            "total_flights": 0,
+            "fired": fired,
+            "value": round(avg_delay, 1),
+            "threshold": threshold,
+            "unit": "min avg delay",
+            "status": "critical" if fired else "normal",
+            "total_flights": total,
+            "metric": "avg_delay",
         }
 
-    avg_delay = data.get("avg_delay_min", 0)
-    fired = avg_delay >= threshold
+    # OpenSky: departure count only (no scheduled times → no delay computation)
+    departure_count = data.get("departure_count", total)
+    if departure_count == 0:
+        return {
+            "fired": True,
+            "value": 0,
+            "threshold": 1,
+            "unit": "departures (2h)",
+            "status": "critical",
+            "total_flights": 0,
+            "metric": "departure_count",
+        }
     return {
-        "fired": fired,
-        "value": round(avg_delay, 1),
-        "threshold": threshold,
-        "unit": "minutes avg delay",
-        "status": "critical" if fired else "normal",
-        "total_flights": total,
+        "fired": False,
+        "value": departure_count,
+        "threshold": 1,
+        "unit": "departures (2h)",
+        "status": "normal",
+        "total_flights": departure_count,
+        "metric": "departure_count",
     }

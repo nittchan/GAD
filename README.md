@@ -65,7 +65,8 @@ parametricdata.io
 ├── Compare               Side-by-side trigger comparison
 ├── Build Your Own        4-step wizard → custom trigger
 ├── Expert Mode           JSON editor → full schema control
-└── Monitor Status        Data source health dashboard
+├── Monitor Status        Data source health dashboard
+└── Oracle Ledger         Signed determinations + chain verification
 
 Background fetcher (every 15 min)
 ├── AviationStack         Flight schedules (tier-1 airports)
@@ -91,7 +92,7 @@ The public dashboard makes **zero external API calls**. All data is pre-fetched 
 
 ## Contributing
 
-Add a new airport: edit `gad/monitor/airports.py` — triggers auto-generate.
+Add a new airport: edit `gad/monitor/airports.py` — triggers auto-generate. If the airport is >15km from the city centre, set `city_lat`/`city_lon` so AQI queries hit the right location.
 Add a new data source: create a file in `gad/monitor/sources/`.
 Add a new peril: update `gad/monitor/triggers.py` and wire into the fetcher.
 
