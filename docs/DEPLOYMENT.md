@@ -117,6 +117,56 @@ cd oracle_ledger
 npx wrangler deploy --env production
 ```
 
+## Environment Variable Reference
+
+Every env var the platform reads, whether it is required, and what breaks without it.
+
+### Infrastructure (required)
+
+| Variable | Required? | Default | Consequence if missing |
+|----------|-----------|---------|------------------------|
+| `SUPABASE_URL` | **Yes** | — | Auth, saved triggers, and analytics all fail. Dashboard login is broken. |
+| `SUPABASE_ANON_KEY` | **Yes** | — | Same as above — Supabase client cannot initialize. |
+| `SUPABASE_SERVICE_KEY` | **Yes** | — | Analytics event writes fail (service-role bypass needed for RLS). |
+
+### Data Sources
+
+| Variable | Required? | Default | Consequence if missing |
+|----------|-----------|---------|------------------------|
+| `NASA_FIRMS_MAP_KEY` | No | — | Wildfire data unavailable. VIIRS + MODIS fetches return `None`. |
+| `WAQI_API_TOKEN` | No | — | AQI fallback to OpenAQ only. WAQI source skipped in priority chain. |
+| `OPENSKY_CLIENT_ID` | No | — | Flight departure data rate-limited to anonymous tier (~100 credits/day vs 4000). |
+| `OPENSKY_CLIENT_SECRET` | No | — | Same as above — both ID and secret are needed for OAuth2. |
+| `AVIATIONSTACK_API_KEY` | No | — | No real-time delay data for tier-1 airports. Falls back to OpenSky only. |
+| `OPENAQ_API_KEY` | **Yes** (for AQI) | — | OpenAQ v3 returns 401 without a key. AQI coverage reduced to WAQI/AirNow only. |
+| `AIRNOW_API_KEY` | No | — | US airport AQI falls back to WAQI. Non-US airports unaffected. |
+| `NASA_EARTHDATA_TOKEN` | No | — | GPM IMERG daily precipitation unavailable. Drought falls back to CHIRPS monthly. |
+| `AISSTREAM_API_KEY` | No | — | Marine/port congestion data unavailable. All marine triggers return `None`. |
+
+### Oracle Signing (v0.2.2+)
+
+| Variable | Required? | Default | Consequence if missing |
+|----------|-----------|---------|------------------------|
+| `GAD_ORACLE_PRIVATE_KEY_HEX` | No | — | Oracle signing disabled. Determinations are not signed or hash-chained. |
+| `GAD_ORACLE_PUBLIC_KEY_HEX` | No | — | Public key unavailable for verification. Paired with private key. |
+| `GAD_ORACLE_KEY_ID` | No | — | Key ID omitted from signed determinations. |
+
+### R2 Upload (oracle ledger)
+
+| Variable | Required? | Default | Consequence if missing |
+|----------|-----------|---------|------------------------|
+| `R2_ACCOUNT_ID` | No | — | R2 upload disabled. Signed determinations logged locally only. |
+| `R2_ACCESS_KEY_ID` | No | — | Same — all three R2 vars are needed for upload. |
+| `R2_SECRET_ACCESS_KEY` | No | — | Same — determinations stay local, not served via Cloudflare Worker. |
+
+### AI Features
+
+| Variable | Required? | Default | Consequence if missing |
+|----------|-----------|---------|------------------------|
+| `ANTHROPIC_API_KEY` | No | — | AI-generated risk briefs unavailable. Monitor runs normally without them. |
+
+---
+
 ## Environment variables on Fly.io
 
 Set on BOTH staging and production:

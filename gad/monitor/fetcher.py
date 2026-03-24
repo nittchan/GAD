@@ -224,6 +224,56 @@ SOURCE_CACHE_KEY = {
 }
 
 
+_health_logged = False
+
+
+def _log_data_source_health() -> None:
+    """Log availability of every data source on first run. Never crashes."""
+    global _health_logged
+    if _health_logged:
+        return
+    _health_logged = True
+
+    # Each entry: (env_var, source_label, required)
+    sources = [
+        ("SUPABASE_URL", "Supabase (auth/analytics)", True),
+        ("SUPABASE_ANON_KEY", "Supabase anon key", True),
+        ("SUPABASE_SERVICE_KEY", "Supabase service key", True),
+        ("NASA_FIRMS_MAP_KEY", "FIRMS wildfire (VIIRS+MODIS)", False),
+        ("WAQI_API_TOKEN", "WAQI air quality", False),
+        ("OPENSKY_CLIENT_ID", "OpenSky flights (OAuth2)", False),
+        ("OPENSKY_CLIENT_SECRET", "OpenSky flights (secret)", False),
+        ("AVIATIONSTACK_API_KEY", "AviationStack flight delays", False),
+        ("OPENAQ_API_KEY", "OpenAQ v3 air quality", False),
+        ("AIRNOW_API_KEY", "AirNow US AQI", False),
+        ("NASA_EARTHDATA_TOKEN", "GPM IMERG precipitation", False),
+        ("AISSTREAM_API_KEY", "AISstream marine data", False),
+        ("GAD_ORACLE_PRIVATE_KEY_HEX", "Oracle signing (private key)", False),
+        ("GAD_ORACLE_PUBLIC_KEY_HEX", "Oracle signing (public key)", False),
+        ("GAD_ORACLE_KEY_ID", "Oracle key ID", False),
+        ("R2_ACCOUNT_ID", "R2 upload (account)", False),
+        ("R2_ACCESS_KEY_ID", "R2 upload (access key)", False),
+        ("R2_SECRET_ACCESS_KEY", "R2 upload (secret key)", False),
+        ("ANTHROPIC_API_KEY", "AI risk briefs", False),
+    ]
+
+    available = 0
+    total = len(sources)
+
+    for env_var, label, required in sources:
+        try:
+            if os.environ.get(env_var):
+                log.info(f"  [OK] {label} ({env_var})")
+                available += 1
+            else:
+                level = "REQUIRED" if required else "optional"
+                log.warning(f"  [--] {label} ({env_var}) — {level}, not set")
+        except Exception:
+            log.warning(f"  [--] {label} ({env_var}) — error checking")
+
+    log.info(f"Data sources: {available}/{total} available")
+
+
 def _should_fetch(source: str, trigger_id: str) -> bool:
     cache_key = SOURCE_CACHE_KEY.get(source, source)
     data, is_stale = read_cache_with_staleness(cache_key, trigger_id)
@@ -293,6 +343,8 @@ def _init_oracle_signing() -> None:
 def fetch_all() -> dict:
     """Fetch all triggers that need updating. Sign determinations if key is available."""
     global _oracle_signing_enabled
+
+    _log_data_source_health()
 
     if not _oracle_signing_enabled:
         _init_oracle_signing()
