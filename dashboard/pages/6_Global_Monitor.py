@@ -1,6 +1,6 @@
 """
 GAD Global Monitor — live parametric insurance risk map.
-Shows real-time trigger status across 6 peril categories using cached open data.
+Shows real-time trigger status across 7 peril categories using cached open data.
 
 Security: This page reads ONLY from the local cache. It NEVER calls external APIs.
 All data is pre-fetched by the background fetcher (gad.monitor.fetcher).
@@ -198,7 +198,7 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 st.markdown(
     '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
     '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
-    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports and 6 peril categories. All data from open sources.</p>',
+    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across 144 airports + 10 ports and 7 peril categories. All data from open sources.</p>',
     unsafe_allow_html=True,
 )
 

@@ -16,7 +16,7 @@ import streamlit as st
 
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream
 
 st.set_page_config(page_title="Trigger Profile | Parametric Data", layout="wide", initial_sidebar_state="expanded")
 
@@ -113,6 +113,8 @@ def _evaluate(trigger: MonitorTrigger, data: dict) -> dict:
         return chirps_monitor.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "usgs":
         return usgs_earthquake.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "aisstream":
+        return aisstream.evaluate_trigger(data, trigger.threshold, trigger.threshold_unit)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
