@@ -71,6 +71,21 @@
 - [x] **DESIGN-02g:** Oracle Ledger page — patina green `#467B6B` for oracle elements, warm palette throughout.
 - [x] **DESIGN-02h:** Homepage — Fraunces via inject_theme, burnt vermillion CTAs, parchment bg.
 
+### DESIGN-03: Close DESIGN.md compliance gaps ← CURRENT
+**Why:** Eng review audit found 14 gaps between DESIGN.md spec and actual code. Components (score_card, charts, checklist) still have v0.1 dark theme. Oracle notarial artifact not built. Typography tokens not applied.
+
+**Critical (visible, breaks aesthetic):**
+- [x] **DESIGN-03a:** Plotly charts — parchment bg `#F5F0EB`, Instrument Sans labels, JetBrains Mono ticks, semantic scatter colors (verdigris/carmine/amber/gray).
+- [x] **DESIGN-03b:** Score card — parchment bg, verdigris/amber/carmine rho color, `data-copper` (#7A2E1F) for Lloyd's, `tabular-nums`.
+- [x] **DESIGN-03c:** Lloyd's checklist — parchment bg, 4px left border, verdigris pass / carmine fail, Instrument Sans body.
+- [x] **DESIGN-03d:** Oracle notarial artifact — corner crop marks (::before/::after in patina green 0.4 opacity), stamp header "⊕ CRYPTOGRAPHICALLY SIGNED DETERMINATION", 2-column fields grid, "CHAIN VERIFIED ✓" signature block.
+- [x] **DESIGN-03e:** Hero font-weight 700, Fraunces font-family, letter-spacing -0.03em. Button radius 3px. Feature card radius 6px.
+- [x] **DESIGN-03f:** Sidebar bg `#E3DCD3` (surface-2) via theme.py `!important`.
+- [x] **DESIGN-03g:** `data-copper` (#7A2E1F) for stat numbers. CSS classes `.data-copper`, `.data-hash`, `.data-coord`, `.data-time` in theme.py.
+- [x] **DESIGN-03h:** `font-variant-numeric: tabular-nums` on all code/JetBrains Mono in theme.py. `text-wrap: balance` on h1/h2/h3.
+- [x] **DESIGN-03i:** Count-up animation `@keyframes countUp` in theme.py. Applied to stat-number on homepage.
+- [x] **DESIGN-03j:** Form input styling — JetBrains Mono + tabular-nums, 3px radius, accent focus ring `rgba(200,85,61,0.12)`. Button hover to `#A8432E`.
+
 ---
 
 ## P2 — Oracle Wiring (trust layer)

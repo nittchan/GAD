@@ -1,4 +1,4 @@
-"""Confusion matrix heatmap (TP/FP/FN/TN)."""
+"""Confusion matrix heatmap (TP/FP/FN/TN) — parchment theme."""
 
 from __future__ import annotations
 
@@ -30,21 +30,23 @@ def confusion_matrix_fig(report: BasisRiskReport) -> go.Figure:
             z=z,
             x=["Loss no", "Loss yes"],
             y=["Trigger no", "Trigger yes"],
-            colorscale=[[0, "#1f2937"], [1, "#10b981"]],
+            colorscale=[[0, "#EDE7E0"], [1, "#2E8B6F"]],
             showscale=False,
             text=[[str(tn), str(fp)], [str(fn), str(tp)]],
             texttemplate="%{text}",
-            textfont={"color": "#f9fafb", "size": 14},
+            textfont={"color": "#1E1B18", "size": 14, "family": "JetBrains Mono, ui-monospace, monospace"},
         )
     )
     fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="#0a0e1a",
-        plot_bgcolor="#0a0e1a",
+        paper_bgcolor="#F5F0EB",
+        plot_bgcolor="#F5F0EB",
         margin=dict(l=40, r=20, t=40, b=40),
-        title="Confusion (period-level)",
+        title=dict(text="Confusion (period-level)", font=dict(family="Instrument Sans, sans-serif", size=14, color="#1E1B18")),
+        font=dict(family="Instrument Sans, sans-serif", color="#7A7267"),
         height=280,
     )
+    fig.update_xaxes(tickfont=dict(family="JetBrains Mono, monospace", size=12))
+    fig.update_yaxes(tickfont=dict(family="JetBrains Mono, monospace", size=12))
     return fig
 
 

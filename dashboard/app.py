@@ -32,20 +32,22 @@ st.markdown("""
     /* Hero */
     .hero-tag { color: #C8553D; font-size: 13px; letter-spacing: 3px;
                 text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
-    .hero-title { font-size: 48px; font-weight: 800; color: #1E1B18;
-                  line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .hero-title { font-size: 3rem; font-weight: 700; color: #1E1B18;
+                  line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.03em;
+                  font-family: 'Fraunces', Georgia, serif; text-wrap: balance; }
     .hero-sub { font-size: 17px; color: #7A7267; max-width: 580px; line-height: 1.7; }
 
     /* Stats */
     .stats-row { display: flex; gap: 48px; margin: 32px 0; }
     .stat-item { }
     .stat-number { font-family: 'JetBrains Mono', ui-monospace, monospace;
-                   font-size: 32px; font-weight: 700; color: #C8553D;
-                   letter-spacing: -0.02em; }
+                   font-size: 32px; font-weight: 700; color: #7A2E1F;
+                   letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+                   animation: countUp 150ms ease-out; }
     .stat-label { color: #7A7267; font-size: 12px; margin-top: 2px; }
 
     /* Feature cards */
-    .feature-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 8px;
+    .feature-card { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
                     padding: 24px; height: 100%; transition: border-color 0.2s; }
     .feature-card:hover { border-color: #C8553D; }
     .feature-card h4 { color: #1E1B18; margin: 0 0 10px 0; font-size: 16px; font-weight: 600; }
@@ -55,14 +57,14 @@ st.markdown("""
     .stButton > button[kind="primary"] {
         background: #C8553D !important; color: #F5F0EB !important;
         border: none !important; font-weight: 600 !important;
-        border-radius: 6px !important; padding: 12px 24px !important;
+        border-radius: 3px !important; padding: 12px 24px !important;
     }
     .stButton > button[kind="primary"]:hover {
         background: #79b8ff !important;
     }
     .stButton > button:not([kind="primary"]) {
         background: transparent !important; color: #1E1B18 !important;
-        border: 1px solid #D4CCC0 !important; border-radius: 6px !important;
+        border: 1px solid #D4CCC0 !important; border-radius: 3px !important;
         padding: 12px 24px !important;
     }
     .stButton > button:not([kind="primary"]):hover {

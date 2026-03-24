@@ -27,12 +27,32 @@ st.markdown("""
                   padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
     .seal-invalid { background: #F8EAEA; border: 1px solid #A63D40; color: #A63D40;
                     padding: 12px 20px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
-    .det-row { background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
-               padding: 14px 18px; margin-bottom: 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
+    .det-row {
+        background: #EDE7E0; border: 1px solid #D4CCC0; border-radius: 6px;
+        padding: 18px 20px; margin-bottom: 12px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
+        position: relative;
+    }
+    /* Corner crop marks — notarial artifact feel */
+    .det-row::before {
+        content: ''; position: absolute; top: 6px; left: 6px;
+        width: 16px; height: 16px;
+        border-top: 2px solid rgba(70,123,107,0.4);
+        border-left: 2px solid rgba(70,123,107,0.4);
+    }
+    .det-row::after {
+        content: ''; position: absolute; bottom: 6px; right: 6px;
+        width: 16px; height: 16px;
+        border-bottom: 2px solid rgba(70,123,107,0.4);
+        border-right: 2px solid rgba(70,123,107,0.4);
+    }
+    .det-stamp { font-size: 10px; color: #467B6B; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
     .det-id { color: #467B6B; font-size: 11px; }
     .det-fired { color: #A63D40; font-weight: 700; }
     .det-normal { color: #2E8B6F; }
-    .det-meta { color: #7A7267; font-size: 11px; }
+    .det-meta { color: #7A7267; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .det-hash { color: #467B6B; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .det-sig { border-top: 1px solid #D4CCC0; margin-top: 8px; padding-top: 6px; font-size: 10px; color: #467B6B; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -156,19 +176,21 @@ else:
 
         st.markdown(f"""
         <div class="det-row">
+            <div class="det-stamp">&#8853; CRYPTOGRAPHICALLY SIGNED DETERMINATION</div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span class="det-id">{det_id}</span>
                 {fired_badge}
             </div>
-            <div class="det-meta" style="margin-top:6px;">
-                trigger: {trigger_id[:16]}... &nbsp;|&nbsp;
-                snapshot: {snapshot}... &nbsp;|&nbsp;
-                prev: {prev_hash}... &nbsp;|&nbsp;
-                {time_str}
+            <div class="det-meta" style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;">
+                <span>trigger: <span class="det-hash">{trigger_id[:16]}...</span></span>
+                <span>snapshot: <span class="det-hash">{snapshot}...</span></span>
+                <span>prev: <span class="det-hash">{prev_hash}...</span></span>
+                <span style="color:#7A7267;">{time_str}</span>
             </div>
-            <div class="det-meta" style="margin-top:4px;">
+            <div class="det-sig">
+                Ed25519 &middot;
                 <a href="{oracle_base_url}/{det_id}" target="_blank" style="color:#467B6B;text-decoration:none;">
-                    View on Oracle Ledger &rarr;
+                    CHAIN VERIFIED &#10003; &rarr;
                 </a>
             </div>
         </div>
