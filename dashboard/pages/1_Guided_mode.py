@@ -25,17 +25,17 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
-    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
+    .stApp { background-color: #ffffff; }
+    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
+    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
     '</div>', unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -67,9 +67,9 @@ PERIL_CONFIG = {
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Build a Trigger</h1>'
-    '<p style="color:#8b949e;font-size:14px;">Four steps. Plain English. About 60 seconds.</p>',
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Build a Trigger</h1>'
+    '<p style="color:#656d76;font-size:14px;">Four steps. Plain English. About 60 seconds.</p>',
     unsafe_allow_html=True,
 )
 
@@ -170,10 +170,10 @@ elif step == 4:
 
     st.markdown("### Your Trigger")
     st.markdown(f"""
-    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:700;color:#e6edf3;margin-bottom:4px;">{monitor_trigger.name}</div>
-        <div style="color:#8b949e;font-size:13px;margin-bottom:8px;">{monitor_trigger.description}</div>
-        <div style="color:#58a6ff;font-size:12px;">
+    <div style="background:#f6f8fa;border:1px solid #d1d9e0;border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:700;color:#1f2328;margin-bottom:4px;">{monitor_trigger.name}</div>
+        <div style="color:#656d76;font-size:13px;margin-bottom:8px;">{monitor_trigger.description}</div>
+        <div style="color:#0969da;font-size:12px;">
             {PERIL_LABELS[peril]} · Threshold: {threshold} {cfg['unit']} · Fires when {'above' if cfg['above'] else 'below'}
         </div>
     </div>

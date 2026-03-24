@@ -1,43 +1,59 @@
 # GAD Design System
 
-Source of truth for UI and export visuals. Target: developers who value trust and rigor — "Bloomberg terminal meets modern data tool", not generic SaaS.
+Source of truth for UI and export visuals. Target: developers who value trust and rigor — "Bloomberg terminal meets modern data tool", not generic SaaS. Light theme, system fonts, sub-200ms load.
 
 ## Color palette
 
 ### Backgrounds
 | Token       | Hex       | Use                    |
 |------------|-----------|------------------------|
-| `bg-app`   | `#0d1117` | Page background (dark) |
-| `bg-card`  | `#161b22` | Score card, panels     |
-| `bg-plot`  | `#0d1117` | Chart background       |
+| `bg-app`   | `#ffffff` | Page background        |
+| `bg-card`  | `#f6f8fa` | Score card, panels     |
+| `bg-plot`  | `#ffffff` | Chart background       |
 
 ### Borders & surfaces
 | Token     | Hex       | Use              |
 |-----------|-----------|------------------|
-| `border`  | `#30363d` | Card border      |
-| `muted`   | `#8b949e` | Captions, labels |
+| `border`  | `#d1d9e0` | Card border      |
+| `border-subtle` | `#e1e4e8` | Table rows |
+| `muted`   | `#656d76` | Captions, labels |
 
 ### Semantic (data & status)
-| Token   | Hex       | Use                          |
-|---------|-----------|------------------------------|
-| `green` | `#3fb950` | ρ > 0.7, Lloyd's pass        |
-| `amber` | `#d29922` | 0.4 ≤ \|ρ\| ≤ 0.7            |
-| `red`   | `#f85149` | \|ρ\| < 0.4, Lloyd's fail    |
-| `accent`| `#58a6ff` | Links, primary actions       |
-| `purple`| `#a371f7` | Secondary series (e.g. loss) |
-| `neutral` | `#484f58` | Neutral markers (e.g. TN)  |
+| Token   | Hex       | Background | Use                          |
+|---------|-----------|------------|------------------------------|
+| `green` | `#1a7f37` | `#dafbe1`  | ρ > 0.7, Lloyd's pass, normal |
+| `amber` | `#9a6700` | `#fff8c5`  | 0.4 ≤ \|ρ\| ≤ 0.7, stale     |
+| `red`   | `#d1242f` | `#ffebe9`  | \|ρ\| < 0.4, Lloyd's fail, critical |
+| `accent`| `#0969da` | `#ddf4ff`  | Links, primary actions       |
+| `neutral` | `#8b949e` | `#f6f8fa` | Neutral markers (e.g. TN)   |
 
 ### Text
 | Token    | Hex       | Use           |
 |----------|-----------|---------------|
-| `text`   | `#e6edf3` | Body          |
-| `text-muted` | `#8b949e` | Secondary text |
+| `text`   | `#1f2328` | Body          |
+| `text-muted` | `#656d76` | Secondary text |
 
 ## Typography
 
-- **UI / headings:** System sans-serif (`ui-sans-serif`, `system-ui`). Headings: tight letter-spacing (-0.02em).
-- **Data / numbers / code:** Monospace — JetBrains Mono, Fira Code, then `ui-monospace`, `monospace`. Use for ρ, CI, trigger IDs, file paths.
-- **Scale (minimum viable):** Title ~1.75rem; section ~1rem; body 0.875rem; captions 0.75rem; data block 2rem for headline ρ.
+- **UI / headings:** System sans-serif (`sans-serif`). Streamlit default. No external font loading.
+- **Data / numbers / code:** System monospace (`ui-monospace, monospace`). No JetBrains Mono CDN.
+- **Scale:** Title ~1.75rem; section ~1rem; body 0.875rem; captions 0.75rem; data block 2rem for headline ρ.
+- **Performance:** Zero external font requests. All fonts are system fonts → sub-200ms load.
+
+## Theme
+
+Configured in `.streamlit/config.toml`:
+```toml
+[theme]
+base = "light"
+primaryColor = "#0969da"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f8fa"
+textColor = "#1f2328"
+font = "sans serif"
+```
+
+This eliminates most CSS overrides. Streamlit dropdowns, selects, buttons, and form elements render correctly with zero custom CSS.
 
 ## Spacing
 
@@ -56,11 +72,17 @@ Source of truth for UI and export visuals. Target: developers who value trust an
 - Each row: criterion ID + name, pass/fail badge, one-line explanation.
 - **Pass:** left border `green` (4px).
 - **Fail:** left border `red` (4px).
-- Never hide or silently skip unknown criteria; raise explicit errors.
+
+### Status badges
+- Inline monospace badges with semantic background colors:
+  - `TRIGGERED`: red text on `#ffebe9` bg
+  - `NORMAL`: green text on `#dafbe1` bg
+  - `NO DATA`: muted text on `#f6f8fa` bg
+  - `UPDATING`: amber text on `#fff8c5` bg
 
 ### Charts (Plotly)
-- Theme: dark (`template="plotly_dark"`, `paper_bgcolor` / `plot_bgcolor` = `#0d1117`).
-- No 3D. Bar colors: trigger `#58a6ff`, loss `#a371f7`, mismatch `#f85149`.
+- Theme: light. `paper_bgcolor` / `plot_bgcolor` = `#ffffff`.
+- Bar colors: trigger `#0969da`, loss `#8250df`, mismatch `#d1242f`.
 - Scatter quadrant colors: TP green, FP red, FN amber, TN neutral.
 
 ### Buttons & links
@@ -69,32 +91,36 @@ Source of truth for UI and export visuals. Target: developers who value trust an
 ## Accessibility
 
 - Chart alt text on every Plotly figure.
-- ARIA: sidebar = navigation, main = main, score card = region.
-- Color-blind safe: pair color with icons (✓/✗) or labels.
-- WCAG AA: contrast ≥ 4.5:1 normal text, ≥ 3:1 large.
-- Touch targets ≥ 44px where applicable.
+- Color-blind safe: pair color with icons or labels.
+- WCAG AA: contrast >= 4.5:1 normal text, >= 3:1 large.
+- Touch targets >= 44px on interactive elements.
 
 ## Responsive
 
-- **Desktop (>1024px):** Sidebar + main panel.
-- **Tablet (768–1024px):** Sidebar collapsible; comparison stacks vertically.
-- **Mobile (<768px):** Charts stack; score card 2-column grid; timeline horizontal scroll.
+- **Desktop (>1024px):** Sidebar collapsed by default (user can expand).
+- **Tablet (768-1024px):** Sidebar collapsed; content full-width.
+- **Mobile (<768px):** Sidebar collapsed; cards stack; tables scroll horizontally.
+- All pages use `initial_sidebar_state="collapsed"` for mobile-first layout.
+
+## Performance
+
+- **Target:** Sub-200ms initial load (excluding Streamlit framework overhead).
+- **Fonts:** System only — zero external font requests.
+- **CSS:** Minimal inline styles. Streamlit theme handles base colors.
+- **No external assets:** No CDN fonts, no icon libraries, no decorative images.
 
 ## Export (PDF)
 
 - Use Helvetica for body and tables; keep layout compact.
 - Reuse semantic intent (e.g. pass/fail) via table styling, not only color.
-- One report per trigger: definition, score card, confusion matrix, Lloyd's checklist, short methodology note.
 
-## Global Monitor (v0.2)
+## Global Monitor
 
-The Global Monitor page (`dashboard/pages/6_Global_Monitor.py`) uses the same design system:
-- **Map:** PyDeck ScatterplotLayer on `mapbox://styles/mapbox/dark-v11`. Marker colors use semantic tokens: `red` for triggered, `green` for normal, `amber` for stale, `muted` for no data.
-- **Trigger cards:** Use `bg-card` background, `border` border, same 6px rounded corners as score cards. Large value in monospace (`JetBrains Mono`), color by semantic status.
-- **Status badges:** Inline monospace badges — `TRIGGERED` (red), `NORMAL` (green), `NO DATA` (muted), `UPDATING` (amber).
-- **Layout:** Full-width map (450px height) above trigger cards in 3-column grid per peril category.
-- **Data:** All data from local cache. Zero external API calls. Footer credits data sources.
+- **Map:** PyDeck ScatterplotLayer. Marker colors use semantic tokens.
+- **Trigger cards:** Use `bg-card` background, `border` border, 6px rounded corners.
+- **Layout:** Full-width map above trigger cards in 3-column grid per peril category.
+- **Tooltips:** White card with shadow, monospace text.
 
-## Oracle / settlement (v0.2.2+)
+## Oracle / settlement
 
-Architecture for signed trigger determinations and the oracle standard is documented in **docs/GAP_ANALYSIS_ORACLE.md**. Data structures: **gad/oracle_models.py** (TriggerEvent, TriggerDetermination). Public key registry: **docs/ORACLE_KEY_REGISTRY.md**. Oracle status page uses a separate palette: `#0a0e1a` background, `#00d4d4` accent (deliberate divergence from dashboard). Review at each version milestone.
+Oracle status page on Cloudflare Worker (`oracle.parametricdata.io`) retains its own dark palette (`#0a0e1a` background, `#00d4d4` accent). The dashboard Oracle Ledger page uses the standard light theme.

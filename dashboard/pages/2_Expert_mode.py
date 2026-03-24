@@ -27,17 +27,17 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
-    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
+    .stApp { background-color: #ffffff; }
+    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
+    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
     '</div>', unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -59,9 +59,9 @@ SAMPLE_CSV = {
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Expert Mode</h1>'
-    '<p style="color:#8b949e;font-size:14px;">Edit trigger JSON directly. Full schema control. Same engine as guided mode.</p>',
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Expert Mode</h1>'
+    '<p style="color:#656d76;font-size:14px;">Edit trigger JSON directly. Full schema control. Same engine as guided mode.</p>',
     unsafe_allow_html=True,
 )
 
@@ -120,9 +120,9 @@ if validate_btn or compute_btn:
         st.session_state["expert_monitor_trigger"] = monitor_trigger
 
         st.markdown(f"""
-        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin:12px 0;">
-            <div style="font-size:15px;font-weight:600;color:#e6edf3;">{monitor_trigger.name}</div>
-            <div style="color:#8b949e;font-size:12px;margin-top:4px;">
+        <div style="background:#f6f8fa;border:1px solid #d1d9e0;border-radius:8px;padding:16px;margin:12px 0;">
+            <div style="font-size:15px;font-weight:600;color:#1f2328;">{monitor_trigger.name}</div>
+            <div style="color:#656d76;font-size:12px;margin-top:4px;">
                 {monitor_trigger.location_label} · {PERIL_LABELS.get(monitor_trigger.peril, '')} ·
                 Threshold: {monitor_trigger.threshold} {monitor_trigger.threshold_unit} ·
                 Fires when {'above' if monitor_trigger.fires_when_above else 'below'}

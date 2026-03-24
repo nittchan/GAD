@@ -27,21 +27,21 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
-    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
-    .detail-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
-    .detail-label { color: #8b949e; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .detail-value { color: #e6edf3; font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-    .detail-value-small { color: #e6edf3; font-size: 14px; }
-    .status-critical { color: #f85149; }
-    .status-normal { color: #3fb950; }
-    .status-no-data { color: #8b949e; }
+    .stApp { background-color: #ffffff; }
+    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
+    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
+    .detail-card { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+    .detail-label { color: #656d76; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .detail-value { color: #1f2328; font-size: 20px; font-weight: 700; font-family: ui-monospace, monospace; }
+    .detail-value-small { color: #1f2328; font-size: 14px; }
+    .status-critical { color: #d1242f; }
+    .status-normal { color: #1a7f37; }
+    .status-no-data { color: #656d76; }
 
     /* Dark-themed dropdowns */
-    [data-testid="stSelectbox"] [data-baseweb="select"] { background-color: #161b22 !important; border-color: #30363d !important; color: #e6edf3 !important; }
-    [data-baseweb="popover"] li { color: #e6edf3 !important; }
-    [data-baseweb="popover"] li:hover { background-color: rgba(88,166,255,0.1) !important; }
+    [data-testid="stSelectbox"] [data-baseweb="select"] { background-color: #f6f8fa !important; border-color: #d1d9e0 !important; color: #1f2328 !important; }
+    [data-baseweb="popover"] li { color: #1f2328 !important; }
+    [data-baseweb="popover"] li:hover { background-color: #ddf4ff !important; }
     [data-testid="stSidebar"] a { min-height: 44px !important; display: flex !important; align-items: center !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -49,8 +49,8 @@ st.markdown("""
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
     '</div>',
     unsafe_allow_html=True,
 )
@@ -136,13 +136,13 @@ value = result.get("value")
 unit = result.get("unit", trigger.threshold_unit)
 
 # ── Page Header ──
-status_color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
+status_color = "#d1242f" if status == "critical" else "#1a7f37" if status == "normal" else "#656d76"
 status_label = "TRIGGERED" if status == "critical" else "NORMAL" if status == "normal" else "UPDATING" if status == "stale" else "NO DATA"
 
 st.markdown(
-    f'<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">{PERIL_LABELS[trigger.peril]}</p>'
-    f'<h1 style="font-size:32px;font-weight:700;color:#e6edf3;margin-bottom:4px;">{trigger.name}</h1>'
-    f'<p style="color:#8b949e;font-size:14px;margin-bottom:24px;">{trigger.location_label}</p>',
+    f'<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">{PERIL_LABELS[trigger.peril]}</p>'
+    f'<h1 style="font-size:32px;font-weight:700;color:#1f2328;margin-bottom:4px;">{trigger.name}</h1>'
+    f'<p style="color:#656d76;font-size:14px;margin-bottom:24px;">{trigger.location_label}</p>',
     unsafe_allow_html=True,
 )
 
@@ -155,7 +155,7 @@ with col1:
     <div class="detail-card">
         <div class="detail-label">Current Value</div>
         <div class="detail-value" style="color:{status_color}">{value_display}</div>
-        <div style="color:#8b949e;font-size:12px;margin-top:4px;">{unit}</div>
+        <div style="color:#656d76;font-size:12px;margin-top:4px;">{unit}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -164,7 +164,7 @@ with col2:
     <div class="detail-card">
         <div class="detail-label">Threshold</div>
         <div class="detail-value">{trigger.threshold}</div>
-        <div style="color:#8b949e;font-size:12px;margin-top:4px;">{trigger.threshold_unit} · fires when {'above' if trigger.fires_when_above else 'below'}</div>
+        <div style="color:#656d76;font-size:12px;margin-top:4px;">{trigger.threshold_unit} · fires when {'above' if trigger.fires_when_above else 'below'}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -173,7 +173,7 @@ with col3:
     <div class="detail-card">
         <div class="detail-label">Status</div>
         <div class="detail-value" style="color:{status_color}">{status_label}</div>
-        <div style="color:#8b949e;font-size:12px;margin-top:4px;">{'Data source: ' + (data.get('source', trigger.data_source) if data else trigger.data_source)}</div>
+        <div style="color:#656d76;font-size:12px;margin-top:4px;">{'Data source: ' + (data.get('source', trigger.data_source) if data else trigger.data_source)}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -359,9 +359,9 @@ elif csv_path and csv_path.is_file():
 else:
     st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
     st.markdown("""
-    <div class="detail-card" style="border-color:#30363d;">
+    <div class="detail-card" style="border-color:#d1d9e0;">
         <div class="detail-label">Basis Risk Analysis</div>
-        <div class="detail-value-small" style="color:#8b949e;">
+        <div class="detail-value-small" style="color:#656d76;">
             Historical basis risk analysis requires time-series data for this location.
             Currently showing live monitoring data. Full Spearman ρ, back-test, and Lloyd's
             scoring will be available when historical data is loaded for this trigger.

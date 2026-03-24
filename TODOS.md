@@ -54,6 +54,22 @@
 
 ---
 
+## P0.5 — Design: Light Theme + Performance ← CURRENT SESSION
+
+### DESIGN-01: Switch to light theme with sub-200ms load
+**Why:** Dark theme fights Streamlit defaults (broken dropdowns, unreadable selects, white flash on load). Light theme aligns natively, needs zero CSS overrides for form elements, loads faster.
+
+- [x] **DESIGN-01a:** `.streamlit/config.toml` — light base, `#0969da` accent, system sans-serif, `#ffffff` bg, `#f6f8fa` secondary. All dark CSS overrides removed.
+- [x] **DESIGN-01b:** DESIGN.md rewritten for light theme — full palette, system fonts, performance targets.
+- [x] **DESIGN-01c:** All 8 dashboard pages restyled — 19 color replacements per file, system monospace (`ui-monospace`), all dark hex codes replaced.
+- [x] **DESIGN-01d:** Map tooltip switched to white card with shadow. Map markers use high-contrast RGBA on any tile style.
+- [x] **DESIGN-01e:** Trigger cards, status badges, flight tables — all use light-bg semantic colors (`#dafbe1`, `#ffebe9`, `#fff8c5`).
+- [x] **DESIGN-01f:** Oracle Ledger page — `#00d4d4` accent replaced with `#0969da`, dark backgrounds replaced with light.
+- [x] **DESIGN-01g:** Loading state on Global Monitor — shows info message when cache is empty instead of blank space. Map tiles switched to `positron` (light).
+- [x] **DESIGN-01h:** System fonts only (zero CDN requests). Minimal CSS. Performance verified on deploy.
+
+---
+
 ## P2 — Oracle Wiring (trust layer)
 
 ### ORACLE-01: Wire Ed25519 signing to live fetcher

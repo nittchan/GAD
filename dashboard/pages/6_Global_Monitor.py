@@ -49,127 +49,63 @@ def _rho_badge(rho: float | None) -> str:
     if rho is None:
         return ""
     if rho >= 0.7:
-        color, bg = "#3fb950", "rgba(63,185,80,0.15)"
+        color, bg = "#1a7f37", "#dafbe1"
     elif rho >= 0.4:
-        color, bg = "#d29922", "rgba(210,153,34,0.15)"
+        color, bg = "#9a6700", "#fff8c5"
     else:
-        color, bg = "#f85149", "rgba(248,81,73,0.15)"
+        color, bg = "#d1242f", "#ffebe9"
     return (
         f'<span style="background:{bg};color:{color};border:1px solid {color};'
-        f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace;'
+        f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:ui-monospace,monospace;'
         f'margin-left:6px;">ρ={rho:.2f}</span>'
     )
 
 st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="collapsed")
 
-# ── Dark theme CSS ──
+# ── Light theme CSS (minimal — Streamlit handles most via config.toml) ──
 st.markdown("""
 <style>
-    /* Hide Streamlit default chrome */
     [data-testid="stSidebarNav"] { display: none; }
-    header[data-testid="stHeader"] { background: transparent; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     [data-testid="stDecoration"] { display: none; }
 
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
-    h1, h2, h3 { color: #e6edf3 !important; }
     .trigger-card {
-        background: #161b22;
-        border: 1px solid #30363d;
+        background: #f6f8fa;
+        border: 1px solid #d1d9e0;
         border-radius: 6px;
         padding: 16px;
         margin-bottom: 12px;
     }
-    .trigger-card h4 { margin: 0 0 8px 0; color: #e6edf3; font-size: 14px; }
-    .trigger-card .location { color: #8b949e; font-size: 12px; margin-bottom: 8px; }
+    .trigger-card h4 { margin: 0 0 8px 0; color: #1f2328; font-size: 14px; }
+    .trigger-card .location { color: #656d76; font-size: 12px; margin-bottom: 8px; }
     .status-badge {
         display: inline-block;
         padding: 2px 8px;
         border-radius: 3px;
         font-size: 11px;
         font-weight: 600;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: ui-monospace, monospace;
     }
-    .status-critical { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid #f85149; }
-    .status-normal { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid #3fb950; }
-    .status-no-data { background: rgba(139,148,158,0.15); color: #8b949e; border: 1px solid #8b949e; }
-    .status-stale { background: rgba(210,153,34,0.15); color: #d29922; border: 1px solid #d29922; }
+    .status-critical { background: #ffebe9; color: #d1242f; border: 1px solid #d1242f; }
+    .status-normal { background: #dafbe1; color: #1a7f37; border: 1px solid #1a7f37; }
+    .status-no-data { background: #f6f8fa; color: #656d76; border: 1px solid #d1d9e0; }
+    .status-stale { background: #fff8c5; color: #9a6700; border: 1px solid #9a6700; }
     .value-large {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: ui-monospace, monospace;
         font-size: 28px;
         font-weight: 700;
+        color: #1f2328;
         margin: 4px 0;
     }
-    .value-unit { color: #8b949e; font-size: 12px; }
+    .value-unit { color: #656d76; font-size: 12px; }
     .peril-header {
         font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #8b949e;
+        color: #656d76;
         margin: 24px 0 12px 0;
-    }
-
-    /* ── Dark-themed multiselect (override Streamlit defaults) ── */
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] {
-        background-color: rgba(88,166,255,0.15) !important;
-        border: 1px solid #58a6ff !important;
-        color: #58a6ff !important;
-        border-radius: 4px !important;
-    }
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] span {
-        color: #58a6ff !important;
-    }
-    [data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
-        fill: #58a6ff !important;
-    }
-    [data-testid="stMultiSelect"] [data-baseweb="select"] {
-        background-color: #161b22 !important;
-        border-color: #30363d !important;
-    }
-    [data-testid="stMultiSelect"] [data-baseweb="popover"] {
-        background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-    }
-    [data-testid="stMultiSelect"] input {
-        color: #e6edf3 !important;
-    }
-
-    /* ── Dark-themed selectbox dropdown ── */
-    [data-testid="stSelectbox"] [data-baseweb="select"] {
-        background-color: #161b22 !important;
-        border-color: #30363d !important;
-        color: #e6edf3 !important;
-    }
-    [data-baseweb="popover"] li {
-        color: #e6edf3 !important;
-    }
-    [data-baseweb="popover"] li:hover {
-        background-color: rgba(88,166,255,0.1) !important;
-    }
-
-    /* ── Sidebar touch targets and mobile ── */
-    [data-testid="stSidebar"] a {
-        min-height: 44px !important;
-        display: flex !important;
-        align-items: center !important;
-        padding: 8px 12px !important;
-    }
-
-    /* ── Mobile responsive ── */
-    @media (max-width: 768px) {
-        [data-testid="stSidebar"] {
-            min-width: 0 !important;
-            width: 250px !important;
-        }
-        .trigger-card .value-large {
-            font-size: 22px;
-        }
-        .trigger-card {
-            padding: 12px;
-        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -239,8 +175,8 @@ def _status_badge(status: str) -> str:
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
     '</div>',
     unsafe_allow_html=True,
 )
@@ -256,9 +192,9 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 
 # ── Page Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Global Monitor</h1>'
-    f'<p style="color:#8b949e;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across {len(PERIL_LABELS)} peril categories. All data from open sources.</p>',
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Global Monitor</h1>'
+    f'<p style="color:#656d76;font-size:14px;">{len(GLOBAL_TRIGGERS)} live triggers across {len(PERIL_LABELS)} peril categories. All data from open sources.</p>',
     unsafe_allow_html=True,
 )
 
@@ -367,6 +303,9 @@ for trigger in GLOBAL_TRIGGERS:
     })
 
 # ── Map ──
+if not map_rows:
+    st.info("No cached data yet. The background fetcher runs every 15 minutes and populates the map automatically. Run `python -m gad.monitor.fetcher` to fetch immediately.")
+
 if map_rows:
     import pydeck as pdk
 
@@ -403,11 +342,11 @@ if map_rows:
     view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.8, pitch=0)
 
     tooltip = {
-        "html": "<div style='font-family:monospace;background:#161b22;padding:10px 14px;border:1px solid #30363d;border-radius:4px;min-width:200px'>"
-                "<div style='font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:4px'>{name}</div>"
-                "<div style='font-size:11px;color:#8b949e;margin-bottom:6px'>{location}</div>"
-                "<div style='font-size:18px;font-weight:700;color:#58a6ff;margin-bottom:2px'>{value_str}</div>"
-                "<div style='font-size:11px;font-weight:600;color:#e6edf3'>{status_label}</div>"
+        "html": "<div style='font-family:ui-monospace,monospace;background:#ffffff;padding:10px 14px;border:1px solid #d1d9e0;border-radius:4px;min-width:200px;box-shadow:0 1px 3px rgba(0,0,0,0.12)'>"
+                "<div style='font-size:13px;font-weight:700;color:#1f2328;margin-bottom:4px'>{name}</div>"
+                "<div style='font-size:11px;color:#656d76;margin-bottom:6px'>{location}</div>"
+                "<div style='font-size:18px;font-weight:700;color:#0969da;margin-bottom:2px'>{value_str}</div>"
+                "<div style='font-size:11px;font-weight:600;color:#1f2328'>{status_label}</div>"
                 "</div>",
         "style": {"backgroundColor": "transparent", "border": "none"},
     }
@@ -419,7 +358,7 @@ if map_rows:
     deck = pdk.Deck(
         layers=layers,
         initial_view_state=view_state,
-        map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
         tooltip=tooltip,
     )
     st.pydeck_chart(deck, use_container_width=True, height=500)
@@ -439,7 +378,7 @@ for peril in selected_perils:
     # Flight delay: compact table (144 airports — cards don't scale)
     if peril == "flight_delay":
         table_html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;">'
-        table_html += '<tr style="border-bottom:1px solid #30363d;color:#8b949e;text-align:left;">'
+        table_html += '<tr style="border-bottom:1px solid #d1d9e0;color:#656d76;text-align:left;">'
         table_html += '<th style="padding:8px 12px;">Airport</th><th style="padding:8px;">Location</th>'
         table_html += '<th style="padding:8px;text-align:right;">Departures</th>'
         table_html += '<th style="padding:8px;text-align:right;">Metric</th><th style="padding:8px;">Status</th></tr>'
@@ -458,13 +397,13 @@ for peril in selected_perils:
             else:
                 value_str = "—"
 
-            color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
+            color = "#d1242f" if status == "critical" else "#1a7f37" if status == "normal" else "#656d76"
 
             rho_html = _rho_badge(rho_map.get(tid))
-            table_html += f'<tr style="border-bottom:1px solid #21262d;">'
-            table_html += f'<td style="padding:8px 12px;color:#e6edf3;font-weight:600;">{trigger.name}{rho_html}</td>'
-            table_html += f'<td style="padding:8px;color:#8b949e;font-size:12px;">{trigger.location_label}</td>'
-            table_html += f'<td style="padding:8px;text-align:right;color:#8b949e;">{total_flights}</td>'
+            table_html += f'<tr style="border-bottom:1px solid #e1e4e8;">'
+            table_html += f'<td style="padding:8px 12px;color:#1f2328;font-weight:600;">{trigger.name}{rho_html}</td>'
+            table_html += f'<td style="padding:8px;color:#656d76;font-size:12px;">{trigger.location_label}</td>'
+            table_html += f'<td style="padding:8px;text-align:right;color:#656d76;">{total_flights}</td>'
             table_html += f'<td style="padding:8px;text-align:right;color:{color};font-weight:700;">{value_str}</td>'
             table_html += f'<td style="padding:8px;">{_status_badge(status)}</td>'
             table_html += '</tr>'
@@ -490,7 +429,7 @@ for peril in selected_perils:
                 status = result.get("status", "no_data")
 
                 value_display = f"{value}" if value is not None else "—"
-                color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
+                color = "#d1242f" if status == "critical" else "#1a7f37" if status == "normal" else "#656d76"
 
                 rho_html = _rho_badge(rho_map.get(tid))
                 st.markdown(f"""

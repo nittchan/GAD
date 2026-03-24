@@ -28,37 +28,37 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
 
     /* Dark theme */
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
+    .stApp { background-color: #ffffff; }
+    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
 
     /* Typography */
-    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
+    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
 
     /* Hero */
-    .hero-tag { color: #58a6ff; font-size: 13px; letter-spacing: 3px;
+    .hero-tag { color: #0969da; font-size: 13px; letter-spacing: 3px;
                 text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
-    .hero-title { font-size: 48px; font-weight: 800; color: #e6edf3;
+    .hero-title { font-size: 48px; font-weight: 800; color: #1f2328;
                   line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.02em; }
-    .hero-sub { font-size: 17px; color: #8b949e; max-width: 580px; line-height: 1.7; }
+    .hero-sub { font-size: 17px; color: #656d76; max-width: 580px; line-height: 1.7; }
 
     /* Stats */
     .stats-row { display: flex; gap: 48px; margin: 32px 0; }
     .stat-item { }
-    .stat-number { font-family: 'JetBrains Mono', ui-monospace, monospace;
-                   font-size: 32px; font-weight: 700; color: #58a6ff;
+    .stat-number { font-family: ui-monospace, monospace;
+                   font-size: 32px; font-weight: 700; color: #0969da;
                    letter-spacing: -0.02em; }
-    .stat-label { color: #8b949e; font-size: 12px; margin-top: 2px; }
+    .stat-label { color: #656d76; font-size: 12px; margin-top: 2px; }
 
     /* Feature cards */
-    .feature-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+    .feature-card { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px;
                     padding: 24px; height: 100%; transition: border-color 0.2s; }
-    .feature-card:hover { border-color: #58a6ff; }
-    .feature-card h4 { color: #e6edf3; margin: 0 0 10px 0; font-size: 16px; font-weight: 600; }
-    .feature-card p { color: #8b949e; font-size: 13px; margin: 0; line-height: 1.6; }
+    .feature-card:hover { border-color: #0969da; }
+    .feature-card h4 { color: #1f2328; margin: 0 0 10px 0; font-size: 16px; font-weight: 600; }
+    .feature-card p { color: #656d76; font-size: 13px; margin: 0; line-height: 1.6; }
 
     /* Buttons */
     .stButton > button[kind="primary"] {
-        background: #58a6ff !important; color: #0d1117 !important;
+        background: #0969da !important; color: #ffffff !important;
         border: none !important; font-weight: 600 !important;
         border-radius: 6px !important; padding: 12px 24px !important;
     }
@@ -66,12 +66,12 @@ st.markdown("""
         background: #79b8ff !important;
     }
     .stButton > button:not([kind="primary"]) {
-        background: transparent !important; color: #e6edf3 !important;
-        border: 1px solid #30363d !important; border-radius: 6px !important;
+        background: transparent !important; color: #1f2328 !important;
+        border: 1px solid #d1d9e0 !important; border-radius: 6px !important;
         padding: 12px 24px !important;
     }
     .stButton > button:not([kind="primary"]):hover {
-        border-color: #58a6ff !important; color: #58a6ff !important;
+        border-color: #0969da !important; color: #0969da !important;
     }
 
     /* Hide Streamlit branding */
@@ -84,9 +84,9 @@ st.markdown("""
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
-    '<p style="font-size:12px;color:#8b949e;margin-top:4px;">Global Insurance Monitor</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
+    '<p style="font-size:12px;color:#656d76;margin-top:4px;">Global Insurance Monitor</p>'
     '</div>',
     unsafe_allow_html=True,
 )

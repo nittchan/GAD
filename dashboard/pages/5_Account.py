@@ -17,20 +17,20 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
-    .stApp { background-color: #0d1117; }
-    [data-testid="stSidebar"] { background: #161b22; border-right: 1px solid #30363d; }
-    h1, h2, h3, h4, p, span, label, div { color: #e6edf3; }
-    .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; text-align: center; }
-    .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #58a6ff; }
-    .stat-lbl { color: #8b949e; font-size: 12px; margin-top: 4px; }
+    .stApp { background-color: #ffffff; }
+    [data-testid="stSidebar"] { background: #f6f8fa; border-right: 1px solid #d1d9e0; }
+    h1, h2, h3, h4, p, span, label, div { color: #1f2328; }
+    .stat-card { background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 8px; padding: 20px; text-align: center; }
+    .stat-num { font-family: ui-monospace, monospace; font-size: 32px; font-weight: 700; color: #0969da; }
+    .stat-lbl { color: #656d76; font-size: 12px; margin-top: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ──
 st.sidebar.markdown(
     '<div style="padding:8px 0 16px 0;">'
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
-    '<p style="font-size:20px;font-weight:700;color:#e6edf3;margin:0;">Parametric Data</p>'
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">parametricdata.io</p>'
+    '<p style="font-size:20px;font-weight:700;color:#1f2328;margin:0;">Parametric Data</p>'
     '</div>', unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -45,9 +45,9 @@ st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 
 # ── Header ──
 st.markdown(
-    '<p style="font-size:11px;color:#58a6ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
-    '<h1 style="font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px;">Monitor Status</h1>'
-    '<p style="color:#8b949e;font-size:14px;">Platform overview and data source health.</p>',
+    '<p style="font-size:11px;color:#0969da;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Parametric Data</p>'
+    '<h1 style="font-size:28px;font-weight:700;color:#1f2328;margin-bottom:8px;">Monitor Status</h1>'
+    '<p style="color:#656d76;font-size:14px;">Platform overview and data source health.</p>',
     unsafe_allow_html=True,
 )
 
@@ -86,16 +86,16 @@ for peril_key, label in PERIL_LABELS.items():
     pct = int(cached / total * 100) if total > 0 else 0
 
     st.markdown(f"""
-    <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="background:#f6f8fa;border:1px solid #d1d9e0;border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
         <div>
-            <span style="font-weight:600;color:#e6edf3;">{label}</span>
-            <span style="color:#8b949e;font-size:12px;margin-left:8px;">{total} triggers</span>
+            <span style="font-weight:600;color:#1f2328;">{label}</span>
+            <span style="color:#656d76;font-size:12px;margin-left:8px;">{total} triggers</span>
         </div>
         <div style="font-family:monospace;font-size:13px;">
-            <span style="color:#3fb950;">{cached} fresh</span> ·
-            <span style="color:#d29922;">{stale} stale</span> ·
-            <span style="color:#8b949e;">{no_data} no data</span> ·
-            <span style="color:#58a6ff;font-weight:600;">{pct}%</span>
+            <span style="color:#1a7f37;">{cached} fresh</span> ·
+            <span style="color:#9a6700;">{stale} stale</span> ·
+            <span style="color:#656d76;">{no_data} no data</span> ·
+            <span style="color:#0969da;font-weight:600;">{pct}%</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
