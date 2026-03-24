@@ -82,15 +82,16 @@ st.divider()
 if step == 1:
     st.markdown("### What are you covering?")
     peril_items = list(PERIL_CONFIG.items())
-    row1 = st.columns(4)
-    row2 = st.columns(4)
-    all_cols = row1 + row2
-    for i, (key, cfg) in enumerate(peril_items):
-        with all_cols[i]:
-            if st.button(f"{cfg['icon']}\n\n{cfg['label']}", key=f"peril_{key}", use_container_width=True):
-                st.session_state["wizard_peril"] = key
-                st.session_state["wizard_step"] = 2
-                st.rerun()
+    cols_per_row = 4
+    for row_start in range(0, len(peril_items), cols_per_row):
+        row_items = peril_items[row_start:row_start + cols_per_row]
+        cols = st.columns(cols_per_row)
+        for i, (key, cfg) in enumerate(row_items):
+            with cols[i]:
+                if st.button(f"{cfg['icon']}\n\n{cfg['label']}", key=f"peril_{key}", use_container_width=True):
+                    st.session_state["wizard_peril"] = key
+                    st.session_state["wizard_step"] = 2
+                    st.rerun()
 
 # ── Step 2: Location ──
 elif step == 2:
