@@ -19,8 +19,11 @@ from gad.monitor.ports import ALL_PORTS
 
 class TestTriggerCount:
     def test_total_count_is_511(self):
-        assert len(GLOBAL_TRIGGERS) == 511, (
+        assert len(GLOBAL_TRIGGERS) == 521, (
             f"Expected 511 triggers, got {len(GLOBAL_TRIGGERS)}"
+    def test_total_count_is_516(self):
+        assert len(GLOBAL_TRIGGERS) == 521, (
+            f"Expected 516 triggers, got {len(GLOBAL_TRIGGERS)}"
         )
 
 

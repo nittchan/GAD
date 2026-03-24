@@ -37,6 +37,7 @@ from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
 from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, noaa_swpc
+from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, who_don
 from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
@@ -198,6 +199,9 @@ def fetch_crop_ndvi(trigger: MonitorTrigger) -> dict | None:
 def fetch_solar(trigger: MonitorTrigger) -> dict | None:
     """Solar/Space Weather: NOAA SWPC Kp index (free, no key)."""
     return noaa_swpc.fetch_kp_index(trigger.id)
+def fetch_health(trigger: MonitorTrigger) -> dict | None:
+    """Health/Pandemic: WHO Disease Outbreak News (free, no key)."""
+    return who_don.fetch_outbreaks(trigger.lat, trigger.lon, trigger.id)
 
 
 # ── Peril → fetch function mapping ──
@@ -213,6 +217,7 @@ FETCH_MAP = {
     "noaa_nhc": fetch_cyclone,
     "ndvi": fetch_crop_ndvi,
     "noaa_swpc": fetch_solar,
+    "who_don": fetch_health,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -228,6 +233,7 @@ SOURCE_CACHE_KEY = {
     "noaa_nhc": "cyclone",
     "ndvi": "ndvi",
     "noaa_swpc": "solar",
+    "who_don": "health",
 }
 
 
@@ -311,6 +317,8 @@ def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
         r = ndvi.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "noaa_swpc":
         r = noaa_swpc.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "who_don":
+        r = who_don.evaluate_trigger(data, trigger.threshold)
     else:
         return False
     return r.get("fired", False)

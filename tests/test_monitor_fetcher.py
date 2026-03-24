@@ -268,6 +268,7 @@ class TestFetchMap:
     EXPECTED_SOURCES = [
         "opensky", "openaq", "firms", "openmeteo",
         "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "noaa_swpc",
+        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "who_don",
     ]
 
     def test_all_expected_sources_present(self):
@@ -288,6 +289,7 @@ class TestSourceCacheKey:
     EXPECTED_SOURCES = [
         "opensky", "openaq", "firms", "openmeteo",
         "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "noaa_swpc",
+        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "who_don",
     ]
 
     def test_all_expected_sources_present(self):

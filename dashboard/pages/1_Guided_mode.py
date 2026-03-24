@@ -65,6 +65,7 @@ PERIL_CONFIG = {
     "cyclone": {"label": "Tropical Cyclone", "icon": "🌀", "unit": "knots", "default": 64.0, "above": True, "source": "noaa_nhc"},
     "crop": {"label": "Crop / NDVI", "icon": "🌾", "unit": "NDVI", "default": 0.3, "above": False, "source": "ndvi"},
     "solar": {"label": "Solar / Space Weather", "icon": "☀️", "unit": "Kp", "default": 5.0, "above": True, "source": "noaa_swpc"},
+    "health": {"label": "Health / Pandemic", "icon": "🏥", "unit": "outbreaks", "default": 1.0, "above": True, "source": "who_don"},
 }
 
 # ── Header ──

@@ -12,7 +12,8 @@ from typing import Literal
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "solar"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "solar", "health"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "health"]
 
 
 @dataclass(frozen=True)
@@ -221,6 +222,17 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="solar-extreme", name="Extreme Geomagnetic Storm", peril="solar", lat=0.0, lon=0.0, location_label="Global", threshold=8, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="NOAA SWPC Kp index >= 8 (G4 severe storm). GPS degraded, widespread voltage control problems, satellite orientation anomalies."),
     MonitorTrigger(id="solar-aviation-polar", name="Polar Route Aviation Risk", peril="solar", lat=70.0, lon=0.0, location_label="Polar Route (Arctic)", threshold=5, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="Kp >= 5 affects polar aviation routes. HF radio blackout forces rerouting of transpolar flights, increasing fuel costs and delays."),
     MonitorTrigger(id="solar-grid-risk", name="Power Grid Risk (North America)", peril="solar", lat=40.0, lon=-90.0, location_label="North America Grid", threshold=7, threshold_unit="Kp", fires_when_above=True, data_source="noaa_swpc", description="Kp >= 7 creates geomagnetically induced currents (GICs) that stress high-voltage transformers in mid-latitude power grids."),
+    # ── Health / Pandemic (WHO DON) ──
+    MonitorTrigger(id="health-delhi", name="Delhi Health Alert", peril="health", lat=28.6139, lon=77.2090, location_label="Delhi, India", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in India within 7 days."),
+    MonitorTrigger(id="health-mumbai", name="Mumbai Health Alert", peril="health", lat=19.0760, lon=72.8777, location_label="Mumbai, India", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in India within 7 days."),
+    MonitorTrigger(id="health-lagos", name="Lagos Health Alert", peril="health", lat=6.5244, lon=3.3792, location_label="Lagos, Nigeria", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Nigeria within 7 days."),
+    MonitorTrigger(id="health-dhaka", name="Dhaka Health Alert", peril="health", lat=23.8103, lon=90.4125, location_label="Dhaka, Bangladesh", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Bangladesh within 7 days."),
+    MonitorTrigger(id="health-jakarta", name="Jakarta Health Alert", peril="health", lat=-6.2088, lon=106.8456, location_label="Jakarta, Indonesia", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Indonesia within 7 days."),
+    MonitorTrigger(id="health-cairo", name="Cairo Health Alert", peril="health", lat=30.0444, lon=31.2357, location_label="Cairo, Egypt", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Egypt within 7 days."),
+    MonitorTrigger(id="health-kinshasa", name="Kinshasa Health Alert", peril="health", lat=-4.4419, lon=15.2663, location_label="Kinshasa, DRC", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in DRC within 7 days."),
+    MonitorTrigger(id="health-lima", name="Lima Health Alert", peril="health", lat=-12.0464, lon=-77.0428, location_label="Lima, Peru", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Peru within 7 days."),
+    MonitorTrigger(id="health-bangkok", name="Bangkok Health Alert", peril="health", lat=13.7563, lon=100.5018, location_label="Bangkok, Thailand", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Thailand within 7 days."),
+    MonitorTrigger(id="health-nairobi", name="Nairobi Health Alert", peril="health", lat=-1.2921, lon=36.8219, location_label="Nairobi, Kenya", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Kenya within 7 days."),
 ]
 
 
@@ -292,6 +304,7 @@ PERIL_LABELS: dict[PerilType, str] = {
     "cyclone": "Tropical Cyclone",
     "crop": "Crop / NDVI",
     "solar": "Solar / Space Weather",
+    "health": "Health / Pandemic",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -306,4 +319,5 @@ PERIL_ICONS: dict[PerilType, str] = {
     "cyclone": "cyclone",
     "crop": "eco",
     "solar": "sunny",
+    "health": "medical_services",
 }
