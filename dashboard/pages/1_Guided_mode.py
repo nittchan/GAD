@@ -64,6 +64,7 @@ PERIL_CONFIG = {
     "flood": {"label": "Flood", "icon": "🌊", "unit": "metres", "default": 5.0, "above": True, "source": "usgs_water"},
     "cyclone": {"label": "Tropical Cyclone", "icon": "🌀", "unit": "knots", "default": 64.0, "above": True, "source": "noaa_nhc"},
     "crop": {"label": "Crop / NDVI", "icon": "🌾", "unit": "NDVI", "default": 0.3, "above": False, "source": "ndvi"},
+    "solar": {"label": "Solar / Space Weather", "icon": "☀️", "unit": "Kp", "default": 5.0, "above": True, "source": "noaa_swpc"},
 }
 
 # ── Header ──
