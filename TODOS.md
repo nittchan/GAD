@@ -44,9 +44,9 @@
 - [x] **DATA-01a:** `scripts/fetch_historical_openmeteo.py` — 5yr daily weather for 144 airports. Open-Meteo Archive API, no key. Output: `data/series/weather/{IATA}_daily.csv`. Gitignored.
 - [x] **DATA-01b:** `scripts/fetch_historical_openaq.py` — 2yr daily AQI per city. OpenAQ v3 /sensors/{id}/days endpoint. Probes for best sensor with recent data. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes station mapping log for audit.
 - [ ] **DATA-01c:** `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable)
-- [ ] **DATA-01d:** `scripts/precompute_basis_risk.py` — batch `compute_basis_risk()` for all triggers
-- [ ] **DATA-01e:** Wire precomputed reports into Trigger Profile page
-- [ ] **DATA-01f:** Add rho badge on Global Monitor trigger cards (green/amber/red)
+- [x] **DATA-01d:** `scripts/precompute_basis_risk.py` — 221 reports computed (144 weather + 72 AQI + legacy). 114 with valid rho. Output: `data/basis_risk/{trigger_id}.json`.
+- [x] **DATA-01e:** Trigger Profile loads precomputed `BasisRiskReport` from JSON. Falls back to legacy CSV, then placeholder. Full rendering with PDF export.
+- [x] **DATA-01f:** Rho badge on Global Monitor — flight table and peril cards show `ρ=X.XX` (green/amber/red). Cached 1hr.
 
 ### DATA-02: AQI source fallback order is unverified
 - [ ] **DATA-02a:** Add `diagnostic_mode` to fetcher showing source, distance, station name
@@ -161,7 +161,7 @@
 | 6 | DATA-01a | **DONE** — 144 airports have 5yr weather history |
 | 7 | DATA-01b | **DONE** — AQI triggers have history (coverage depends on OpenAQ station availability) |
 | 8 | DATA-01c | Flight history fetched |
-| 9 | DATA-01d–01f | All triggers show Spearman rho |
+| 9 | DATA-01d–01f | **DONE** — 221 precomputed reports, rho badges on map, profile page wired |
 | 10 | MARINE-01, MARINE-02 | Marine peril live with 10 ports |
 | 11 | PERIL-01 | Flood peril live |
 | 12 | PERIL-02 | Cyclone peril live |

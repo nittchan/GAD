@@ -20,6 +20,46 @@ from gad.monitor.triggers import (
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake
 
+import json as _json
+from pathlib import Path as _Path
+
+_BASIS_RISK_DIR = _Path(__file__).resolve().parent.parent.parent / "data" / "basis_risk"
+
+
+@st.cache_data(ttl=3600)
+def _load_rho_map() -> dict[str, float | None]:
+    """Load precomputed Spearman rho for all triggers. Cached 1 hour."""
+    rho_map: dict[str, float | None] = {}
+    if not _BASIS_RISK_DIR.is_dir():
+        return rho_map
+    for p in _BASIS_RISK_DIR.glob("*.json"):
+        try:
+            d = _json.loads(p.read_text(encoding="utf-8"))
+            trigger_id = p.stem
+            rho = d.get("spearman_rho")
+            if rho is not None and rho == rho:  # exclude NaN
+                rho_map[trigger_id] = round(rho, 3)
+        except Exception:
+            pass
+    return rho_map
+
+
+def _rho_badge(rho: float | None) -> str:
+    """Render a small rho badge: green >= 0.7, amber >= 0.4, red < 0.4."""
+    if rho is None:
+        return ""
+    if rho >= 0.7:
+        color, bg = "#3fb950", "rgba(63,185,80,0.15)"
+    elif rho >= 0.4:
+        color, bg = "#d29922", "rgba(210,153,34,0.15)"
+    else:
+        color, bg = "#f85149", "rgba(248,81,73,0.15)"
+    return (
+        f'<span style="background:{bg};color:{color};border:1px solid {color};'
+        f'border-radius:3px;padding:1px 6px;font-size:10px;font-family:monospace;'
+        f'margin-left:6px;">ρ={rho:.2f}</span>'
+    )
+
 st.set_page_config(page_title="Parametric Data — Global Monitor", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
 # ── Dark theme CSS ──
@@ -324,6 +364,8 @@ else:
     st.info("No triggers match the selected filters.")
 
 # ── Trigger Display ──
+rho_map = _load_rho_map()
+
 for peril in selected_perils:
     peril_triggers = [(tid, t, d, r, s) for tid, (t, d, r, s) in trigger_results.items() if t.peril == peril]
     if not peril_triggers:
@@ -355,8 +397,9 @@ for peril in selected_perils:
 
             color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
 
+            rho_html = _rho_badge(rho_map.get(tid))
             table_html += f'<tr style="border-bottom:1px solid #21262d;">'
-            table_html += f'<td style="padding:8px 12px;color:#e6edf3;font-weight:600;">{trigger.name}</td>'
+            table_html += f'<td style="padding:8px 12px;color:#e6edf3;font-weight:600;">{trigger.name}{rho_html}</td>'
             table_html += f'<td style="padding:8px;color:#8b949e;font-size:12px;">{trigger.location_label}</td>'
             table_html += f'<td style="padding:8px;text-align:right;color:#8b949e;">{total_flights}</td>'
             table_html += f'<td style="padding:8px;text-align:right;color:{color};font-weight:700;">{value_str}</td>'
@@ -386,10 +429,11 @@ for peril in selected_perils:
                 value_display = f"{value}" if value is not None else "—"
                 color = "#f85149" if status == "critical" else "#3fb950" if status == "normal" else "#8b949e"
 
+                rho_html = _rho_badge(rho_map.get(tid))
                 st.markdown(f"""
                 <div class="trigger-card">
                     <h4>{trigger.name} {_status_badge(status)}</h4>
-                    <div class="location">{trigger.location_label}</div>
+                    <div class="location">{trigger.location_label}{rho_html}</div>
                     <div class="value-large" style="color: {color}">{value_display}</div>
                     <div class="value-unit">{unit} (threshold: {trigger.threshold})</div>
                 </div>

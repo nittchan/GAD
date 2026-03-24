@@ -213,16 +213,84 @@ if data:
 else:
     st.info("No data cached yet. The background fetcher will populate this automatically.")
 
-# ── Basis Risk Analysis (when historical data is available) ──
-# Check if this trigger has a historical CSV (legacy triggers)
+# ── Basis Risk Analysis ──
+# Priority: 1) Precomputed JSON, 2) Legacy CSV, 3) Placeholder
 ROOT = Path(__file__).resolve().parent.parent.parent
+PRECOMPUTED_DIR = ROOT / "data" / "basis_risk"
 LEGACY_CSV_MAP = {
     "flight-delay-blr": ROOT / "data" / "series" / "flight_delay_indigo.csv",
     "drought-kenya-marsabit": ROOT / "data" / "series" / "kenya_drought.csv",
 }
 
+precomputed_path = PRECOMPUTED_DIR / f"{trigger.id}.json"
 csv_path = LEGACY_CSV_MAP.get(trigger.id)
-if csv_path and csv_path.is_file():
+
+if precomputed_path.is_file():
+    # ── Precomputed basis risk (from scripts/precompute_basis_risk.py) ──
+    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+    st.markdown("### Basis Risk Analysis")
+    st.caption("Precomputed historical back-test using the GAD engine")
+
+    try:
+        import json as _json
+        from gad.engine.models import BasisRiskReport
+        from dashboard.components import (
+            render_score_card, timeline_fig, scatter_fig,
+            confusion_matrix_fig, confusion_matrix_markdown,
+            chart_summary, render_lloyds_checklist,
+        )
+
+        report_data = _json.loads(precomputed_path.read_text(encoding="utf-8"))
+        report = BasisRiskReport(**report_data)
+
+        render_score_card(report)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
+            st.caption(chart_summary(report))
+        with c2:
+            st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
+            st.caption(chart_summary(report))
+
+        st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
+        st.markdown(confusion_matrix_markdown(report))
+        render_lloyds_checklist(report)
+
+        # PDF export if engine trigger can be built
+        try:
+            from gad.engine import TriggerDef
+            from gad.engine.models import DataSourceProvenance
+            from gad.engine.pdf_export import generate_lloyds_report
+
+            engine_trigger = TriggerDef(
+                name=trigger.name,
+                peril=trigger.peril,
+                threshold=trigger.threshold,
+                threshold_unit=trigger.threshold_unit,
+                data_source=trigger.data_source,
+                geography={"type": "Point", "coordinates": [trigger.lon, trigger.lat]},
+                provenance=DataSourceProvenance(
+                    primary_source=trigger.data_source,
+                    primary_url="https://parametricdata.io",
+                    max_data_latency_seconds=3600,
+                    historical_years_available=5,
+                ),
+                trigger_fires_when_above=trigger.fires_when_above,
+            )
+            pdf_bytes = generate_lloyds_report(engine_trigger, report)
+            st.download_button(
+                "Download Lloyd's PDF",
+                data=pdf_bytes,
+                file_name=f"parametricdata_report_{trigger.id}.pdf",
+                mime="application/pdf",
+            )
+        except Exception:
+            pass  # PDF export is optional
+    except Exception as e:
+        st.error(f"Failed to load precomputed report: {e}")
+
+elif csv_path and csv_path.is_file():
+    # ── Legacy CSV path (2 original triggers) ──
     st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
     st.markdown("### Basis Risk Analysis")
     st.caption("Historical back-test using the GAD engine")
@@ -238,7 +306,6 @@ if csv_path and csv_path.is_file():
         )
         from gad.engine.pdf_export import generate_lloyds_report
 
-        # Build TriggerDef from MonitorTrigger
         engine_trigger = TriggerDef(
             name=trigger.name,
             peril=trigger.peril,
@@ -248,7 +315,7 @@ if csv_path and csv_path.is_file():
             geography={"type": "Point", "coordinates": [trigger.lon, trigger.lat]},
             provenance=DataSourceProvenance(
                 primary_source=trigger.data_source,
-                primary_url=f"https://parametricdata.io",
+                primary_url="https://parametricdata.io",
                 max_data_latency_seconds=3600,
                 historical_years_available=5,
             ),

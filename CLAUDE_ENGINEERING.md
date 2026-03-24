@@ -140,7 +140,7 @@ Oracle (v0.2.2+):
 - `scripts/fetch_historical_openmeteo.py`: Download 5yr daily weather for all 144 airports. Free, no key. Output: `data/series/weather/{IATA}_daily.csv`. Supports `--airports` and `--years` flags.
 - `scripts/fetch_historical_openaq.py`: Download 2yr daily AQI for tier 1-2 airports. OpenAQ v3 API (requires API key). Probes for best PM2.5 sensor per city. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes `_station_mapping.csv` for audit.
 - `scripts/fetch_historical_opensky.py`: (planned) Download 1yr daily departures (resumable).
-- `scripts/precompute_basis_risk.py`: (planned) Batch compute basis risk for all triggers with historical data.
+- `scripts/precompute_basis_risk.py`: Batch compute basis risk for all triggers with historical data. Output: `data/basis_risk/{trigger_id}.json`. 221 reports, 114 with valid rho. Supports `--peril` and `--force` flags.
 
 ## Oracle Scripts
 

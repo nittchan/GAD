@@ -50,7 +50,7 @@ class TriggerDef(BaseModel):
         default="",
         description="Plain English — shown in guided mode",
     )
-    peril: Literal["flight_delay", "drought", "flood", "earthquake", "wind"]
+    peril: Literal["flight_delay", "drought", "flood", "earthquake", "wind", "extreme_weather", "air_quality", "wildfire"]
     threshold: float
     threshold_unit: str = Field(..., description="e.g. minutes, mm_rainfall, knots")
     data_source: str

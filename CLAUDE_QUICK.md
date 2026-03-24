@@ -82,8 +82,8 @@ Compute engine: gad/engine/ package
 
 ## Near-Term Priorities
 
-1. Historical basis risk for all 436 triggers (weather data downloaded; AQI in progress; precompute pending).
-2. Oracle signing wired to live monitor (done). Determination status page + R2 upload (done).
+1. Basis risk precomputed for 221 triggers (done). Flight history (DATA-01c) and remaining AQI coverage pending.
+2. Oracle signing + R2 upload + Oracle Ledger page (done).
 3. New perils: shipping/marine (AIS), flood (NOAA), cyclone (NHC).
 4. REST API (FastAPI) + MCP server.
 5. Parametric Data Pro (enterprise tier).

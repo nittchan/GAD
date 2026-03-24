@@ -46,7 +46,7 @@ The product goal: become THE default global parametric insurance monitor. v0.2 s
 
 Current capabilities:
   - Global Monitor: live risk map with 436 triggers, hover tooltips, peril/country filters.
-  - Multi-source fetcher: priority fallback across 8 data sources.
+  - Multi-source fetcher: priority fallback across 9 data sources.
   - All pages wired to the trigger registry (Trigger Profile, Compare, Guided Mode, Expert Mode, Monitor Status).
   - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
   - Deployed at parametricdata.io with Cloudflare DDoS protection.
@@ -54,7 +54,7 @@ Current capabilities:
 Not yet complete (v0.2.2+):
   - Oracle signing wired to live monitor (Ed25519 primitives exist, not yet connected).
   - Determination status page upgrade (verification proof UI).
-  - Historical basis risk for all 436 triggers (weather data downloaded for 144 airports; AQI and flight history pending).
+  - Historical basis risk precomputed for 221 triggers (144 weather + 72 AQI + legacy). Rho badges on Global Monitor. Trigger Profile shows full reports.
   - New perils: shipping (AIS), health (WHO), solar (NOAA SWPC).
   - Parametric Data Pro (enterprise tier).
 
@@ -133,11 +133,12 @@ User flows:
    - Side-by-side comparison of up to two triggers.
 
 5. Account (dashboard/pages/5_Account.py)
+   - OAuth callback/session management.
+   - Reads saved triggers and notification subscriptions from Supabase.
+
 6. Oracle Ledger (dashboard/pages/7_Oracle.py)
    - Chain verification status, total determinations, recent entries.
    - Links to Cloudflare Worker URLs for each determination.
-   - OAuth callback/session management.
-   - Reads saved triggers and notification subscriptions from Supabase.
 
 ## Core Engine and Data Contracts
 
