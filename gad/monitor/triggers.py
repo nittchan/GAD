@@ -12,8 +12,7 @@ from typing import Literal
 from gad.monitor.airports import ALL_AIRPORTS, Airport
 from gad.monitor.ports import ALL_PORTS, Port
 
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "solar", "health"]
-PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "health"]
+PerilType = Literal["flight_delay", "air_quality", "wildfire", "drought", "extreme_weather", "earthquake", "marine", "flood", "cyclone", "crop", "solar", "health", "disaster", "eonet"]
 
 
 @dataclass(frozen=True)
@@ -233,6 +232,27 @@ STANDALONE_TRIGGERS: list[MonitorTrigger] = [
     MonitorTrigger(id="health-lima", name="Lima Health Alert", peril="health", lat=-12.0464, lon=-77.0428, location_label="Lima, Peru", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Peru within 7 days."),
     MonitorTrigger(id="health-bangkok", name="Bangkok Health Alert", peril="health", lat=13.7563, lon=100.5018, location_label="Bangkok, Thailand", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Thailand within 7 days."),
     MonitorTrigger(id="health-nairobi", name="Nairobi Health Alert", peril="health", lat=-1.2921, lon=36.8219, location_label="Nairobi, Kenya", threshold=1, threshold_unit="outbreaks", fires_when_above=True, data_source="who_don", description="WHO Disease Outbreak News reports >= 1 outbreak in Kenya within 7 days."),
+
+    # ── Disaster (GDACS) ──
+    # Multi-hazard disaster alerts from the Global Disaster Alert and Coordination System
+    MonitorTrigger(id="disaster-ring-of-fire-japan", name="Japan Disaster Alert", peril="disaster", lat=35.68, lon=139.65, location_label="Tokyo, Japan", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event (earthquake, flood, cyclone, volcano) within 500km of Tokyo."),
+    MonitorTrigger(id="disaster-ring-of-fire-indonesia", name="Indonesia Disaster Alert", peril="disaster", lat=-6.21, lon=106.85, location_label="Jakarta, Indonesia", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Jakarta."),
+    MonitorTrigger(id="disaster-ring-of-fire-chile", name="Chile Disaster Alert", peril="disaster", lat=-33.45, lon=-70.67, location_label="Santiago, Chile", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Santiago."),
+    MonitorTrigger(id="disaster-mediterranean-italy", name="Italy Disaster Alert", peril="disaster", lat=42.35, lon=13.40, location_label="L'Aquila, Italy", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of L'Aquila."),
+    MonitorTrigger(id="disaster-caribbean-haiti", name="Haiti Disaster Alert", peril="disaster", lat=18.54, lon=-72.34, location_label="Port-au-Prince, Haiti", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Port-au-Prince."),
+    MonitorTrigger(id="disaster-south-asia-bangladesh", name="Bangladesh Disaster Alert", peril="disaster", lat=23.81, lon=90.41, location_label="Dhaka, Bangladesh", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Dhaka."),
+    MonitorTrigger(id="disaster-east-africa-mozambique", name="Mozambique Disaster Alert", peril="disaster", lat=-25.97, lon=32.57, location_label="Maputo, Mozambique", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Maputo."),
+    MonitorTrigger(id="disaster-central-america-guatemala", name="Guatemala Disaster Alert", peril="disaster", lat=14.63, lon=-90.51, location_label="Guatemala City, Guatemala", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Guatemala City."),
+    MonitorTrigger(id="disaster-pacific-philippines", name="Philippines Disaster Alert", peril="disaster", lat=14.60, lon=120.98, location_label="Manila, Philippines", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Manila."),
+    MonitorTrigger(id="disaster-indian-ocean-sri-lanka", name="Sri Lanka Disaster Alert", peril="disaster", lat=6.93, lon=79.85, location_label="Colombo, Sri Lanka", threshold=1, threshold_unit="disaster events", fires_when_above=True, data_source="gdacs", description="GDACS reports >= 1 disaster event within 500km of Colombo."),
+
+    # ── EONET (NASA Earth Observatory Natural Event Tracker) ──
+    # Covers volcanoes, dust storms, sea/lake ice, landslides — perils not in other sources
+    MonitorTrigger(id="eonet-volcano-iceland", name="Iceland Volcanic Activity", peril="eonet", lat=64.13, lon=-21.90, location_label="Reykjavik, Iceland", threshold=1, threshold_unit="natural events", fires_when_above=True, data_source="nasa_eonet", description="NASA EONET detects >= 1 active natural event (volcano, ice, storm) within 500km of Iceland."),
+    MonitorTrigger(id="eonet-volcano-hawaii", name="Hawaii Volcanic Activity", peril="eonet", lat=19.90, lon=-155.60, location_label="Big Island, Hawaii", threshold=1, threshold_unit="natural events", fires_when_above=True, data_source="nasa_eonet", description="NASA EONET detects >= 1 active natural event within 500km of Hawaii."),
+    MonitorTrigger(id="eonet-dust-sahara", name="Sahara Dust Storm", peril="eonet", lat=23.00, lon=3.00, location_label="Central Sahara", threshold=1, threshold_unit="natural events", fires_when_above=True, data_source="nasa_eonet", description="NASA EONET detects >= 1 dust/haze event within 500km of the Sahara."),
+    MonitorTrigger(id="eonet-ice-arctic", name="Arctic Sea Ice Event", peril="eonet", lat=75.00, lon=0.00, location_label="Arctic Ocean", threshold=1, threshold_unit="natural events", fires_when_above=True, data_source="nasa_eonet", description="NASA EONET detects >= 1 sea/lake ice event within 500km of the Arctic."),
+    MonitorTrigger(id="eonet-volcano-indonesia", name="Indonesia Volcanic Activity", peril="eonet", lat=-7.54, lon=110.45, location_label="Central Java, Indonesia", threshold=1, threshold_unit="natural events", fires_when_above=True, data_source="nasa_eonet", description="NASA EONET detects >= 1 volcanic event within 500km of Central Java."),
 ]
 
 
@@ -305,6 +325,8 @@ PERIL_LABELS: dict[PerilType, str] = {
     "crop": "Crop / NDVI",
     "solar": "Solar / Space Weather",
     "health": "Health / Pandemic",
+    "disaster": "Disaster",
+    "eonet": "Natural Events (EONET)",
 }
 
 PERIL_ICONS: dict[PerilType, str] = {
@@ -320,4 +342,6 @@ PERIL_ICONS: dict[PerilType, str] = {
     "crop": "eco",
     "solar": "sunny",
     "health": "medical_services",
+    "disaster": "warning",
+    "eonet": "public",
 }

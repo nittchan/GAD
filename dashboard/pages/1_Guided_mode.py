@@ -66,6 +66,8 @@ PERIL_CONFIG = {
     "crop": {"label": "Crop / NDVI", "icon": "🌾", "unit": "NDVI", "default": 0.3, "above": False, "source": "ndvi"},
     "solar": {"label": "Solar / Space Weather", "icon": "☀️", "unit": "Kp", "default": 5.0, "above": True, "source": "noaa_swpc"},
     "health": {"label": "Health / Pandemic", "icon": "🏥", "unit": "outbreaks", "default": 1.0, "above": True, "source": "who_don"},
+    "disaster": {"label": "Disaster", "icon": "🚨", "unit": "disaster events", "default": 1.0, "above": True, "source": "gdacs"},
+    "eonet": {"label": "Natural Events (EONET)", "icon": "🌋", "unit": "natural events", "default": 1.0, "above": True, "source": "nasa_eonet"},
 }
 
 # ── Header ──

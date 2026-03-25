@@ -38,6 +38,7 @@ from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
 from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, faa_atcscc
+from gad.monitor.sources import gdacs, nasa_eonet
 from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
@@ -291,6 +292,16 @@ def fetch_health(trigger: MonitorTrigger) -> dict | None:
     return who_don.fetch_outbreaks(trigger.lat, trigger.lon, trigger.id)
 
 
+def fetch_disaster(trigger: MonitorTrigger) -> dict | None:
+    """Disaster: GDACS multi-hazard alerts (free, no key)."""
+    return gdacs.fetch_disasters(trigger.lat, trigger.lon, trigger.id)
+
+
+def fetch_eonet(trigger: MonitorTrigger) -> dict | None:
+    """Natural events: NASA EONET (free, no key)."""
+    return nasa_eonet.fetch_events(trigger.lat, trigger.lon, trigger.id)
+
+
 # ── Peril → fetch function mapping ──
 FETCH_MAP = {
     "opensky": fetch_flight_delay,
@@ -305,6 +316,8 @@ FETCH_MAP = {
     "ndvi": fetch_crop_ndvi,
     "noaa_swpc": fetch_solar,
     "who_don": fetch_health,
+    "gdacs": fetch_disaster,
+    "nasa_eonet": fetch_eonet,
 }
 
 # ── Cache TTL per source type (seconds) ──
@@ -321,6 +334,8 @@ SOURCE_CACHE_KEY = {
     "ndvi": "ndvi",
     "noaa_swpc": "solar",
     "who_don": "health",
+    "gdacs": "disaster",
+    "nasa_eonet": "eonet",
 }
 
 
@@ -406,6 +421,10 @@ def _evaluate_fired(trigger: MonitorTrigger, data: dict) -> bool:
         r = noaa_swpc.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "who_don":
         r = who_don.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "gdacs":
+        r = gdacs.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "nasa_eonet":
+        r = nasa_eonet.evaluate_trigger(data, trigger.threshold)
     else:
         return False
     return r.get("fired", False)
