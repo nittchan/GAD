@@ -4,7 +4,7 @@
 
 [parametricdata.io](https://parametricdata.io)
 
-Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, crop stress, solar storms, and disease outbreaks — and evaluates how well parametric insurance triggers perform against them. 521 triggers. 144 airports. 10 ports. 12 peril categories. 16 data sources. All open. All free.
+Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, crop stress, solar storms, and disease outbreaks — and evaluates how well parametric insurance triggers perform against them. 536 triggers. 144 airports. 10 ports. 14 peril categories. 18 data sources. All open. All free.
 
 ## What you see
 
@@ -32,6 +32,8 @@ Every trigger determination can be cryptographically signed, hash-chained, and i
 | Crop / NDVI | 10 | Copernicus/MODIS | Vegetation health index for key agricultural regions |
 | Solar / Space Weather | 5 | NOAA SWPC | Geomagnetic storm and solar flare monitoring |
 | Health / Pandemic | 10 | WHO DON | Disease outbreak alerts from WHO global surveillance |
+| Disaster (GDACS) | 10 | GDACS RSS | Volcanoes, tsunamis, floods — disaster-prone locations |
+| Natural Events (EONET) | 5 | NASA EONET | Volcanoes, dust storms, sea ice — 13 event categories |
 
 ## Run it yourself
 
@@ -66,7 +68,7 @@ print(verify_determination(det, public_key_bytes))  # True
 
 ```
 parametricdata.io
-├── Global Monitor        Live risk map (521 triggers, 12 perils)
+├── Global Monitor        Live risk map (536 triggers, 14 perils)
 ├── Trigger Profile       Click any trigger → full basis risk analysis
 ├── Compare               Side-by-side trigger comparison
 ├── Build Your Own        4-step wizard → custom trigger
@@ -110,9 +112,11 @@ GET /v1/triggers/{id}/model-history   — model version audit trail
 GET /v1/triggers/{id}/model-drift     — drift detection status
 GET /v1/intelligence/peril-patterns   — per-peril firing rates
 GET /v1/intelligence/location/{lat}/{lon} — triggers near a point
+GET /v1/health                        — per-source data freshness
 GET /v1/status                        — per-peril health
 GET /v1/ports                         — marine port list
 GET /v1/perils                        — peril categories
+POST /v1/products/evaluate            — multi-peril composite product
 GET /v1/docs                          — OpenAPI documentation
 ```
 

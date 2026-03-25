@@ -8,7 +8,7 @@ Engineering-focused scope summary for implementation, debugging, and refactor de
 
 GAD operates as four integrated layers:
 
-1. **Global Monitor** — live risk dashboard with 12 peril categories, background data fetching, cache-based reads.
+1. **Global Monitor** — live risk dashboard with 14 peril categories, background data fetching, cache-based reads.
 2. **Basis risk engine** — Spearman correlation, bootstrap CI, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — Ed25519 signed determinations, hash-chained log, Cloudflare Worker read surface.
 4. **Account/telemetry** — Supabase-backed auth, saved triggers, activity events.
@@ -25,7 +25,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 ## Package Structure
 
 ### gad/api/ — REST API
-- main.py: FastAPI app with 12+ routes (triggers, basis-risk, determinations, model-history, model-drift, status, ports, perils, intelligence/peril-patterns, intelligence/location, intelligence/climate-zone). API key auth opt-in. Response models in models.py.
+- main.py: FastAPI app with 14+ routes (triggers, basis-risk, determinations, model-history, model-drift, status, ports, perils, intelligence/peril-patterns, intelligence/location, intelligence/climate-zone). API key auth opt-in. Response models in models.py.
 - models.py: Pydantic response models for auto-generated OpenAPI schemas.
 
 ### gad/mcp/ — MCP Server (Model Context Protocol)
@@ -62,7 +62,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 ### gad/monitor/ — Global Monitor
 - airports.py: Master airport registry (50 Indian + 94 global = 144 airports). Each airport has `lat`/`lon` (runway) and optional `city_lat`/`city_lon` (city centre). AQI triggers use city coordinates via `effective_city_lat`/`effective_city_lon` properties; flight/weather triggers use airport coordinates.
 - ports.py: Port registry (10 tier-1 global ports with anchorage bounding boxes)
-- triggers.py: Auto-generates flight delay, weather, AQI, earthquake, marine, flood, cyclone, crop/NDVI, solar, and health triggers (521 triggers across 12 perils)
+- triggers.py: Auto-generates triggers for 14 perils: flight delay, weather, AQI, earthquake, marine, flood, cyclone, crop/NDVI, solar, health, disaster/GDACS, natural events/EONET (536 triggers)
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
@@ -76,6 +76,8 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - sources/noaa_flood.py: Flood river gauge data (USGS Water Services API — free, no key)
 - sources/noaa_nhc.py: Tropical cyclone tracking (NOAA NHC GeoJSON — free, no key)
 - sources/ndvi.py: Crop / vegetation health (Copernicus/MODIS NDVI — free, no key)
+- sources/gdacs.py: Disaster alerts (GDACS RSS — volcanoes, tsunamis, floods — free, no key)
+- sources/nasa_eonet.py: Natural events (NASA EONET API — 13 categories — free, no key)
 - sources/noaa_swpc.py: Solar/space weather (NOAA SWPC — free, no key)
 - sources/who_don.py: Health/pandemic alerts (WHO Disease Outbreak News — free, no key)
 - risk_index.py: Parametric Risk Exposure Index (PREI) computation per country
@@ -104,7 +106,7 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 
 ### Monitor triggers (gad/monitor/triggers.py)
 Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
-521 triggers across 12 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone + 10 crop/NDVI + 5 solar + 10 health). Add new airports/ports to the registries to expand coverage.
+536 triggers across 14 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone + 10 crop/NDVI + 5 solar + 10 health). Add new airports/ports to the registries to expand coverage.
 **Coordinate split:** AQI triggers use city centre coordinates (where AQI monitors are); flight/weather triggers use airport runway coordinates. When adding an airport far from its city (>15km), set `city_lat`/`city_lon` on the Airport entry.
 **Flight delay dual metric:** Evaluation is source-aware. AviationStack (tier-1 airports) provides real delay in minutes — fires when avg delay exceeds threshold. OpenSky (all airports, fallback) provides departure count only — fires when 0 departures in 2h (airport disruption proxy). The `evaluate_trigger` result includes a `metric` field (`"avg_delay"` or `"departure_count"`) so the UI shows the correct label.
 
@@ -198,7 +200,7 @@ Oracle (v0.2.2+):
 
 ## Near-Term Engineering Priorities
 
-1. **v0.2 remaining:** Historical basis risk for all 521 triggers. Oracle signing wired to live monitor.
+1. **v0.2 remaining:** Historical basis risk for all 536 triggers. Oracle signing wired to live monitor.
 2. **v0.3 — Self-Learning Actuary:** DuckDB on Fly.io persistent volume (+$1.50/mo). Single-writer pattern (fetcher). TriggerObservation time series. Distribution tracker (90d + 365d rolling). Drift detector (CUSUM). Seasonal decomposition (STL). Threshold optimizer. Peer calibration (Koppen zones). Cold-start inference. Co-firing correlation matrix. Model versioning. See TODOS.md P8 for full task breakdown.
 3. **v0.4 — Platform:** API product layer on CF Workers (community service). Redis (Upstash) for API cache + rate limiting. Verification SDK + CLI.
 

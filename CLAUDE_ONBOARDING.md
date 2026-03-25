@@ -27,7 +27,7 @@ The strongest production-ready capability is the Global Monitor (live risk map) 
 ### Global Monitor (gad/monitor/)
 - gad/monitor/airports.py: Master airport registry (50 Indian + 94 global = 144 airports). Each airport has runway coordinates (`lat`/`lon`) and optional city centre coordinates (`city_lat`/`city_lon`) — AQI triggers use city coordinates since AQI monitors are in urban areas, not at airfields.
 - gad/monitor/ports.py: Port registry (10 tier-1 global ports with anchorage bounding boxes).
-- gad/monitor/triggers.py: Auto-generates 521 triggers across 12 perils from the airport and port registries.
+- gad/monitor/triggers.py: Auto-generates 536 triggers across 14 perils from the airport and port registries.
 - gad/monitor/cache.py: local JSON cache — dashboard reads from here, never from APIs.
 - gad/monitor/fetcher.py: background worker that fetches data from external APIs on a schedule.
 - gad/monitor/sources/: API connectors (FAA ATCSCC, OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI, NOAA SWPC, WHO DON).
