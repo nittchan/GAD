@@ -41,14 +41,15 @@ The product goal: become THE default global parametric insurance monitor. v0.2 s
 **v0.2.1 is live at parametricdata.io.** The product has evolved significantly from v0.1:
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers, guided/expert modes, PDF export.
-- v0.2.0 (2026-03-23): Global Monitor with 426 triggers across 144 airports, 5 perils, interactive map.
-- v0.2.1 (2026-03-23): Multi-source data connectors (AviationStack, AirNow, FIRMS dual satellite, GPM IMERG). All pages unified under the 426-trigger registry.
+- v0.2.0 (2026-03-23): Global Monitor with 536 triggers across 144 airports, 14 perils, interactive map.
+- v0.2.1 (2026-03-23): Multi-source data connectors (AviationStack, AirNow, FIRMS dual satellite, GPM IMERG). All pages unified under the 536-trigger registry.
 
 Current capabilities:
   - Global Monitor: live risk map with 536 triggers, hover tooltips, peril/country filters.
   - Multi-source fetcher: priority fallback across 18 data sources.
   - All pages wired to the trigger registry (Trigger Profile, Compare, Guided Mode, Expert Mode, Monitor Status).
-  - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
+  - Oracle signing wired to live monitor (Ed25519 sign/verify, R2 upload, Oracle Ledger page).
+  - Auto-bootstrap: fetcher seeds historical weather data on first deploy (idempotent).
   - Deployed at parametricdata.io with Cloudflare DDoS protection.
 
 Completed since v0.2.1:
@@ -354,7 +355,7 @@ All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader
 ## Roadmap
 
 ### v0.2.0 — Global Monitor (SHIPPED 2026-03-23)
-- 426 triggers across 144 airports (50 Indian + 94 global), 5 perils.
+- 536 triggers across 144 airports (50 Indian + 94 global), 14 perils.
 - Background fetcher, cache-based security, interactive map. Deployed to parametricdata.io.
 
 ### v0.2.1 — Multi-Source Data (SHIPPED 2026-03-23)
@@ -415,17 +416,17 @@ Additional runtime credentials/configs are required for full production deployme
 - Dashboard with 3 sample triggers, guided/expert modes, PDF export.
 
 ### v0.2.1 (complete 2026-03-23)
-- [x] Global Monitor with 426 triggers across 144 airports, 5 perils
+- [x] Global Monitor with 536 triggers across 144 airports, 14 perils
 - [x] Multi-source data connectors with priority fallback (8 APIs)
-- [x] All pages wired to 426-trigger registry
+- [x] All pages wired to 536-trigger registry
 - [x] Deployed to parametricdata.io with Cloudflare DDoS
 - [x] Dev → staging → production workflow
 - [x] All 8 API keys configured on Fly.io
 
-### v0.2.2 (next)
-- [ ] Oracle signing wired to live monitor
-- [ ] Determination status page with verification proof
-- [ ] Historical basis risk for all triggers
+### v0.2.2 (complete 2026-03-25)
+- [x] Oracle signing wired to live monitor
+- [x] Determination status page with verification proof
+- [x] Historical basis risk (81 triggers precomputed, auto-bootstrap on deploy)
 
 ## Design System
 Always read DESIGN.md before making any visual or UI decisions.
