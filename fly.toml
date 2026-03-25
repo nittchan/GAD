@@ -7,6 +7,11 @@ primary_region = 'bom'
 [build]
   dockerfile = 'dashboard/Dockerfile'
 
+# Persistent volume for DuckDB, cache, oracle log
+[mounts]
+  source = 'gad_data'
+  destination = '/data'
+
 # Streamlit dashboard on port 8501 (primary)
 [http_service]
   internal_port = 8501
@@ -20,7 +25,7 @@ primary_region = 'bom'
     hard_limit = 50
     soft_limit = 25
 
-# API on port 8502 (internal — accessed via /v1/ path rewrite if needed)
+# API on port 8502
 [[services]]
   internal_port = 8502
   protocol = "tcp"

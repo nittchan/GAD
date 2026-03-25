@@ -119,19 +119,19 @@
 ### Phase 0: Infrastructure Foundation
 **Order:** DB-01a → DB-01b → DB-01x → DB-01c → DB-01d → DB-05 → DB-02a → DB-02b/c → DB-03a/b/c → DB-04
 
-- [ ] **DB-01a:** Provision Fly.io persistent volume (10GB, `sin` region, prod + staging). `$1.50/mo`.
-- [ ] **DB-01b:** Mount volume in `fly.toml` at `/data`.
-- [ ] **DB-01x:** `flock` file lock in fetcher — single-writer invariant. *(eng review)*
-- [ ] **DB-01c:** `gad/config.py` — centralise all data paths. ⚠️ **BREAKING CHANGE** — touches every file with `Path("data/")`. Must be atomic with full test run.
-- [ ] **DB-01d:** Volume health check at fetcher startup.
-- [ ] **DB-05:** Add `duckdb>=0.10.0`, `statsmodels>=0.14.0`, `scikit-learn>=1.4.0` to requirements.txt.
-- [ ] **DB-02a:** DuckDB schema + `init_db()` — 8 tables in `gad/engine/db.py`.
-- [ ] **DB-02b:** Write helpers — `gad/engine/db_write.py`. try/except wrapped.
-- [ ] **DB-02c:** Read helpers — `gad/engine/db_read.py`.
-- [ ] **DB-03a:** R2 twice-daily backup — **CHECKPOINT before copy**. 00:00 + 12:00 UTC.
-- [ ] **DB-03b:** Restore script + checksum verification.
-- [ ] **DB-03c:** Prune old backups — keep 30 days.
-- [ ] **DB-04:** Supabase scope reduction — confirm analytical tables → DuckDB.
+- [x] **DB-01a:** Fly.io volumes provisioned — 10GB prod (bom) + 10GB staging (sin). $1.50/mo each.
+- [x] **DB-01b:** Volume mounted in `fly.toml` at `/data` via `[mounts]` block.
+- [x] **DB-01x:** `flock` file lock in fetcher — `fcntl.LOCK_EX|LOCK_NB` on `DATA_ROOT/.fetcher.lock`.
+- [x] **DB-01c:** `gad/config.py` — centralised paths with auto-detection (`/data` on Fly, `./data` local). 11 files updated. 2298 tests pass.
+- [x] **DB-01d:** Volume health check — write/read/delete test file at fetcher startup. `CRITICAL` log on failure.
+- [x] **DB-05:** `duckdb>=0.10.0`, `statsmodels>=0.14.0`, `scikit-learn>=1.4.0` added to requirements.txt.
+- [x] **DB-02a:** DuckDB schema — 8 tables in `gad/engine/db.py`. Singleton connection (lazy init per eng review).
+- [x] **DB-02b:** Write helpers — `gad/engine/db_write.py`. 8 functions, all try/except wrapped.
+- [x] **DB-02c:** Read helpers — `gad/engine/db_read.py`. 7 query functions, return DataFrames.
+- [x] **DB-03a:** R2 backup — `gad/engine/backup.py`. CHECKPOINT before copy, gzip, upload. `prune_old_backups()` included.
+- [x] **DB-03b:** Restore script — `scripts/restore_duckdb.py`. R2 download, gunzip, SHA-256 checksum verification.
+- [x] **DB-03c:** Prune old backups — `prune_old_backups(keep_days=30)` in backup.py.
+- [x] **DB-04:** Supabase scope confirmed in db.py header comment — auth/user tables stay on Supabase, all analytical tables in DuckDB.
 
 ### Phase 1: Time Series Foundation (blocks all learning)
 **Depends on:** Phase 0 complete.

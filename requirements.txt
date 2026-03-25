@@ -17,3 +17,6 @@ boto3>=1.34
 websockets>=12.0
 fastapi>=0.110
 uvicorn>=0.29
+duckdb>=0.10.0
+statsmodels>=0.14.0
+scikit-learn>=1.4.0
