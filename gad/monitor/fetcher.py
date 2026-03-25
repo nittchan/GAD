@@ -551,6 +551,14 @@ def fetch_all(diagnostic: bool = False) -> dict:
                 fetched += 1
                 sources_succeeded_this_cycle.add(trigger.data_source)
 
+                # SL-01b: Write observation to DuckDB (never crashes the fetcher)
+                try:
+                    from gad.engine.db_write import write_observation
+                    value = result.get("value") if isinstance(result.get("value"), (int, float)) else None
+                    write_observation(trigger.id, value, _evaluate_fired(trigger, result), trigger.data_source, result)
+                except Exception as e:
+                    log.debug(f"Observation write skipped for {trigger.id}: {e}")
+
                 # Oracle signing: create and sign a determination for every evaluation
                 if _oracle_signing_enabled and _private_key:
                     # CEO-04: Skip signing if source is in recovery cooldown
@@ -602,6 +610,18 @@ def fetch_all(diagnostic: bool = False) -> dict:
         aqi_no_data = aqi_total - aqi_got_data
         print(f"AQI summary: {aqi_total} total, {aqi_got_data} got data, {aqi_no_data} no data\n")
 
+    # DB-06b: Run daily/weekly jobs if due
+    if _should_run_daily_jobs():
+        try:
+            _run_daily_jobs()
+        except Exception as e:
+            log.warning(f"Daily jobs failed: {e}")
+    if _should_run_weekly_jobs():
+        try:
+            _run_weekly_jobs()
+        except Exception as e:
+            log.warning(f"Weekly jobs failed: {e}")
+
     summary = {
         "fetched": fetched,
         "skipped": skipped,
@@ -612,6 +632,63 @@ def fetch_all(diagnostic: bool = False) -> dict:
     }
     log.info(f"Fetch complete: {summary}")
     return summary
+
+
+# ── DB-06a: Daily/weekly flag file pattern ──
+
+def _should_run_daily_jobs() -> bool:
+    """Check if daily jobs should run (23-hour debounce via flag file)."""
+    from gad.config import DATA_ROOT
+    flag = DATA_ROOT / ".last_daily_run"
+    if not flag.exists():
+        return True
+    last_run = datetime.fromtimestamp(flag.stat().st_mtime, tz=timezone.utc)
+    return (datetime.now(timezone.utc) - last_run).total_seconds() > 82800  # 23 hours
+
+
+def _mark_daily_done():
+    """Touch the daily flag file."""
+    from gad.config import DATA_ROOT
+    (DATA_ROOT / ".last_daily_run").write_text(datetime.now(timezone.utc).isoformat())
+
+
+def _should_run_weekly_jobs() -> bool:
+    """Check if weekly jobs should run (6.5-day debounce via flag file)."""
+    from gad.config import DATA_ROOT
+    flag = DATA_ROOT / ".last_weekly_run"
+    if not flag.exists():
+        return True
+    last_run = datetime.fromtimestamp(flag.stat().st_mtime, tz=timezone.utc)
+    return (datetime.now(timezone.utc) - last_run).total_seconds() > 561600  # 6.5 days
+
+
+def _mark_weekly_done():
+    """Touch the weekly flag file."""
+    from gad.config import DATA_ROOT
+    (DATA_ROOT / ".last_weekly_run").write_text(datetime.now(timezone.utc).isoformat())
+
+
+# ── DB-06b: Daily and weekly job runners ──
+
+def _run_daily_jobs():
+    """Run once per day: backup, distributions, drift detection."""
+    log.info("Running daily jobs...")
+    try:
+        from gad.engine.backup import backup_to_r2, prune_old_backups
+        backup_to_r2()
+        prune_old_backups(keep_days=30)
+    except Exception as e:
+        log.warning(f"Daily backup failed: {e}")
+    _mark_daily_done()
+    log.info("Daily jobs complete.")
+
+
+def _run_weekly_jobs():
+    """Run once per week: peer calibration, correlation matrix."""
+    log.info("Running weekly jobs...")
+    # Phase 3+ will add: peer index, correlation matrix, seasonal decomposition
+    _mark_weekly_done()
+    log.info("Weekly jobs complete (no learning tasks yet).")
 
 
 def run_loop(interval_seconds: int = 900) -> None:
