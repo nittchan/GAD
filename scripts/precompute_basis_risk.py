@@ -33,12 +33,14 @@ from gad.config import DATA_ROOT, SERIES_DIR, BASIS_RISK_DIR  # noqa: E402
 
 WEATHER_DIR = SERIES_DIR / "weather"
 AQI_DIR = SERIES_DIR / "aqi"
+FLIGHTS_DIR = SERIES_DIR / "flights"
 OUTPUT_DIR = BASIS_RISK_DIR
 
 # Map monitor trigger ID to historical CSV path
 PERIL_DATA_MAP = {
     "extreme_weather": ("weather", WEATHER_DIR, lambda iata: f"{iata}_daily.csv"),
     "air_quality": ("aqi", AQI_DIR, lambda iata: f"{iata}_aqi_daily.csv"),
+    "flight_delay": ("flights", FLIGHTS_DIR, lambda iata: f"{iata}_daily.csv"),
 }
 
 # Map monitor peril names to provenance info
@@ -54,6 +56,12 @@ PROVENANCE_MAP = {
         primary_url="https://openaq.org/",
         max_data_latency_seconds=3600,
         historical_years_available=2,
+    ),
+    "flight_delay": DataSourceProvenance(
+        primary_source="DGCA India / BTS USA / OpenSky",
+        primary_url="https://www.dgca.gov.in/digigov-portal/",
+        max_data_latency_seconds=86400,
+        historical_years_available=1,
     ),
 }
 
@@ -121,6 +129,7 @@ def main() -> None:
     skipped_exists = 0
     skipped_no_csv = 0
     errors = 0
+    computed_by_peril: dict[str, int] = {}
 
     print(f"Precomputing basis risk for {len(triggers)} triggers...")
     print(f"Output: {OUTPUT_DIR}/")
@@ -159,6 +168,7 @@ def main() -> None:
             rho = report.spearman_rho
             score = report.lloyds_score
             computed += 1
+            computed_by_peril[trigger.peril] = computed_by_peril.get(trigger.peril, 0) + 1
 
             if computed % 20 == 0 or computed <= 5:
                 print(f"  [{computed}] {trigger.id}: rho={rho:.3f}, lloyds={score:.1f}, periods={len(weather_data)}")
@@ -168,6 +178,8 @@ def main() -> None:
             print(f"  ERROR {trigger.id}: {e}")
 
     print(f"\nDone: {computed} computed, {skipped_exists} already existed, {skipped_no_csv} no CSV, {errors} errors")
+    if computed_by_peril:
+        print(f"  By peril: {', '.join(f'{k}={v}' for k, v in sorted(computed_by_peril.items()))}")
     print(f"Reports at: {OUTPUT_DIR}/")
 
     # Summary stats
