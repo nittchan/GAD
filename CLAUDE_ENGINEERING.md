@@ -25,7 +25,11 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 ## Package Structure
 
 ### gad/api/ — REST API
-- main.py: FastAPI app with 8 routes (triggers, basis-risk, determinations, model-history, status, ports, perils). API key auth opt-in via API_REQUIRE_AUTH env var.
+- main.py: FastAPI app with 12+ routes (triggers, basis-risk, determinations, model-history, model-drift, status, ports, perils, intelligence/peril-patterns, intelligence/location, intelligence/climate-zone). API key auth opt-in. Response models in models.py.
+- models.py: Pydantic response models for auto-generated OpenAPI schemas.
+
+### gad/mcp/ — MCP Server (Model Context Protocol)
+- server.py: JSON-RPC 2.0 stdio server exposing 4 tools for AI agents (check_trigger_status, list_triggers_by_location, get_basis_risk, list_perils). Run: `python -m gad.mcp.server`
 
 ### gad/engine/ — Compute core
 - models.py: TriggerDef, BasisRiskReport, TriggerDetermination, TriggerObservation, ModelVersion, PolicyBinding, GadEvent
@@ -35,6 +39,8 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - timeseries.py: Observation read abstraction (stats, series, threshold checks)
 - model_registry.py: Append-only model versioning with R2 backup
 - backup.py: DuckDB backup (CHECKPOINT + gzip + R2 upload + prune)
+- distribution_tracker.py: Rolling 90d/365d distribution computation with model versioning
+- drift_detector.py: CUSUM drift detection (mean shift, firing rate, variance change)
 - basis_risk.py: Spearman rho, bootstrap CI, confusion matrix, Lloyd's integration
 - lloyds.py: Lloyd's checklist scoring
 - oracle.py: Ed25519 sign/verify, hash chain, append-only log

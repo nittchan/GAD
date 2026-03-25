@@ -69,16 +69,17 @@ Top-level domains and responsibilities:
 - dashboard/
   - Primary Streamlit product UI.
   - app.py home/landing + multipage navigation.
-  - pages/ global monitor, guided, expert, profile, compare, account, oracle.
-  - components/ auth and visual rendering helpers.
+  - pages/ global monitor, guided, expert, profile, compare, account, oracle, digest (9 pages).
+  - components/ auth, theme, footer, trigger_selector, score_card, charts.
 
 - gad/
   - Core Python package.
-  - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export).
-  - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources).
+  - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export, db, db_write, db_read, timeseries, distribution_tracker, drift_detector, model_registry, backup).
+  - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources, intelligence, risk_index).
   - gad/monitor/ports.py — Port registry (10 tier-1 global ports with anchorage bounding boxes).
   - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don).
-  - gad/monitor/risk_index.py — Parametric Risk Exposure Index (PREI) computation per country.
+  - gad/api/ — FastAPI REST API (12+ routes, Pydantic response models, OpenAPI docs at /v1/docs).
+  - gad/mcp/ — MCP server for AI agents (4 tools, JSON-RPC 2.0 stdio).
   - gad/pipeline.py — CHIRPS raster fetch and extraction.
 
 - data/

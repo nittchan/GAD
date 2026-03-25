@@ -101,17 +101,29 @@ Oracle layer (v0.2.2)
 ## REST API
 
 ```
-GET /v1/triggers              — all triggers with status
-GET /v1/triggers/{id}         — single trigger profile
-GET /v1/triggers/{id}/basis-risk — precomputed Spearman report
-GET /v1/triggers/{id}/determinations — oracle log
-GET /v1/status                — per-peril health
-GET /v1/ports                 — marine port list
-GET /v1/perils                — peril categories
-GET /v1/docs                  — OpenAPI documentation
+GET /v1/triggers                      — all triggers with status
+GET /v1/triggers/{id}                 — single trigger profile
+GET /v1/triggers/{id}/basis-risk      — precomputed Spearman report
+GET /v1/triggers/{id}/determinations  — oracle log
+GET /v1/triggers/{id}/model-history   — model version audit trail
+GET /v1/triggers/{id}/model-drift     — drift detection status
+GET /v1/intelligence/peril-patterns   — per-peril firing rates
+GET /v1/intelligence/location/{lat}/{lon} — triggers near a point
+GET /v1/status                        — per-peril health
+GET /v1/ports                         — marine port list
+GET /v1/perils                        — peril categories
+GET /v1/docs                          — OpenAPI documentation
 ```
 
-Open by default. API key auth opt-in via `API_REQUIRE_AUTH=true` + `X-API-Key` header.
+Open by default. API key auth opt-in via `API_REQUIRE_AUTH=true` + `X-API-Key` header. Full guide: [docs/API_GUIDE.md](docs/API_GUIDE.md).
+
+## MCP Server (for AI agents)
+
+```bash
+python -m gad.mcp.server   # JSON-RPC 2.0 over stdin/stdout
+```
+
+Tools: `check_trigger_status`, `list_triggers_by_location`, `get_basis_risk`, `list_perils`.
 
 Full API documentation: [docs/API_GUIDE.md](docs/API_GUIDE.md)
 
