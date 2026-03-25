@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from dashboard.components.theme import inject_theme
+from dashboard.components.trigger_selector import build_trigger_options
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don
@@ -100,15 +101,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Trigger selectors ──
-trigger_labels = {f"{t.name} ({PERIL_LABELS[t.peril]})": t.id for t in GLOBAL_TRIGGERS}
-labels = list(trigger_labels.keys())
+# ── Trigger selectors (searchable by city, peril, country) ──
+labels, trigger_labels = build_trigger_options()
 
 sel_col1, sel_col2 = st.columns(2)
 with sel_col1:
-    label1 = st.selectbox("Trigger A", options=labels, index=0, key="compare_a")
+    label1 = st.selectbox("Trigger A", options=labels, index=0, key="compare_a",
+                           placeholder="Type to search...")
 with sel_col2:
-    label2 = st.selectbox("Trigger B", options=labels, index=min(1, len(labels)-1), key="compare_b")
+    label2 = st.selectbox("Trigger B", options=labels, index=min(1, len(labels)-1), key="compare_b",
+                           placeholder="Type to search...")
 
 t1 = get_trigger_by_id(trigger_labels[label1])
 t2 = get_trigger_by_id(trigger_labels[label2])
