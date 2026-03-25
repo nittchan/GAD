@@ -184,8 +184,11 @@ Oracle (v0.2.2+):
 
 - `scripts/fetch_historical_openmeteo.py`: Download 5yr daily weather for all 144 airports. Free, no key. Output: `data/series/weather/{IATA}_daily.csv`. Supports `--airports` and `--years` flags.
 - `scripts/fetch_historical_openaq.py`: Download 2yr daily AQI for tier 1-2 airports. OpenAQ v3 API (requires API key). Probes for best PM2.5 sensor per city. Output: `data/series/aqi/{IATA}_aqi_daily.csv`. Writes `_station_mapping.csv` for audit.
-- `scripts/fetch_historical_opensky.py`: (planned) Download 1yr daily departures (resumable).
-- `scripts/precompute_basis_risk.py`: Batch compute basis risk for all triggers with historical data. Output: `data/basis_risk/{trigger_id}.json`. 221 reports, 114 with valid rho. Supports `--peril` and `--force` flags.
+- `scripts/fetch_bts_transtats.py`: Download US on-time flight performance from BTS TranStats. Real delay minutes for 15 US airports, 3yr history. Free, no key.
+- `scripts/fetch_opensky_zenodo.py`: Download global departure counts from OpenSky Zenodo Parquet dumps. All 144 airports, 4yr history. Free, no key.
+- `scripts/fetch_eurocontrol.py`: European airport delays from Eurocontrol ANS. 25 airports, 3 modes (CSV/API/weather-proxy). Free.
+- `scripts/fetch_dgca_india.py`: Indian airport delays from DGCA monthly reports. 10 airports, PDF parse/template import modes.
+- `scripts/precompute_basis_risk.py`: Batch compute basis risk for all triggers with historical data (weather + AQI + flights). Output: `data/basis_risk/{trigger_id}.json`. Supports `--peril` and `--force` flags.
 
 ## Oracle Scripts
 

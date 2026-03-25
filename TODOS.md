@@ -1,6 +1,7 @@
 # TODOS
 
-> **65 completed / 91 remaining.** Last updated: 2026-03-24.
+> **107 completed / 29 remaining (82%).** Last updated: 2026-03-25.
+> v0.3 Self-Learning Actuary complete (Phases 0-5). Historical data pipeline complete (weather + AQI + flights).
 > Dependency graph and execution order validated by eng review.
 
 ---

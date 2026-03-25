@@ -51,11 +51,15 @@ Current capabilities:
   - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
   - Deployed at parametricdata.io with Cloudflare DDoS protection.
 
-Not yet complete (v0.2.2+):
-  - Oracle signing wired to live monitor (Ed25519 primitives exist, not yet connected).
-  - Determination status page upgrade (verification proof UI).
-  - Historical basis risk precomputed for 221 triggers (144 weather + 72 AQI + legacy). Rho badges on Global Monitor. Trigger Profile shows full reports.
+Completed since v0.2.1:
+  - Oracle signing wired to live monitor (Ed25519, R2 upload, Oracle Ledger page).
+  - Historical basis risk: 221+ triggers precomputed. Flight data pipeline complete (BTS TranStats, OpenSky Zenodo, Eurocontrol, DGCA India).
+  - DuckDB analytical datastore (v0.3 Self-Learning Actuary: distributions, drift, thresholds, peers, correlations).
+  - 12 perils, 16 data sources, 521 triggers, REST API (12+ routes), MCP server.
+
+Not yet complete:
   - Parametric Data Pro (enterprise tier).
+  - KeplerGL map upgrade, GDACS/EONET disaster sources, Redis caching layer.
 
 
 ## Engine Migration (Completed 2026-03-23)
@@ -357,7 +361,7 @@ All new compute, oracle, and test work targets gad/engine/ and gad/engine/loader
 - Priority fallback protocol. All 8 API keys configured. All pages unified under registry.
 
 ### v0.2 remaining
-- Historical basis risk for all 521 triggers.
+- Historical basis risk for all 521 triggers. Flight data pipeline complete (BTS/Zenodo/Eurocontrol/DGCA scripts built, precompute updated).
 - NOAA HRRR Smoke, NOAA GFS weather, NOAA SPI drought.
 
 ### v0.2.2 (oracle layer — next milestone)
