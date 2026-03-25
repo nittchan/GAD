@@ -15,6 +15,7 @@ from pathlib import Path
 import streamlit as st
 
 from dashboard.components.theme import inject_theme
+from dashboard.components.trigger_selector import build_trigger_options
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don
@@ -78,15 +79,14 @@ SOURCE_KEY_MAP = {
 # Check if navigated from Global Monitor
 pre_selected = st.session_state.get("selected_trigger_id")
 
-# Build searchable trigger list
-trigger_options = {f"{t.name} ({PERIL_LABELS[t.peril]})": t.id for t in GLOBAL_TRIGGERS}
-option_labels = list(trigger_options.keys())
+# Build searchable trigger list (rich labels: "Delhi DEL — Flight Delay")
+option_labels, trigger_options = build_trigger_options()
 
 # Find default index
 default_idx = 0
 if pre_selected:
-    for i, (label, tid) in enumerate(trigger_options.items()):
-        if tid == pre_selected:
+    for i, label in enumerate(option_labels):
+        if trigger_options.get(label) == pre_selected:
             default_idx = i
             break
 
@@ -95,7 +95,7 @@ selected_label = st.sidebar.selectbox(
     "Select trigger",
     options=option_labels,
     index=default_idx,
-    placeholder="Search triggers...",
+    placeholder="Type to search by city, peril, or name...",
 )
 
 trigger_id = trigger_options.get(selected_label)

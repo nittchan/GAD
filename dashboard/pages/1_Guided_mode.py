@@ -103,10 +103,15 @@ elif step == 2:
 
     # Airport picker — searchable dropdown from the 144 airport registry
     from gad.monitor.airports import ALL_AIRPORTS
-    airport_options = {f"{a.city} — {a.name} ({a.iata})": a for a in ALL_AIRPORTS}
-    airport_labels = ["Custom location..."] + list(airport_options.keys())
+    airport_options = {f"{a.city} {a.iata} — {a.country}": a for a in ALL_AIRPORTS}
+    airport_labels = ["Custom location..."] + sorted(airport_options.keys())
 
-    selected_airport = st.selectbox("Select an airport or city", airport_labels, index=0)
+    selected_airport = st.selectbox(
+        "Select an airport or city",
+        airport_labels,
+        index=0,
+        placeholder="Type city, IATA code, or country...",
+    )
 
     if selected_airport != "Custom location..." and selected_airport in airport_options:
         airport = airport_options[selected_airport]
