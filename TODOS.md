@@ -78,6 +78,32 @@
 - [ ] **DATA-01c:** `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable, multi-day job)
 - [x] **UX-01:** Searchable dropdowns — rich labels ("Delhi DEL — Flight Delay (India)"), sorted alphabetically, type-to-filter. Shared `trigger_selector.py`. Applied to Trigger Profile, Compare, Guided Mode.
 
+---
+
+## Frontend Performance & UX
+
+### FE-01: Speed + caching
+- [ ] **FE-01a:** Add `<link rel="preconnect">` for Google Fonts in theme.py — reduces DNS+TLS latency (~100ms saving).
+- [ ] **FE-01b:** Add `@st.cache_data` to expensive computations across pages: trigger list building, PREI computation, intelligence briefs, basis risk loading. ⚠️ Compatible with existing `_load_rho_map()` cache — same pattern.
+- [ ] **FE-01c:** Loading skeletons — add `st.spinner` or placeholder text during data loads on Global Monitor, Trigger Profile, and Digest pages.
+
+### FE-02: Interactions
+- [ ] **FE-02a:** URL deep linking for triggers — pass `?trigger=flight-delay-del` as query param on Trigger Profile. Currently uses `st.session_state` which doesn't survive page refresh/share.
+- [ ] **FE-02b:** Mobile bottom nav — sticky footer with 4 key pages (Monitor, Build, Profile, Oracle) for mobile screens. CSS only, no Streamlit change.
+- [ ] **FE-02c:** Toast feedback — replace `st.success` with `st.toast()` (Streamlit 1.33+) for ephemeral actions. ⚠️ Requires bumping `streamlit>=1.31` to `>=1.33` in requirements.txt.
+
+---
+
+## API Documentation & Quality
+
+### API-03: Developer documentation
+**Why:** Auto-generated Swagger at /v1/docs exists but has terse descriptions, no examples, no getting-started guide. Users can't onboard without reading source code.
+
+- [ ] **API-03a:** `docs/API_GUIDE.md` — standalone getting-started guide with: overview, base URL, auth (open by default, opt-in key), curl examples for every route, response schemas, error format, rate limits. Link from README.
+- [ ] **API-03b:** Enrich FastAPI route docstrings — add request/response examples, parameter descriptions, and error codes to each `@app.get()`. These auto-populate Swagger UI. ⚠️ No conflict with existing routes — additive only.
+- [ ] **API-03c:** Make API description dynamic — replace hardcoded "521 triggers" with `len(GLOBAL_TRIGGERS)` in FastAPI app description.
+- [ ] **API-03d:** Add response models (Pydantic) to API routes — enables auto-generated response schemas in OpenAPI. ⚠️ Depends on existing models in `gad/engine/models.py` — extend, don't duplicate.
+
 ### SRC-01/02/03: Additional data sources (standalone)
 - [ ] **SRC-01:** NOAA HRRR Smoke data — wildfire impact, GRIB format. Medium effort.
 - [ ] **SRC-02:** NOAA GFS weather fallback — authoritative global model behind Open-Meteo. GRIB format.
