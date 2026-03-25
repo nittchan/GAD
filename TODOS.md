@@ -188,16 +188,16 @@
 ### Phase 3: Threshold Optimization + Peer Intelligence
 **Depends on:** Phase 2 (distributions).
 
-- [ ] **SL-04a:** Threshold optimizer — frequency matching + KS separability.
-- [ ] **SL-04b:** Evidence gating (<30 obs = None, 30-99 = low, 100-499 = medium, 500+ = high).
-- [ ] **SL-04c:** "Threshold advisor" panel on Trigger Profile.
-- [ ] **SL-04d:** "Suggest optimal threshold" in Guided Mode step 3.
-- [ ] **SL-05a:** Koppen climate zone lookup.
-- [ ] **SL-05b:** Peer index — cosine similarity, top-5 peers. **Depends on:** SL-05a.
-- [ ] **SL-05c:** Outlier detection — >2σ from peer median.
-- [ ] **SL-06a:** Cold-start inference — weighted-average from 5 nearest peers. **Depends on:** SL-05b.
-- [ ] **SL-06b:** Replace "NO DATA" with inferred estimate + progress bar.
-- [ ] **SL-06c:** Graduation trigger — cold-start → direct at 30 observations.
+- [x] **SL-04a:** Threshold optimizer — frequency matching + KS separability.
+- [x] **SL-04b:** Evidence gating (<30 obs = None, 30-99 = low, 100-499 = medium, 500+ = high).
+- [x] **SL-04c:** "Threshold advisor" panel on Trigger Profile.
+- [x] **SL-04d:** "Suggest optimal threshold" in Guided Mode step 3.
+- [x] **SL-05a:** Koppen climate zone lookup.
+- [x] **SL-05b:** Peer index — cosine similarity, top-5 peers. **Depends on:** SL-05a.
+- [x] **SL-05c:** Outlier detection — >2σ from peer median.
+- [x] **SL-06a:** Cold-start inference — weighted-average from 5 nearest peers. **Depends on:** SL-05b.
+- [x] **SL-06b:** Replace "NO DATA" with inferred estimate + progress bar.
+- [x] **SL-06c:** Graduation trigger — cold-start → direct at 30 observations.
 
 ### Phase 4: Global Intelligence
 **Depends on:** Phase 3 (peers). API endpoints **blocked by** API-01.
