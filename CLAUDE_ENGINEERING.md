@@ -82,43 +82,150 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - sources/who_don.py: Health/pandemic alerts (WHO Disease Outbreak News — free, no key)
 - risk_index.py: Parametric Risk Exposure Index (PREI) computation per country
 
-### Data architecture — where computation happens
+### Data Architecture
+
+**Rule: The browser and dashboard compute nothing. All math, fetching, and risk calculation happens server-side. The dashboard only reads precomputed results.**
+
+Update this section after any TODO that adds a data source, store, compute job, or read path.
+
 ```
-WRITE PATH (server-side only, never browser):
-  Background fetcher (every 15 min)
-    → Fetches live data from 18 external APIs
-    → Writes to JSON cache (live trigger status)
-    → Writes observations to DuckDB (time series)
-    → Signs oracle determinations (Ed25519)
+┌─────────────────────────────────────────────────────────────────────┐
+│                        EXTERNAL DATA SOURCES                        │
+│  18 APIs — all free tier, fetched server-side only                  │
+│                                                                     │
+│  Flight:    FAA ATCSCC · AviationStack · OpenSky                    │
+│  AQI:       AirNow EPA · OpenAQ · WAQI                             │
+│  Weather:   Open-Meteo                                              │
+│  Wildfire:  NASA FIRMS (VIIRS + MODIS)                              │
+│  Drought:   CHIRPS · NASA GPM IMERG                                 │
+│  Earthquake: USGS                                                   │
+│  Marine:    AISstream (WebSocket)                                   │
+│  Flood:     USGS Water Services                                     │
+│  Cyclone:   NOAA NHC                                                │
+│  Crop:      Copernicus/MODIS NDVI                                   │
+│  Solar:     NOAA SWPC                                               │
+│  Health:    WHO DON                                                 │
+│  Disaster:  GDACS RSS                                               │
+│  Events:    NASA EONET                                              │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │ fetched every 15 min
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     WRITE PATH (server-side only)                   │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────┐        │
+│  │  Background Fetcher  (gad/monitor/fetcher.py)           │        │
+│  │  Runs: every 15 min (--loop) or cron                    │        │
+│  │                                                         │        │
+│  │  For each of 536 triggers:                              │        │
+│  │    1. Fetch live value from priority source chain        │        │
+│  │    2. Evaluate fired/not-fired against threshold         │        │
+│  │    3. Write to JSON cache ──────────────────────► [A]    │        │
+│  │    4. Write observation to DuckDB ──────────────► [B]    │        │
+│  │    5. Sign determination (Ed25519) ─────────────► [C]    │        │
+│  └─────────────────────────────────────────────────────────┘        │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────┐        │
+│  │  Historical Backfill  (one-time on first deploy)        │        │
+│  │  Auto-bootstraps if <50 weather CSVs exist              │        │
+│  │                                                         │        │
+│  │  scripts/fetch_historical_openmeteo.py → 5yr weather    │        │
+│  │  scripts/fetch_historical_openaq.py   → 2yr AQI        │        │
+│  │  scripts/fetch_bts_transtats.py       → 3yr US flights  │        │
+│  │  scripts/fetch_opensky_zenodo.py      → 4yr departures  │        │
+│  │                                                         │        │
+│  │  Output: CSV series files ──────────────────────► [D]    │        │
+│  └─────────────────────────────────────────────────────────┘        │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────┐        │
+│  │  Precompute  (scripts/precompute_basis_risk.py)         │        │
+│  │  Runs: after backfill, or on-demand (--force)           │        │
+│  │                                                         │        │
+│  │  Reads CSV series [D]                                   │        │
+│  │  Computes: Spearman rho, bootstrap CI, FPR/FNR,        │        │
+│  │            confusion matrix, Lloyd's checklist score    │        │
+│  │  Output: JSON reports ──────────────────────────► [E]    │        │
+│  └─────────────────────────────────────────────────────────┘        │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────┐        │
+│  │  Daily Jobs  (fetcher._run_daily_jobs)                  │        │
+│  │  Reads DuckDB observations [B], writes results to [B]   │        │
+│  │                                                         │        │
+│  │  • Distribution tracker — 90d/365d rolling stats        │        │
+│  │  • Drift detector — CUSUM (mean shift, firing rate)     │        │
+│  │  • DuckDB backup → R2                                   │        │
+│  └─────────────────────────────────────────────────────────┘        │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────┐        │
+│  │  Weekly Jobs  (fetcher._run_weekly_jobs)                │        │
+│  │  Reads DuckDB observations [B], writes results to [B]   │        │
+│  │                                                         │        │
+│  │  • Threshold optimizer — frequency matching + KS test   │        │
+│  │  • Peer calibration — cosine similarity, top-5 peers    │        │
+│  │  • Correlation matrix — phi coefficient, lead-lag       │        │
+│  └─────────────────────────────────────────────────────────┘        │
+└─────────────────────────────────────────────────────────────────────┘
 
-  Historical backfill (one-time on first deploy)
-    → Fetches 5yr weather / 2yr AQI from free APIs
-    → Writes CSV series to data/series/
+┌─────────────────────────────────────────────────────────────────────┐
+│                         DATA STORES                                 │
+│                                                                     │
+│  [A] JSON Cache         data/monitor_cache/*.json                   │
+│      Live trigger status. TTL-based. Gitignored.                    │
+│      Written by: fetcher (every 15 min)                             │
+│      Read by: dashboard, REST API                                   │
+│                                                                     │
+│  [B] DuckDB             data/gad.duckdb                             │
+│      8 tables: trigger_observations, trigger_distributions,         │
+│      drift_alerts, threshold_suggestions, trigger_peers,            │
+│      trigger_correlations, model_versions, seasonal_profiles        │
+│      Written by: fetcher (observations), daily/weekly jobs          │
+│      Read by: REST API, daily/weekly jobs                           │
+│      Single-writer pattern (fetcher process holds flock)            │
+│                                                                     │
+│  [C] Oracle Ledger      data/oracle/ + Cloudflare R2                │
+│      Signed determinations (Ed25519), hash-chained JSONL.           │
+│      Written by: fetcher (on each evaluation)                       │
+│      Read by: Oracle Ledger page, Cloudflare Worker, verify CLI     │
+│                                                                     │
+│  [D] CSV Series         data/series/{weather,aqi,flights}/*.csv     │
+│      Historical time series. One-time backfill, persistent.         │
+│      Written by: historical backfill scripts (one-time)             │
+│      Read by: precompute_basis_risk.py                              │
+│                                                                     │
+│  [E] Basis Risk JSON    data/basis_risk/{trigger_id}.json           │
+│      Precomputed Spearman reports. One per trigger.                 │
+│      Written by: precompute_basis_risk.py                           │
+│      Read by: dashboard (Trigger Profile), REST API                 │
+│                                                                     │
+│  [F] Supabase           (external, cloud-hosted)                    │
+│      User profiles, saved triggers, activity events, API keys.      │
+│      Written by: dashboard (auth), analytics.py                     │
+│      Read by: dashboard (Account page), API (auth)                  │
+└─────────────────────────────────────────────────────────────────────┘
 
-  Precompute (one-time + on-demand)
-    → Reads CSV series
-    → Computes Spearman rho, bootstrap CI, confusion matrix, Lloyd's score
-    → Writes JSON reports to data/basis_risk/{trigger_id}.json
-
-  Daily/weekly jobs (DuckDB analytics)
-    → Distribution tracker: 90d/365d rolling stats from DuckDB observations
-    → Drift detector: CUSUM on DuckDB observations
-    → Threshold optimizer: frequency matching from DuckDB observations
-    → Peer calibration: cosine similarity from DuckDB observations
-    → Correlation matrix: phi coefficient from DuckDB observations
-
-READ PATH (dashboard + API):
-  Dashboard → reads JSON cache + precomputed basis risk JSON → renders
-  REST API → reads JSON cache + DuckDB → responds
-  Browser does ZERO computation. All math happens server-side.
-
-Users → Dashboard → Cache (precomputed JSON) → Response
-                     ↑
-Background fetcher → External APIs → Cache + DuckDB
-(cron, 15 min)
-
-Users NEVER trigger API calls or computation.
-Cost is fixed regardless of traffic.
+┌─────────────────────────────────────────────────────────────────────┐
+│                    READ PATH (zero computation)                     │
+│                                                                     │
+│  Dashboard (Streamlit, port 8501)                                   │
+│    Global Monitor    → reads [A] JSON cache                         │
+│    Trigger Profile   → reads [A] cache + [E] basis risk JSON        │
+│    Compare           → reads [A] cache + [E] basis risk JSON        │
+│    Guided/Expert     → reads [A] cache                              │
+│    Oracle Ledger     → reads [C] oracle log                         │
+│    Digest            → reads [A] cache + [B] DuckDB                 │
+│    Composer          → reads [A] cache + [B] DuckDB                 │
+│                                                                     │
+│  REST API (FastAPI, port 8502)                                      │
+│    /v1/triggers      → reads [A] cache                              │
+│    /v1/basis-risk    → reads [E] basis risk JSON                    │
+│    /v1/intelligence  → reads [B] DuckDB                             │
+│    /v1/health        → reads [A] cache metadata                     │
+│    /v1/model-drift   → reads [B] DuckDB                             │
+│                                                                     │
+│  Browser does ZERO computation, ZERO external API calls.            │
+│  Users NEVER trigger data fetches. Cost is fixed.                   │
+│  10,000 concurrent users = same API cost as zero users.             │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Dashboard Pages
