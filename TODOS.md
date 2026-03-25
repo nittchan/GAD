@@ -162,16 +162,16 @@
 ### Phase 1: Time Series Foundation (blocks all learning)
 **Depends on:** Phase 0 complete.
 
-- [ ] **SL-01a:** `TriggerObservation` model in models.py.
-- [ ] **SL-01b:** Wire into fetcher — write observation to DuckDB after each evaluation.
-- [ ] **SL-01c:** `gad/engine/timeseries.py` — thin read abstraction.
-- [ ] **SL-01d:** Backfill historical data as observations.
-- [ ] **SL-09a:** Model versioning — `ModelVersion` in models.py. *(elevated to Phase 1 per Codex review)*
-- [ ] **SL-09b:** JSON copy to R2 `model-registry/`.
-- [ ] **SL-09c:** Link `model_version_id` to `TriggerDetermination`. ⚠️ **SCHEMA CHANGE** — must be `Optional[UUID] = None` for backward compatibility with existing hash chain.
-- [ ] **SL-09d:** `GET /v1/triggers/{id}/model-history`. **Blocked by:** API-01.
-- [ ] **DB-06a:** Daily/weekly flag file pattern in fetcher.
-- [ ] **DB-06b:** `daily_jobs()` and `weekly_jobs()` functions.
+- [x] **SL-01a:** `TriggerObservation` model in models.py. Exported from `gad/engine/__init__.py`.
+- [x] **SL-01b:** Wired into fetcher — writes observation to DuckDB after each evaluation. try/except wrapped.
+- [x] **SL-01c:** `gad/engine/timeseries.py` — get_trigger_timeseries(), get_trigger_stats(), has_enough_observations().
+- [x] **SL-01d:** `scripts/backfill_observations.py` — CSV to DuckDB backfill (weather + AQI). Skips existing.
+- [x] **SL-09a:** `ModelVersion` model in models.py. Append-only audit trail.
+- [x] **SL-09b:** `gad/engine/model_registry.py` — register_model_version() writes to DuckDB + R2 `model-registry/`.
+- [x] **SL-09c:** `model_version_id: Optional[UUID] = None` on TriggerDetermination. Added to canonical JSON. Chain-compatible.
+- [x] **SL-09d:** `GET /v1/triggers/{id}/model-history` endpoint + `get_model_versions()` in db_read.py.
+- [x] **DB-06a:** Daily/weekly flag file debounce (23hr / 6.5day intervals).
+- [x] **DB-06b:** `_run_daily_jobs()` (backup + prune) + `_run_weekly_jobs()` (placeholder for Phase 3). Called at end of fetch_all().
 
 ### Phase 2: Distribution Learning
 **Depends on:** Phase 1 complete.
