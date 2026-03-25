@@ -202,10 +202,10 @@
 ### Phase 4: Global Intelligence
 **Depends on:** Phase 3 (peers). API endpoints **blocked by** API-01.
 
-- [ ] **SL-07a:** Co-firing correlation matrix — phi coefficient. Geographic bounding 2000km. *(eng review)*
-- [ ] **SL-07b:** Correlation clusters toggle on Global Monitor — use Kepler.gl (`streamlit-keplergl`) for advanced map with arcs, heatmaps, time playback. Keep PyDeck as default lightweight view.
-- [ ] **SL-07c:** "Correlated triggers" on Trigger Profile.
-- [ ] **SL-07d:** Lead-lag analysis for high-phi pairs.
+- [x] **SL-07a:** Co-firing correlation matrix — phi coefficient. Geographic bounding 2000km. *(eng review)*
+- [x] **SL-07b:** Correlation clusters toggle on Global Monitor — use Kepler.gl (`streamlit-keplergl`) for advanced map with arcs, heatmaps, time playback. Keep PyDeck as default lightweight view.
+- [x] **SL-07c:** "Correlated triggers" on Trigger Profile.
+- [x] **SL-07d:** Lead-lag analysis for high-phi pairs.
 - [x] **SL-08a:** `GET /v1/intelligence/peril-patterns`. **Blocked by:** API-01.
 - [x] **SL-08b:** `GET /v1/intelligence/location/{lat}/{lon}`. **Blocked by:** API-01.
 - [x] **SL-08c:** `GET /v1/intelligence/climate-zone/{zone}`. **Blocked by:** API-01.
@@ -214,9 +214,9 @@
 ### Phase 5: User Accounts + Saved Work
 **Depends on:** Phase 3 (model versioning).
 
-- [ ] **UA-01:** `user_trigger_annotations` table in Supabase (RLS).
-- [ ] **UA-02:** Snapshot on save — model_version_id, threshold_percentile, firing_rate.
-- [ ] **UA-03:** Account page watchlist intelligence — calibration drift since save.
+- [x] **UA-01:** `user_trigger_annotations` table in Supabase (RLS).
+- [x] **UA-02:** Snapshot on save — model_version_id, threshold_percentile, firing_rate.
+- [x] **UA-03:** Account page watchlist intelligence — calibration drift since save.
 
 ---
 
@@ -227,15 +227,15 @@ All items tagged with their phase dependency.
 
 - [x] **CEO-04:** Source recovery cooldown — 2-cycle pause on oracle signing after source recovery.
 - [x] **CEO-05:** Per-source rate limiter — sliding-window (FIRMS 5000/10min, WAQI 1000/day, AviationStack 16/day). 11 new tests.
-- [ ] **CEO-01:** R2 as API fallback. **Blocked by:** API-01.
-- [ ] **CEO-02:** Webhook retry + dead-letter queue. **Blocked by:** API-01. *(Note: overlaps with PLAT-02 — CEO-02 is canonical.)*
-- [ ] **CEO-03:** Hash API keys in CF Workers KV. **Blocked by:** API-01.
-- [ ] **CEO-06:** Deployment sequence for API layer. **Blocked by:** API-01.
+- [x] **CEO-01:** R2 as API fallback. **Blocked by:** API-01.
+- [x] **CEO-02:** Webhook retry + dead-letter queue. **Blocked by:** API-01. *(Note: overlaps with PLAT-02 — CEO-02 is canonical.)*
+- [x] **CEO-03:** Hash API keys in CF Workers KV. **Blocked by:** API-01.
+- [x] **CEO-06:** Deployment sequence for API layer. **Blocked by:** API-01.
 
 ### CEO Deferred Expansions
 - [ ] **CEO-07:** Data Adapter Plugin Protocol — `DataSourceAdapter` ABC.
 - [ ] **CEO-08:** Verification SDK + CLI — `pip install parametricdata`. *(Note: `python -m gad.verify` already exists — this is packaging.)*
-- [ ] **CEO-09:** Trigger Proximity Alerts — notify at 80% threshold.
+- [x] **CEO-09:** Trigger Proximity Alerts — notify at 80% threshold.
 - [ ] **CEO-10:** Multi-Peril Product Composer — composite products.
 - [ ] **CEO-11:** Embeddable Trigger Widget — `<script>` for broker portals.
 
