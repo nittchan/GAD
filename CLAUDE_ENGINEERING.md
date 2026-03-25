@@ -64,7 +64,7 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - ports.py: Port registry (10 tier-1 global ports with anchorage bounding boxes)
 - triggers.py: Auto-generates triggers for 14 perils: flight delay, weather, AQI, earthquake, marine, flood, cyclone, crop/NDVI, solar, health, disaster/GDACS, natural events/EONET (536 triggers)
 - cache.py: JSON file cache with TTL, staleness detection
-- fetcher.py: Background worker fetches all sources on schedule
+- fetcher.py: Background worker fetches all sources on schedule. Auto-bootstraps historical weather data on first deploy (idempotent — skips if ≥50 CSVs exist).
 - security.py: Rate limiter, input sanitization, key management
 - sources/faa_atcscc.py: US airport delays — real delay minutes from FAA ATCSCC (free, no key, tier-0 for US)
 - sources/opensky.py: Flight departure data (OpenSky Network API — departure count, global fallback)

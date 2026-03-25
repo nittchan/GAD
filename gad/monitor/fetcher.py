@@ -792,9 +792,66 @@ def _run_weekly_jobs():
     log.info("Weekly jobs complete.")
 
 
+def _bootstrap_historical_data() -> None:
+    """One-time historical data seed on first deploy.
+
+    Checks if weather series CSVs exist. If not, runs the historical
+    Open-Meteo fetch (free, no key) and then precomputes basis risk.
+    Idempotent — skips if data already exists.
+    """
+    from gad.config import SERIES_DIR, BASIS_RISK_DIR
+
+    weather_dir = SERIES_DIR / "weather"
+    weather_dir.mkdir(parents=True, exist_ok=True)
+    existing = list(weather_dir.glob("*_daily.csv"))
+    if len(existing) >= 50:
+        log.info(f"Historical data bootstrap: skipped ({len(existing)} weather CSVs exist)")
+        return
+
+    log.info("Historical data bootstrap: no weather series found — fetching from Open-Meteo...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, "scripts/fetch_historical_openmeteo.py", "--years", "5", "--delay", "1.5"],
+            capture_output=True, text=True, timeout=3600,
+        )
+        if result.returncode == 0:
+            new_count = len(list(weather_dir.glob("*_daily.csv")))
+            log.info(f"Historical data bootstrap: fetched {new_count} weather CSVs")
+        else:
+            log.warning(f"Historical data bootstrap: weather fetch failed: {result.stderr[:500]}")
+            return
+    except Exception as e:
+        log.warning(f"Historical data bootstrap: weather fetch error: {e}")
+        return
+
+    # Precompute basis risk from the freshly fetched data
+    log.info("Historical data bootstrap: precomputing basis risk reports...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, "scripts/precompute_basis_risk.py", "--force"],
+            capture_output=True, text=True, timeout=1800,
+        )
+        if result.returncode == 0:
+            report_count = len(list(BASIS_RISK_DIR.glob("*.json")))
+            log.info(f"Historical data bootstrap: {report_count} basis risk reports generated")
+        else:
+            log.warning(f"Historical data bootstrap: precompute failed: {result.stderr[:500]}")
+    except Exception as e:
+        log.warning(f"Historical data bootstrap: precompute error: {e}")
+
+
 def run_loop(interval_seconds: int = 900) -> None:
     """Run fetch_all in a loop. For Fly.io continuous process."""
     log.info(f"Starting fetch loop (interval={interval_seconds}s)")
+
+    # One-time historical data seed on first deploy
+    try:
+        _bootstrap_historical_data()
+    except Exception as e:
+        log.warning(f"Historical bootstrap failed (non-fatal): {e}")
+
     while True:
         try:
             fetch_all()
