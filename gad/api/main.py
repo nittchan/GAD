@@ -230,6 +230,19 @@ async def list_ports(_key=Depends(verify_api_key)):
     }
 
 
+@app.get("/v1/triggers/{trigger_id}/model-history", tags=["Learning"])
+async def get_model_history(trigger_id: str, limit: int = 20, _key=Depends(verify_api_key)):
+    """Get model version history for a trigger."""
+    try:
+        from gad.engine.db_read import get_model_versions
+        rows = get_model_versions(trigger_id, limit=limit)
+        if rows is None or rows.empty:
+            return {"trigger_id": trigger_id, "versions": [], "count": 0}
+        return {"trigger_id": trigger_id, "versions": rows.to_dict("records"), "count": len(rows)}
+    except Exception as e:
+        return {"trigger_id": trigger_id, "versions": [], "count": 0, "error": str(e)}
+
+
 @app.get("/v1/perils", tags=["Status"])
 async def list_perils(_key=Depends(verify_api_key)):
     """List all peril categories."""

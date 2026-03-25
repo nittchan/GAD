@@ -91,6 +91,20 @@ def get_correlations(trigger_id, min_phi=0.3):
         return None
 
 
+def get_model_versions(trigger_id, limit=20):
+    """Return model version history for a trigger, newest first."""
+    try:
+        from gad.engine.db import get_connection
+        conn = get_connection()
+        return conn.execute(
+            "SELECT * FROM model_versions WHERE trigger_id = ? ORDER BY created_at DESC LIMIT ?",
+            [trigger_id, limit]
+        ).fetchdf()
+    except Exception as e:
+        log.warning(f"Failed to read model versions for {trigger_id}: {e}")
+        return None
+
+
 def get_observation_count(trigger_id):
     """Return total observation count for a trigger."""
     try:

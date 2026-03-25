@@ -63,6 +63,7 @@ def _canonical_json(det: TriggerDetermination) -> bytes:
         "determined_at": det.determined_at.isoformat(),
         "prev_hash": det.prev_hash,
         "key_id": str(det.key_id) if det.key_id else None,
+        "model_version_id": str(det.model_version_id) if det.model_version_id else None,
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
 

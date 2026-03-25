@@ -10,9 +10,11 @@ from gad.engine.models import (
     BasisRiskReport,
     DataSourceProvenance,
     GadEvent,
+    ModelVersion,
     PolicyBinding,
     TriggerDef,
     TriggerDetermination,
+    TriggerObservation,
 )
 from gad.engine.pdf_export import generate_lloyds_report
 from gad.engine.oracle import (
@@ -30,10 +32,12 @@ __all__ = [
     "BacktestRow",
     "BasisRiskReport",
     "GadEvent",
+    "ModelVersion",
     "DataSourceProvenance",
     "PolicyBinding",
     "TriggerDef",
     "TriggerDetermination",
+    "TriggerObservation",
     "compute_basis_risk",
     "lloyds_check",
     "generate_lloyds_report",

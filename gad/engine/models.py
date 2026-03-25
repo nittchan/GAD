@@ -97,6 +97,10 @@ class TriggerDetermination(BaseModel):
         default=None,
         description="UUID of the signing key from the key registry. None in v0.1 (unsigned).",
     )
+    model_version_id: Optional[UUID] = Field(
+        default=None,
+        description="Links determination to calibration state",
+    )
 
 
 class BacktestRow(BaseModel):
@@ -137,6 +141,28 @@ class BasisRiskReport(BaseModel):
         ...,
         description="GAD git commit hash or package version at computation time — required for independent verifiability",
     )
+
+
+class ModelVersion(BaseModel):
+    """Append-only audit trail for learning layer model state."""
+
+    version_id: str = Field(default_factory=lambda: str(uuid4()))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    trigger_id: Optional[str] = None  # None = global model
+    model_type: str = ""  # e.g. "distribution_90d", "threshold_optimizer", "peer_index"
+    parameters: Optional[str] = None  # JSON string of model parameters
+    metrics: Optional[str] = None  # JSON string of model metrics/scores
+
+
+class TriggerObservation(BaseModel):
+    """Atomic unit of the learning layer. One observation per trigger per fetch cycle."""
+
+    trigger_id: str
+    observed_at: datetime
+    value: Optional[float] = None
+    fired: bool = False
+    data_source: str = ""
+    raw_json: Optional[str] = None
 
 
 class GadEvent(BaseModel):
