@@ -132,9 +132,23 @@ Tools: `check_trigger_status`, `list_triggers_by_location`, `get_basis_risk`, `l
 
 Full API documentation: [docs/API_GUIDE.md](docs/API_GUIDE.md)
 
-## Security
+## How data flows
 
-The public dashboard makes **zero external API calls**. All data is pre-fetched by a background worker and served from a local cache. 10,000 concurrent users cost the same in API calls as zero users.
+All computation happens server-side. The browser renders precomputed results — it never fetches external data or runs actuarial math.
+
+```
+Background fetcher (every 15 min)
+  → Fetches live data from 18 APIs → JSON cache + DuckDB
+  → Signs oracle determinations (Ed25519)
+
+Historical backfill (one-time on first deploy)
+  → 5yr weather + 2yr AQI → CSV series → precomputed basis risk JSON
+
+Daily analytics (DuckDB)
+  → Distributions, drift detection, threshold optimization, peer calibration
+```
+
+The dashboard reads from cache and precomputed JSON. The REST API reads from cache and DuckDB. **Zero external API calls from the dashboard.** 10,000 concurrent users cost the same as zero users.
 
 ## Contributing
 

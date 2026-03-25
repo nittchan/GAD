@@ -82,14 +82,43 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - sources/who_don.py: Health/pandemic alerts (WHO Disease Outbreak News — free, no key)
 - risk_index.py: Parametric Risk Exposure Index (PREI) computation per country
 
-### Security model
+### Data architecture — where computation happens
 ```
-Users → Dashboard → Cache (local JSON files) → Response
+WRITE PATH (server-side only, never browser):
+  Background fetcher (every 15 min)
+    → Fetches live data from 18 external APIs
+    → Writes to JSON cache (live trigger status)
+    → Writes observations to DuckDB (time series)
+    → Signs oracle determinations (Ed25519)
+
+  Historical backfill (one-time on first deploy)
+    → Fetches 5yr weather / 2yr AQI from free APIs
+    → Writes CSV series to data/series/
+
+  Precompute (one-time + on-demand)
+    → Reads CSV series
+    → Computes Spearman rho, bootstrap CI, confusion matrix, Lloyd's score
+    → Writes JSON reports to data/basis_risk/{trigger_id}.json
+
+  Daily/weekly jobs (DuckDB analytics)
+    → Distribution tracker: 90d/365d rolling stats from DuckDB observations
+    → Drift detector: CUSUM on DuckDB observations
+    → Threshold optimizer: frequency matching from DuckDB observations
+    → Peer calibration: cosine similarity from DuckDB observations
+    → Correlation matrix: phi coefficient from DuckDB observations
+
+READ PATH (dashboard + API):
+  Dashboard → reads JSON cache + precomputed basis risk JSON → renders
+  REST API → reads JSON cache + DuckDB → responds
+  Browser does ZERO computation. All math happens server-side.
+
+Users → Dashboard → Cache (precomputed JSON) → Response
                      ↑
-Background fetcher → External APIs → Cache
+Background fetcher → External APIs → Cache + DuckDB
 (cron, 15 min)
 
-Users NEVER trigger API calls. Cost is fixed regardless of traffic.
+Users NEVER trigger API calls or computation.
+Cost is fixed regardless of traffic.
 ```
 
 ## Dashboard Pages

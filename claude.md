@@ -108,6 +108,17 @@ Top-level domains and responsibilities:
 - tests/
   - Basis risk, Lloyds, oracle signing/verification, and reproducibility tests.
 
+## Data Architecture
+
+All risk data is fetched, stored, and computed **server-side**. The browser and dashboard never fetch external APIs or run actuarial calculations.
+
+- **Live data**: Background fetcher (every 15 min) → 18 external APIs → JSON cache files + DuckDB observations
+- **Historical data**: One-time backfill scripts → CSV series files (weather, AQI, flights)
+- **Basis risk**: Precomputed from CSV series → JSON reports in `data/basis_risk/` (Spearman rho, Lloyd's scores, confusion matrices)
+- **Self-learning analytics**: DuckDB daily/weekly jobs (distributions, drift detection, threshold optimization, peer calibration, correlations) — all from stored observations, no re-fetching
+- **Dashboard reads**: JSON cache (live status) + precomputed basis risk JSON (historical analysis). Zero computation in browser.
+- **REST API reads**: JSON cache + DuckDB queries. Zero external calls per request.
+
 ## Runtime Surfaces
 
 ### Surface A: Dashboard App (primary)
