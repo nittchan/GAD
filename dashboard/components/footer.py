@@ -6,6 +6,15 @@ from __future__ import annotations
 
 import streamlit as st
 
+MOBILE_NAV_HTML = """
+<div class="mobile-nav">
+    <a href="/Global_Monitor">🌍 Monitor</a>
+    <a href="/Guided_mode">✨ Build</a>
+    <a href="/Trigger_profile">📊 Profile</a>
+    <a href="/Oracle">🔐 Oracle</a>
+</div>
+"""
+
 FOOTER_HTML = """
 <div style="margin-top:48px;padding:24px 0;border-top:1px solid #D4CCC0;">
     <p style="color:#C8553D;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-family:'Instrument Sans',sans-serif;">
@@ -35,4 +44,5 @@ FOOTER_HTML = """
 
 def render_footer() -> None:
     """Render the shared footer. Call at the bottom of every page."""
+    st.markdown(MOBILE_NAV_HTML, unsafe_allow_html=True)
     st.markdown(FOOTER_HTML, unsafe_allow_html=True)

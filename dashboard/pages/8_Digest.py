@@ -110,7 +110,7 @@ with col_gen:
                 digest_content = generate_global_digest()
                 digest_file = f"{today_str}.md"
                 is_today = True
-                st.success("Digest generated.")
+                st.toast("Digest generated.")
             except Exception as e:
                 st.error(f"Failed to generate digest: {e}")
 

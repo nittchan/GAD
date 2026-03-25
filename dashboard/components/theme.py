@@ -69,6 +69,35 @@ THEME_CSS = """
         to { opacity: 1; transform: translateY(0); }
     }
     .stat-animate { animation: countUp 150ms ease-out; }
+
+    /* ── Mobile bottom nav — shows on screens < 768px ── */
+    @media (max-width: 768px) {
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #E3DCD3;
+            border-top: 1px solid #D4CCC0;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+        .mobile-nav a {
+            text-decoration: none;
+            color: #7A7267;
+            font-size: 11px;
+            text-align: center;
+            font-family: 'Instrument Sans', sans-serif;
+        }
+        .mobile-nav a:hover { color: #C8553D; }
+        /* Add padding to page bottom so content isn't hidden behind nav */
+        .stApp { padding-bottom: 60px; }
+    }
+    @media (min-width: 769px) {
+        .mobile-nav { display: none; }
+    }
 </style>
 """
 

@@ -74,8 +74,8 @@ SOURCE_KEY_MAP = {
     "who_don": "health",
 }
 
-# Check if navigated from Global Monitor
-pre_selected = st.session_state.get("selected_trigger_id")
+# Check if navigated from Global Monitor or URL deep link
+pre_selected = st.query_params.get("trigger") or st.session_state.get("selected_trigger_id")
 
 # Build searchable trigger list (rich labels: "Delhi DEL — Flight Delay")
 option_labels, trigger_options = build_trigger_options()
@@ -97,6 +97,11 @@ selected_label = st.sidebar.selectbox(
 )
 
 trigger_id = trigger_options.get(selected_label)
+
+# Sync URL query param for deep linking / bookmarking
+if trigger_id:
+    st.query_params["trigger"] = trigger_id
+
 trigger = get_trigger_by_id(trigger_id) if trigger_id else None
 
 if not trigger:
