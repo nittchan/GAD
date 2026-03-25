@@ -74,8 +74,8 @@ Top-level domains and responsibilities:
 
 - gad/
   - Core Python package.
-  - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export, db, db_write, db_read, timeseries, distribution_tracker, drift_detector, model_registry, backup).
-  - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources, intelligence, risk_index).
+  - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export, db, db_write, db_read, timeseries, distribution_tracker, drift_detector, threshold_optimizer, peer_index, cold_start, model_registry, backup).
+  - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources, intelligence, risk_index, climate_zones).
   - gad/monitor/ports.py — Port registry (10 tier-1 global ports with anchorage bounding boxes).
   - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don).
   - gad/api/ — FastAPI REST API (12+ routes, Pydantic response models, OpenAPI docs at /v1/docs).

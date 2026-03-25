@@ -41,6 +41,12 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - backup.py: DuckDB backup (CHECKPOINT + gzip + R2 upload + prune)
 - distribution_tracker.py: Rolling 90d/365d distribution computation with model versioning
 - drift_detector.py: CUSUM drift detection (mean shift, firing rate, variance change)
+- threshold_optimizer.py: Frequency matching + KS separability, evidence gating
+- peer_index.py: Cosine similarity peer matching (top-5), outlier detection (>2σ)
+- cold_start.py: Weighted-average inference from peers for triggers with <30 observations
+
+### gad/monitor/ — Global Monitor
+- climate_zones.py: Koppen climate zone lookup (rule-based approximation)
 - basis_risk.py: Spearman rho, bootstrap CI, confusion matrix, Lloyd's integration
 - lloyds.py: Lloyd's checklist scoring
 - oracle.py: Ed25519 sign/verify, hash chain, append-only log

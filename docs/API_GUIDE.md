@@ -367,6 +367,50 @@ curl https://parametricdata.io:8502/v1/triggers/flight-delay-del/model-history?l
 }
 ```
 
+### Get Peril Patterns
+
+```
+GET /v1/intelligence/peril-patterns
+```
+
+Per-peril firing rates and status aggregation across all triggers.
+
+```bash
+curl https://parametricdata.io:8502/v1/intelligence/peril-patterns
+```
+
+### Get Location Intelligence
+
+```
+GET /v1/intelligence/location/{lat}/{lon}?radius_km=500
+```
+
+Find all triggers within a radius of a point, sorted by distance.
+
+```bash
+curl https://parametricdata.io:8502/v1/intelligence/location/28.6/77.2?radius_km=200
+```
+
+### Get Climate Zone
+
+```
+GET /v1/intelligence/climate-zone/{zone}
+```
+
+Triggers in a Koppen climate zone. Placeholder — full data available after Phase 3 peer calibration.
+
+### Get Model Drift
+
+```
+GET /v1/triggers/{trigger_id}/model-drift
+```
+
+Compare latest model accuracy against baseline. Flags drift when drop exceeds 5 percentage points.
+
+```bash
+curl https://parametricdata.io:8502/v1/triggers/weather-heat-del/model-drift
+```
+
 ## Error Responses
 
 All errors return JSON with a `detail` field:
