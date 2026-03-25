@@ -20,8 +20,12 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - Dashboard: `streamlit run dashboard/app.py`
 - Background fetcher: `python -m gad.monitor.fetcher` (cron) or `python -m gad.monitor.fetcher --loop` (continuous)
 - Oracle read surface: oracle_ledger/worker.js
+- REST API: `uvicorn gad.api.main:app` (port 8502, OpenAPI at /v1/docs)
 
 ## Package Structure
+
+### gad/api/ — REST API
+- main.py: FastAPI app with 7 routes (triggers, basis-risk, determinations, status, ports, perils). API key auth opt-in via API_REQUIRE_AUTH env var.
 
 ### gad/engine/ — Compute core
 - models.py: TriggerDef, BasisRiskReport, TriggerDetermination, PolicyBinding, GadEvent

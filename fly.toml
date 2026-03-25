@@ -1,4 +1,4 @@
-# fly.toml — parametricdata.io dashboard
+# fly.toml — parametricdata.io dashboard + API
 # Deploy: fly deploy
 
 app = 'gad-dashboard'
@@ -7,6 +7,7 @@ primary_region = 'bom'
 [build]
   dockerfile = 'dashboard/Dockerfile'
 
+# Streamlit dashboard on port 8501 (primary)
 [http_service]
   internal_port = 8501
   force_https = true
@@ -18,6 +19,13 @@ primary_region = 'bom'
     type = 'connections'
     hard_limit = 50
     soft_limit = 25
+
+# API on port 8502 (internal — accessed via /v1/ path rewrite if needed)
+[[services]]
+  internal_port = 8502
+  protocol = "tcp"
+  [[services.ports]]
+    port = 8502
 
 [[vm]]
   memory = '1gb'

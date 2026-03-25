@@ -94,18 +94,18 @@
 **Must be done before:** SL-08a-d, SL-09d, CEO-01/02/03/06, INFRA-02b.
 
 ### API-01: FastAPI REST surface
-- [ ] **API-01a:** `gad/api/main.py` — triggers, basis-risk, determinations, status routes
-- [ ] **API-01b:** API key auth middleware (Supabase `api_keys` table)
-- [ ] **API-01c:** Deploy alongside Streamlit on Fly.io. **Merge INFRA-02a/b into this** — add supervisord or process manager at deploy time.
-- [ ] **API-01d:** Auto-generated OpenAPI docs at `/v1/docs`
+- [x] **API-01a:** `gad/api/main.py` — 7 routes: /v1/triggers, /v1/triggers/{id}, /v1/triggers/{id}/basis-risk, /v1/triggers/{id}/determinations, /v1/status, /v1/ports, /v1/perils.
+- [x] **API-01b:** API key auth via X-API-Key header. Opt-in (API_REQUIRE_AUTH env var). Open by default for community access.
+- [x] **API-01c:** Dockerfile switched from `&` hack to supervisord (3 processes: streamlit, fetcher, uvicorn). fly.toml updated with API port 8502.
+- [x] **API-01d:** Auto-generated OpenAPI docs at /v1/docs, ReDoc at /v1/redoc.
 
 ### API-02: MCP server
 - [ ] **API-02a:** `gad/mcp/server.py` — check_trigger_status, list_triggers_by_location, etc.
 - [ ] **API-02b:** Deploy as Cloudflare Worker or `/mcp` route
 
-### INFRA-02: Process management (merged into API-01c)
-- [ ] **INFRA-02a:** Replace `&` pattern with `supervisord` or restart-on-failure script
-- [ ] ~~**INFRA-02b:** Add FastAPI as third supervised process~~ → **merged into API-01c**
+### INFRA-02: Process management (done — merged into API-01c)
+- [x] **INFRA-02a:** supervisord replaces `&` pattern. Auto-restart on failure.
+- [x] ~~**INFRA-02b:**~~ FastAPI as third supervised process — done in API-01c.
 
 ---
 
