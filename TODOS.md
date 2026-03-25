@@ -76,7 +76,7 @@
 
 ### Still pending (Track A):
 - [ ] **DATA-01c:** `scripts/fetch_historical_opensky.py` — 1yr daily departures (resumable, multi-day job)
-- [ ] **UX-01:** Searchable dropdowns — replace `st.selectbox` with type-to-filter on Trigger Profile (521 triggers), Compare (2 selectors), and Guided Mode (location picker). Use `st.text_input` + filtered list or `streamlit-searchbox` component. Critical at 521+ triggers — current scroll-through is unusable.
+- [x] **UX-01:** Searchable dropdowns — rich labels ("Delhi DEL — Flight Delay (India)"), sorted alphabetically, type-to-filter. Shared `trigger_selector.py`. Applied to Trigger Profile, Compare, Guided Mode.
 
 ### SRC-01/02/03: Additional data sources (standalone)
 - [ ] **SRC-01:** NOAA HRRR Smoke data — wildfire impact, GRIB format. Medium effort.
@@ -199,8 +199,8 @@
 ### CEO Review Plan Hardening
 All items tagged with their phase dependency.
 
-- [ ] **CEO-04:** Source recovery cooldown — 2-cycle after `very_stale` recovery. **Can do now** (fetcher change, no API dependency).
-- [ ] **CEO-05:** Per-source rate limiter in fetcher. **Can do now.**
+- [x] **CEO-04:** Source recovery cooldown — 2-cycle pause on oracle signing after source recovery.
+- [x] **CEO-05:** Per-source rate limiter — sliding-window (FIRMS 5000/10min, WAQI 1000/day, AviationStack 16/day). 11 new tests.
 - [ ] **CEO-01:** R2 as API fallback. **Blocked by:** API-01.
 - [ ] **CEO-02:** Webhook retry + dead-letter queue. **Blocked by:** API-01. *(Note: overlaps with PLAT-02 — CEO-02 is canonical.)*
 - [ ] **CEO-03:** Hash API keys in CF Workers KV. **Blocked by:** API-01.
