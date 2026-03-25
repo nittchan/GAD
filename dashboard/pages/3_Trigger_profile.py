@@ -237,6 +237,17 @@ else:
 # ── Basis Risk Analysis ──
 # Priority: 1) Precomputed JSON, 2) Legacy CSV, 3) Placeholder
 from gad.config import BASIS_RISK_DIR as PRECOMPUTED_DIR, SERIES_DIR
+import json as _json
+
+
+@st.cache_data(ttl=3600)
+def _load_precomputed_report(trigger_id: str) -> dict | None:
+    """Load precomputed basis risk JSON. Cached 1 hour (static data)."""
+    path = PRECOMPUTED_DIR / f"{trigger_id}.json"
+    if path.is_file():
+        return _json.loads(path.read_text(encoding="utf-8"))
+    return None
+
 
 LEGACY_CSV_MAP = {
     "flight-delay-blr": SERIES_DIR / "flight_delay_indigo.csv",
@@ -252,35 +263,80 @@ if precomputed_path.is_file():
     st.markdown("### Basis Risk Analysis")
     st.caption("Precomputed historical back-test using the GAD engine")
 
-    try:
-        import json as _json
-        from gad.engine.models import BasisRiskReport
-        from dashboard.components import (
-            render_score_card, timeline_fig, scatter_fig,
-            confusion_matrix_fig, confusion_matrix_markdown,
-            chart_summary, render_lloyds_checklist,
-        )
-
-        report_data = _json.loads(precomputed_path.read_text(encoding="utf-8"))
-        report = BasisRiskReport(**report_data)
-
-        render_score_card(report)
-        c1, c2 = st.columns(2)
-        with c1:
-            st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
-            st.caption(chart_summary(report))
-        with c2:
-            st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
-            st.caption(chart_summary(report))
-
-        st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
-        st.markdown(confusion_matrix_markdown(report))
-        render_lloyds_checklist(report)
-
-        # PDF export if engine trigger can be built
+    with st.spinner("Loading basis risk analysis..."):
         try:
-            from gad.engine import TriggerDef
+            from gad.engine.models import BasisRiskReport
+            from dashboard.components import (
+                render_score_card, timeline_fig, scatter_fig,
+                confusion_matrix_fig, confusion_matrix_markdown,
+                chart_summary, render_lloyds_checklist,
+            )
+
+            report_data = _load_precomputed_report(trigger.id)
+            report = BasisRiskReport(**report_data)
+
+            render_score_card(report)
+            c1, c2 = st.columns(2)
+            with c1:
+                st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
+            with c2:
+                st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
+
+            st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
+            st.markdown(confusion_matrix_markdown(report))
+            render_lloyds_checklist(report)
+
+            # PDF export if engine trigger can be built
+            try:
+                from gad.engine import TriggerDef
+                from gad.engine.models import DataSourceProvenance
+                from gad.engine.pdf_export import generate_lloyds_report
+
+                engine_trigger = TriggerDef(
+                    name=trigger.name,
+                    peril=trigger.peril,
+                    threshold=trigger.threshold,
+                    threshold_unit=trigger.threshold_unit,
+                    data_source=trigger.data_source,
+                    geography={"type": "Point", "coordinates": [trigger.lon, trigger.lat]},
+                    provenance=DataSourceProvenance(
+                        primary_source=trigger.data_source,
+                        primary_url="https://parametricdata.io",
+                        max_data_latency_seconds=3600,
+                        historical_years_available=5,
+                    ),
+                    trigger_fires_when_above=trigger.fires_when_above,
+                )
+                pdf_bytes = generate_lloyds_report(engine_trigger, report)
+                st.download_button(
+                    "Download Lloyd's PDF",
+                    data=pdf_bytes,
+                    file_name=f"parametricdata_report_{trigger.id}.pdf",
+                    mime="application/pdf",
+                )
+            except Exception:
+                pass  # PDF export is optional
+        except Exception as e:
+            st.error(f"Failed to load precomputed report: {e}")
+
+elif csv_path and csv_path.is_file():
+    # ── Legacy CSV path (2 original triggers) ──
+    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+    st.markdown("### Basis Risk Analysis")
+    st.caption("Historical back-test using the GAD engine")
+
+    with st.spinner("Loading basis risk analysis..."):
+        try:
+            from gad.engine import TriggerDef, compute_basis_risk
+            from gad.engine.loader import load_weather_data_from_csv
             from gad.engine.models import DataSourceProvenance
+            from dashboard.components import (
+                render_score_card, timeline_fig, scatter_fig,
+                confusion_matrix_fig, confusion_matrix_markdown,
+                chart_summary, render_lloyds_checklist,
+            )
             from gad.engine.pdf_export import generate_lloyds_report
 
             engine_trigger = TriggerDef(
@@ -298,6 +354,23 @@ if precomputed_path.is_file():
                 ),
                 trigger_fires_when_above=trigger.fires_when_above,
             )
+
+            weather_data = load_weather_data_from_csv(csv_path)
+            report = compute_basis_risk(engine_trigger, weather_data)
+
+            render_score_card(report)
+            c1, c2 = st.columns(2)
+            with c1:
+                st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
+            with c2:
+                st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
+                st.caption(chart_summary(report))
+
+            st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
+            st.markdown(confusion_matrix_markdown(report))
+            render_lloyds_checklist(report)
+
             pdf_bytes = generate_lloyds_report(engine_trigger, report)
             st.download_button(
                 "Download Lloyd's PDF",
@@ -305,69 +378,8 @@ if precomputed_path.is_file():
                 file_name=f"parametricdata_report_{trigger.id}.pdf",
                 mime="application/pdf",
             )
-        except Exception:
-            pass  # PDF export is optional
-    except Exception as e:
-        st.error(f"Failed to load precomputed report: {e}")
-
-elif csv_path and csv_path.is_file():
-    # ── Legacy CSV path (2 original triggers) ──
-    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
-    st.markdown("### Basis Risk Analysis")
-    st.caption("Historical back-test using the GAD engine")
-
-    try:
-        from gad.engine import TriggerDef, compute_basis_risk
-        from gad.engine.loader import load_weather_data_from_csv
-        from gad.engine.models import DataSourceProvenance
-        from dashboard.components import (
-            render_score_card, timeline_fig, scatter_fig,
-            confusion_matrix_fig, confusion_matrix_markdown,
-            chart_summary, render_lloyds_checklist,
-        )
-        from gad.engine.pdf_export import generate_lloyds_report
-
-        engine_trigger = TriggerDef(
-            name=trigger.name,
-            peril=trigger.peril,
-            threshold=trigger.threshold,
-            threshold_unit=trigger.threshold_unit,
-            data_source=trigger.data_source,
-            geography={"type": "Point", "coordinates": [trigger.lon, trigger.lat]},
-            provenance=DataSourceProvenance(
-                primary_source=trigger.data_source,
-                primary_url="https://parametricdata.io",
-                max_data_latency_seconds=3600,
-                historical_years_available=5,
-            ),
-            trigger_fires_when_above=trigger.fires_when_above,
-        )
-
-        weather_data = load_weather_data_from_csv(csv_path)
-        report = compute_basis_risk(engine_trigger, weather_data)
-
-        render_score_card(report)
-        c1, c2 = st.columns(2)
-        with c1:
-            st.plotly_chart(timeline_fig(report), use_container_width=True, config={"displayModeBar": False})
-            st.caption(chart_summary(report))
-        with c2:
-            st.plotly_chart(scatter_fig(report), use_container_width=True, config={"displayModeBar": False})
-            st.caption(chart_summary(report))
-
-        st.plotly_chart(confusion_matrix_fig(report), use_container_width=True, config={"displayModeBar": False})
-        st.markdown(confusion_matrix_markdown(report))
-        render_lloyds_checklist(report)
-
-        pdf_bytes = generate_lloyds_report(engine_trigger, report)
-        st.download_button(
-            "Download Lloyd's PDF",
-            data=pdf_bytes,
-            file_name=f"parametricdata_report_{trigger.id}.pdf",
-            mime="application/pdf",
-        )
-    except Exception as e:
-        st.error(f"Basis risk computation failed: {e}")
+        except Exception as e:
+            st.error(f"Basis risk computation failed: {e}")
 else:
     st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
     st.markdown("""
@@ -380,6 +392,93 @@ else:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+# ── Distribution Section (SL-02b) ──
+try:
+    from gad.engine.db_read import get_distribution as _get_dist
+    from gad.engine.timeseries import get_trigger_timeseries as _get_ts
+
+    _dist_df = _get_dist(trigger.id, "90d")
+    if _dist_df is not None and not _dist_df.empty:
+        _dist = _dist_df.iloc[0]
+
+        st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+        st.markdown("### Distribution")
+        st.caption("Statistical profile from the last 90 days of observations")
+
+        dc1, dc2, dc3, dc4 = st.columns(4)
+        with dc1:
+            st.markdown(f"""
+            <div class="detail-card">
+                <div class="detail-label">Observations</div>
+                <div class="detail-value">{int(_dist.get('observation_count', 0))}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with dc2:
+            _mean_val = _dist.get('mean')
+            st.markdown(f"""
+            <div class="detail-card">
+                <div class="detail-label">Mean</div>
+                <div class="detail-value">{f'{_mean_val:.2f}' if _mean_val is not None else '---'}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with dc3:
+            _std_val = _dist.get('std')
+            st.markdown(f"""
+            <div class="detail-card">
+                <div class="detail-label">Std Dev</div>
+                <div class="detail-value">{f'{_std_val:.2f}' if _std_val is not None else '---'}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with dc4:
+            _fr_val = _dist.get('firing_rate')
+            st.markdown(f"""
+            <div class="detail-card">
+                <div class="detail-label">Firing Rate</div>
+                <div class="detail-value">{f'{_fr_val*100:.1f}%' if _fr_val is not None else '---'}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Histogram of observation values
+        _ts_data = _get_ts(trigger.id, days=90)
+        if _ts_data:
+            import plotly.graph_objects as go
+
+            _obs_values = [r["value"] for r in _ts_data if r.get("value") is not None]
+            if _obs_values:
+                _hist_fig = go.Figure()
+                _hist_fig.add_trace(go.Histogram(
+                    x=_obs_values,
+                    marker_color="#C8553D",
+                    opacity=0.85,
+                    name="Observations",
+                ))
+                # Threshold vertical line
+                _hist_fig.add_vline(
+                    x=trigger.threshold,
+                    line_dash="dash",
+                    line_color="#A63D40",
+                    line_width=2,
+                    annotation_text=f"Threshold: {trigger.threshold}",
+                    annotation_position="top right",
+                    annotation_font_color="#A63D40",
+                    annotation_font_size=11,
+                )
+                _hist_fig.update_layout(
+                    plot_bgcolor="#F5F0EB",
+                    paper_bgcolor="#F5F0EB",
+                    font_color="#1E1B18",
+                    xaxis_title=trigger.threshold_unit,
+                    yaxis_title="Count",
+                    showlegend=False,
+                    margin=dict(l=40, r=20, t=30, b=40),
+                    height=300,
+                    xaxis=dict(gridcolor="#E3DCD3"),
+                    yaxis=dict(gridcolor="#E3DCD3"),
+                )
+                st.plotly_chart(_hist_fig, use_container_width=True, config={"displayModeBar": False})
+except Exception:
+    pass  # SL-02b: Never crash the page if distribution section fails
 
 # ── Risk Brief (AI-generated) ──
 try:

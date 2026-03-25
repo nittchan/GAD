@@ -88,6 +88,8 @@ st.markdown("""
     .status-normal { background: #E4F2EC; color: #2E8B6F; border: 1px solid #2E8B6F; }
     .status-no-data { background: #EDE7E0; color: #7A7267; border: 1px solid #D4CCC0; }
     .status-stale { background: #FDF5E0; color: #D4A017; border: 1px solid #D4A017; }
+    .status-drifting { background: #FDF5E0; color: #D4A017; border: 1px solid #D4A017; animation: drift-pulse 2s ease-in-out infinite; }
+    @keyframes drift-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     .value-large {
         font-family: 'JetBrains Mono', ui-monospace, monospace;
         font-size: 28px;
@@ -175,6 +177,7 @@ def _status_badge(status: str) -> str:
         "stale": "UPDATING",
         "no_api_key": "NO API KEY",
         "data_source_unavailable": "NO STATION",
+        "drifting": "DRIFTING",
     }
     css_class = {
         "critical": "status-critical",
@@ -184,10 +187,22 @@ def _status_badge(status: str) -> str:
         "stale": "status-stale",
         "no_api_key": "status-no-data",
         "data_source_unavailable": "status-no-data",
+        "drifting": "status-drifting",
     }
     label = labels.get(status, status.upper())
     cls = css_class.get(status, "status-no-data")
     return f'<span class="status-badge {cls}">{label}</span>'
+
+
+# SL-03b: Drift check helper
+def _has_recent_drift(trigger_id: str) -> bool:
+    """Check if a trigger has drift alerts within the last 7 days. Never crashes."""
+    try:
+        from gad.engine.db_read import get_drift_alerts
+        df = get_drift_alerts(trigger_id, days=7)
+        return df is not None and not df.empty
+    except Exception:
+        return False
 
 
 # ── Sidebar ──
@@ -276,17 +291,23 @@ for trigger in GLOBAL_TRIGGERS:
 
     trigger_results[trigger.id] = (trigger, data, result, is_stale)
 
+    # SL-03b: Override normal status to drifting if recent drift alerts exist
+    status = result["status"]
+    if status == "normal" and _has_recent_drift(trigger.id):
+        status = "drifting"
+        result["status"] = "drifting"
+
     # Map marker color
     # critical (fired) = red, even if stale
+    # drifting = amber (pulsing)
     # stale (not fired) = amber
     # normal = green
     # no_data = gray
-    status = result["status"]
     if status == "critical":
         color = [248, 81, 73, 200]
     elif status == "normal":
         color = [63, 185, 80, 200]
-    elif status == "stale":
+    elif status in ("stale", "drifting"):
         color = [210, 153, 34, 200]
     else:
         color = [139, 148, 158, 200]
@@ -299,6 +320,8 @@ for trigger in GLOBAL_TRIGGERS:
         status_label = "TRIGGERED (stale)"
     elif status == "critical":
         status_label = "TRIGGERED"
+    elif status == "drifting":
+        status_label = "DRIFTING"
     elif status == "normal":
         status_label = "NORMAL"
     elif status == "stale":
@@ -389,7 +412,19 @@ else:
 # ── Country Risk Index (PREI) ──
 from gad.monitor.risk_index import compute_prei
 
-prei_data = compute_prei(trigger_results)
+
+@st.cache_data(ttl=300)
+def _cached_prei(_trigger_results_json: str) -> dict:
+    """Cache PREI computation for 5 minutes. JSON key used for cache invalidation only."""
+    return compute_prei(trigger_results)
+
+
+# Build a lightweight hash key from trigger statuses (avoids serialising full data)
+_prei_key = _json.dumps(
+    {tid: r.get("status", "") for tid, (_, _, r, _) in trigger_results.items()},
+    sort_keys=True,
+)
+prei_data = _cached_prei(_prei_key)
 if prei_data:
     with st.expander("Country Risk Exposure Index (PREI)", expanded=False):
         st.caption("PREI = (fired/total)*100 + (near-threshold/total)*30. Higher = more risk exposure.")

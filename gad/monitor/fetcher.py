@@ -679,6 +679,23 @@ def _run_daily_jobs():
         prune_old_backups(keep_days=30)
     except Exception as e:
         log.warning(f"Daily backup failed: {e}")
+
+    # SL-02a: Compute distributions for all triggers (90d + 365d)
+    try:
+        from gad.engine.distribution_tracker import compute_all_distributions
+        dist_result = compute_all_distributions()
+        log.info(f"Distribution tracker: {dist_result}")
+    except Exception as e:
+        log.warning(f"Distribution computation failed: {e}")
+
+    # SL-03a: Run drift detection for all triggers
+    try:
+        from gad.engine.drift_detector import detect_all_drift
+        drift_result = detect_all_drift()
+        log.info(f"Drift detector: {drift_result}")
+    except Exception as e:
+        log.warning(f"Drift detection failed: {e}")
+
     _mark_daily_done()
     log.info("Daily jobs complete.")
 

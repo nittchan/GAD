@@ -83,8 +83,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 DIGEST_DIR = ROOT / "data" / "digest"
 
 
+@st.cache_data(ttl=300)
 def _find_latest_digest() -> tuple[str | None, str | None]:
-    """Find the most recent digest file. Returns (content, filename) or (None, None)."""
+    """Find the most recent digest file. Cached 5 min. Returns (content, filename) or (None, None)."""
     if not DIGEST_DIR.is_dir():
         return None, None
     files = sorted(DIGEST_DIR.glob("*.md"), reverse=True)
@@ -94,7 +95,8 @@ def _find_latest_digest() -> tuple[str | None, str | None]:
 
 
 # Try loading existing digest first
-digest_content, digest_file = _find_latest_digest()
+with st.spinner("Loading latest digest..."):
+    digest_content, digest_file = _find_latest_digest()
 today_str = date.today().isoformat()
 is_today = digest_file == f"{today_str}.md" if digest_file else False
 

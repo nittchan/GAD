@@ -4,6 +4,8 @@ Loads Google Fonts and applies the parchment + burnt vermillion design system.
 """
 
 GOOGLE_FONTS_LINK = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     '<link href="https://fonts.googleapis.com/css2?family='
     'Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,400&'
     'family=Instrument+Sans:wght@400;500;600;700&'

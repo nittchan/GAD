@@ -335,6 +335,45 @@ def generate_global_digest() -> str:
     else:
         lines.append("No perils showing elevated activity.")
 
+    # SL-03c: Drift alerts section
+    lines += ["", "## Drift Alerts", ""]
+    try:
+        from gad.engine.db_read import get_drift_alerts
+        from gad.monitor.triggers import get_trigger_by_id
+
+        _DRIFT_LABELS = {
+            "mean_shift": "Mean Shift",
+            "firing_rate_change": "Firing Rate Change",
+            "variance_change": "Variance Change",
+        }
+
+        drift_items = []
+        for trigger in GLOBAL_TRIGGERS:
+            try:
+                df = get_drift_alerts(trigger.id, days=1)
+                if df is not None and not df.empty:
+                    for _, row in df.iterrows():
+                        drift_items.append({
+                            "name": trigger.name,
+                            "drift_type": row.get("drift_type", "unknown"),
+                            "old_value": row.get("old_value"),
+                            "new_value": row.get("new_value"),
+                        })
+            except Exception:
+                continue
+
+        if drift_items:
+            for d in drift_items:
+                dtype_label = _DRIFT_LABELS.get(d["drift_type"], d["drift_type"])
+                lines.append(
+                    f"- **{d['name']}** — {dtype_label}: "
+                    f"{d['old_value']} -> {d['new_value']}"
+                )
+        else:
+            lines.append("No drift alerts in the last 24 hours.")
+    except Exception:
+        lines.append("Drift detection unavailable (DuckDB not configured).")
+
     lines += [
         "",
         "---",

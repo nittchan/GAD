@@ -65,36 +65,52 @@ with s4:
 st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
 st.markdown("### Triggers by Peril")
 
+_SOURCE_KEY_MAP = {
+    "flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire",
+    "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake",
+    "marine": "marine", "flood": "flood", "cyclone": "cyclone",
+    "crop": "ndvi", "solar": "solar", "health": "health",
+}
+
+
+@st.cache_data(ttl=300)
+def _compute_peril_stats() -> dict[str, dict]:
+    """Compute per-peril cache freshness stats. Cached 5 min."""
+    stats: dict[str, dict] = {}
+    for peril_key in PERIL_LABELS:
+        triggers = get_triggers_by_peril(peril_key)
+        source_key = _SOURCE_KEY_MAP.get(peril_key, peril_key)
+        cached = stale = no_data = 0
+        for t in triggers:
+            data, is_stale = read_cache_with_staleness(source_key, t.id)
+            if data is None:
+                no_data += 1
+            elif is_stale:
+                stale += 1
+            else:
+                cached += 1
+        total = len(triggers)
+        pct = int(cached / total * 100) if total > 0 else 0
+        stats[peril_key] = {"cached": cached, "stale": stale, "no_data": no_data, "total": total, "pct": pct}
+    return stats
+
+
+with st.spinner("Loading monitor status..."):
+    peril_stats = _compute_peril_stats()
+
 for peril_key, label in PERIL_LABELS.items():
-    triggers = get_triggers_by_peril(peril_key)
-    source_key = {"flight_delay": "flights", "air_quality": "aqi", "wildfire": "fire", "drought": "drought", "extreme_weather": "weather", "earthquake": "earthquake", "marine": "marine", "flood": "flood", "cyclone": "cyclone", "crop": "ndvi", "solar": "solar", "health": "health"}.get(peril_key, peril_key)
-
-    cached = 0
-    stale = 0
-    no_data = 0
-    for t in triggers:
-        data, is_stale = read_cache_with_staleness(source_key, t.id)
-        if data is None:
-            no_data += 1
-        elif is_stale:
-            stale += 1
-        else:
-            cached += 1
-
-    total = len(triggers)
-    pct = int(cached / total * 100) if total > 0 else 0
-
+    s = peril_stats[peril_key]
     st.markdown(f"""
     <div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
         <div>
             <span style="font-weight:600;color:#1E1B18;">{label}</span>
-            <span style="color:#7A7267;font-size:12px;margin-left:8px;">{total} triggers</span>
+            <span style="color:#7A7267;font-size:12px;margin-left:8px;">{s['total']} triggers</span>
         </div>
         <div style="font-family:monospace;font-size:13px;">
-            <span style="color:#2E8B6F;">{cached} fresh</span> ·
-            <span style="color:#D4A017;">{stale} stale</span> ·
-            <span style="color:#7A7267;">{no_data} no data</span> ·
-            <span style="color:#C8553D;font-weight:600;">{pct}%</span>
+            <span style="color:#2E8B6F;">{s['cached']} fresh</span> ·
+            <span style="color:#D4A017;">{s['stale']} stale</span> ·
+            <span style="color:#7A7267;">{s['no_data']} no data</span> ·
+            <span style="color:#C8553D;font-weight:600;">{s['pct']}%</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
