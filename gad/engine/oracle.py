@@ -16,10 +16,11 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PublicKey,
 )
 
+from gad.config import ORACLE_DIR, ORACLE_LOG_DIR
 from gad.engine.models import TriggerDetermination
 
-ORACLE_LOG_PATH = "registry/determinations"
-ORACLE_JSONL_PATH = "registry/oracle_log.jsonl"
+ORACLE_LOG_PATH = str(ORACLE_LOG_DIR)
+ORACLE_JSONL_PATH = str(ORACLE_DIR / "oracle_log.jsonl")
 
 # Genesis hash — the prev_hash for the very first determination in the log.
 # This is a fixed constant. Do NOT change it after the first determination is written.

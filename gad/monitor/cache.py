@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "monitor_cache"
+from gad.config import CACHE_DIR
 
 
 def _ensure_cache_dir() -> Path:

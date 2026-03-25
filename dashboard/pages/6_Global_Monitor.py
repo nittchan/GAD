@@ -23,9 +23,8 @@ from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don
 
 import json as _json
-from pathlib import Path as _Path
 
-_BASIS_RISK_DIR = _Path(__file__).resolve().parent.parent.parent / "data" / "basis_risk"
+from gad.config import BASIS_RISK_DIR as _BASIS_RISK_DIR
 
 
 @st.cache_data(ttl=3600)

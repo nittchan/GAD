@@ -42,9 +42,11 @@ except ImportError:
 
 from gad.monitor.airports import ALL_AIRPORTS  # noqa: E402
 
+from gad.config import SERIES_DIR  # noqa: E402
+
 OPENAQ_URL = "https://api.openaq.org/v3"
 TIMEOUT = 20
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "series" / "aqi"
+OUTPUT_DIR = SERIES_DIR / "aqi"
 AQI_THRESHOLD = 150  # AQI triggers fire at 150 (unhealthy)
 
 

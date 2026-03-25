@@ -38,8 +38,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from gad.monitor.airports import ALL_AIRPORTS  # noqa: E402
 from gad.monitor.triggers import GLOBAL_TRIGGERS  # noqa: E402
 
+from gad.config import SERIES_DIR  # noqa: E402
+
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "series" / "weather"
+OUTPUT_DIR = SERIES_DIR / "weather"
 TIMEOUT = 30
 
 

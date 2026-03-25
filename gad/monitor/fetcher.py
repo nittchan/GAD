@@ -16,6 +16,7 @@ Usage:
 
 from __future__ import annotations
 
+import fcntl
 import logging
 import os
 import sys
@@ -47,12 +48,44 @@ from gad.engine.models import TriggerDetermination
 from gad.engine.r2_upload import upload_determination as r2_upload
 from gad.engine.version import get_gad_version
 
+from gad.config import DATA_ROOT
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 log = logging.getLogger("gad.monitor.fetcher")
+
+
+# ── DB-01d: Volume health check ──
+def _check_volume_health() -> None:
+    """Write/read/delete test file to verify volume is mounted and writable."""
+    test_file = DATA_ROOT / ".health_check"
+    try:
+        test_file.write_text("ok")
+        assert test_file.read_text() == "ok"
+        test_file.unlink()
+        log.info(f"Volume health check: OK (DATA_ROOT={DATA_ROOT})")
+    except Exception as e:
+        log.critical(f"Volume health check FAILED: {e}. DATA_ROOT={DATA_ROOT}")
+
+
+# ── DB-01x: File lock to prevent concurrent fetcher instances ──
+_lock_fd = None
+
+
+def _acquire_lock() -> bool:
+    """Acquire an exclusive flock. Returns False if another instance holds it."""
+    global _lock_fd
+    lock_path = DATA_ROOT / ".fetcher.lock"
+    _lock_fd = open(lock_path, "w")
+    try:
+        fcntl.flock(_lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except OSError:
+        log.warning("Another fetcher instance is running — exiting")
+        return False
 
 
 # ── CEO-05: Per-source rate limiter ──
@@ -440,6 +473,13 @@ def _update_recovery_cooldowns(
 def fetch_all(diagnostic: bool = False) -> dict:
     """Fetch all triggers that need updating. Sign determinations if key is available."""
     global _oracle_signing_enabled
+
+    # DB-01d: Verify volume is healthy before anything else
+    _check_volume_health()
+
+    # DB-01x: Prevent concurrent fetcher instances
+    if not _acquire_lock():
+        return {"skipped": "lock held"}
 
     _log_data_source_health()
 

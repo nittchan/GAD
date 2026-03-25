@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Security, Depends
@@ -73,8 +72,10 @@ SOURCE_KEY_MAP = {
     "ndvi": "ndvi", "noaa_swpc": "solar", "who_don": "health",
 }
 
-BASIS_RISK_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "basis_risk"
-ORACLE_LOG_DIR = Path(__file__).resolve().parent.parent.parent / "registry"
+from gad.config import BASIS_RISK_DIR, ORACLE_DIR
+
+# ORACLE_LOG_DIR used locally for the JSONL path — points to the oracle root
+_ORACLE_LOG_DIR = ORACLE_DIR
 
 
 # ── Routes ──
@@ -156,7 +157,7 @@ async def get_basis_risk(trigger_id: str, _key=Depends(verify_api_key)):
 @app.get("/v1/triggers/{trigger_id}/determinations", tags=["Oracle"])
 async def get_determinations(trigger_id: str, limit: int = 20, _key=Depends(verify_api_key)):
     """Get recent oracle determinations for a trigger."""
-    jsonl_path = ORACLE_LOG_DIR / "oracle_log.jsonl"
+    jsonl_path = _ORACLE_LOG_DIR / "oracle_log.jsonl"
     if not jsonl_path.is_file():
         return {"trigger_id": trigger_id, "determinations": [], "count": 0}
 

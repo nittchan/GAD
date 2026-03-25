@@ -14,12 +14,9 @@ import json
 import os
 import time
 from datetime import date, datetime, timezone
-from pathlib import Path
 from typing import Optional
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-INTELLIGENCE_CACHE_DIR = ROOT / "data" / "intelligence_cache"
-DIGEST_DIR = ROOT / "data" / "digest"
+from gad.config import INTELLIGENCE_CACHE_DIR, DIGEST_DIR
 
 # Peril labels (duplicated from triggers to avoid circular import)
 _PERIL_DISPLAY = {

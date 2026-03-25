@@ -10,8 +10,6 @@ Accessed via:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import streamlit as st
 
 from dashboard.components.theme import inject_theme
@@ -238,11 +236,11 @@ else:
 
 # ── Basis Risk Analysis ──
 # Priority: 1) Precomputed JSON, 2) Legacy CSV, 3) Placeholder
-ROOT = Path(__file__).resolve().parent.parent.parent
-PRECOMPUTED_DIR = ROOT / "data" / "basis_risk"
+from gad.config import BASIS_RISK_DIR as PRECOMPUTED_DIR, SERIES_DIR
+
 LEGACY_CSV_MAP = {
-    "flight-delay-blr": ROOT / "data" / "series" / "flight_delay_indigo.csv",
-    "drought-kenya-marsabit": ROOT / "data" / "series" / "kenya_drought.csv",
+    "flight-delay-blr": SERIES_DIR / "flight_delay_indigo.csv",
+    "drought-kenya-marsabit": SERIES_DIR / "kenya_drought.csv",
 }
 
 precomputed_path = PRECOMPUTED_DIR / f"{trigger.id}.json"

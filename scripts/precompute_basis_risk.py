@@ -29,10 +29,11 @@ from gad.engine.loader import load_weather_data_from_csv  # noqa: E402
 from gad.engine.models import DataSourceProvenance, TriggerDef  # noqa: E402
 from gad.monitor.triggers import GLOBAL_TRIGGERS  # noqa: E402
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-WEATHER_DIR = DATA_DIR / "series" / "weather"
-AQI_DIR = DATA_DIR / "series" / "aqi"
-OUTPUT_DIR = DATA_DIR / "basis_risk"
+from gad.config import DATA_ROOT, SERIES_DIR, BASIS_RISK_DIR  # noqa: E402
+
+WEATHER_DIR = SERIES_DIR / "weather"
+AQI_DIR = SERIES_DIR / "aqi"
+OUTPUT_DIR = BASIS_RISK_DIR
 
 # Map monitor trigger ID to historical CSV path
 PERIL_DATA_MAP = {

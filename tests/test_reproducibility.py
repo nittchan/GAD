@@ -40,7 +40,8 @@ def _load_trigger_def(path: Path) -> TriggerDef:
 
 
 def test_compute_is_deterministic():
-    root = Path(__file__).resolve().parent.parent / "data"
+    from gad.config import DATA_ROOT
+    root = DATA_ROOT
     for tid in ("kenya_drought", "kenya_regional", "vietnam_flood", "japan_earthquake"):
         t = _load_trigger_def(root / "triggers" / f"{tid}.yaml")
         weather_data = load_from_manifest(root / "manifest.yaml", tid, root)
