@@ -139,6 +139,82 @@ st.markdown("""
 | WHO DON | Disease outbreak news | No key needed | RSS feed (2hr TTL) |
 """)
 
+# ── Watchlist ──
+st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
+st.markdown("### Watchlist")
+
+try:
+    _session = st.session_state.get("supabase_session")
+    _user = getattr(_session, "user", None) if _session else None
+
+    if _user:
+        from gad.engine.user_annotations import get_watchlist_drift, delete_trigger_annotation
+
+        _drift_items = get_watchlist_drift(_user.id)
+
+        if _drift_items:
+            st.caption(f"{len(_drift_items)} saved trigger(s) — showing firing rate drift since save")
+
+            for _item in _drift_items:
+                _saved_rate = _item.get("saved_firing_rate")
+                _current_rate = _item.get("current_firing_rate")
+                _drift = _item.get("drift")
+                _saved_at = _item.get("saved_at", "")[:10] if _item.get("saved_at") else "—"
+
+                # Drift indicator
+                if _drift is not None:
+                    if _drift > 0.01:
+                        _drift_color = "#A63D40"  # red — worse (higher firing)
+                        _drift_label = f"+{_drift*100:.1f}%"
+                        _drift_arrow = "&#9650;"
+                    elif _drift < -0.01:
+                        _drift_color = "#2E8B6F"  # green — improved (lower firing)
+                        _drift_label = f"{_drift*100:.1f}%"
+                        _drift_arrow = "&#9660;"
+                    else:
+                        _drift_color = "#7A7267"
+                        _drift_label = "0.0%"
+                        _drift_arrow = "&#8212;"
+                else:
+                    _drift_color = "#7A7267"
+                    _drift_label = "—"
+                    _drift_arrow = ""
+
+                _saved_pct = f"{_saved_rate*100:.1f}%" if _saved_rate is not None else "—"
+                _current_pct = f"{_current_rate*100:.1f}%" if _current_rate is not None else "—"
+                _note_text = f' — <em>{_item["note"]}</em>' if _item.get("note") else ""
+
+                _wl_col1, _wl_col2 = st.columns([5, 1])
+                with _wl_col1:
+                    st.markdown(f"""
+                    <div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:6px;padding:12px 16px;margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <span style="font-weight:600;color:#1E1B18;">{_item['trigger_id']}</span>
+                                <span style="color:#7A7267;font-size:12px;margin-left:8px;">saved {_saved_at}</span>
+                                {f'<span style="color:#7A7267;font-size:12px;">{_note_text}</span>' if _note_text else ''}
+                            </div>
+                            <div style="font-family:monospace;font-size:13px;">
+                                <span style="color:#7A7267;">{_saved_pct}</span>
+                                <span style="color:#7A7267;"> &#8594; </span>
+                                <span style="color:#1E1B18;">{_current_pct}</span>
+                                <span style="color:{_drift_color};font-weight:600;margin-left:8px;">{_drift_arrow} {_drift_label}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with _wl_col2:
+                    if st.button("Remove", key=f"rm_{_item['trigger_id']}"):
+                        delete_trigger_annotation(_user.id, _item["trigger_id"])
+                        st.rerun()
+        else:
+            st.info("No triggers saved to your watchlist yet. Visit a Trigger Profile and click 'Save to Watchlist' to start tracking.")
+    else:
+        st.info("Sign in to save triggers to your watchlist.")
+except Exception as _wl_err:
+    st.warning(f"Could not load watchlist: {_wl_err}")
+
 # ── Account (future) ──
 st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
 st.markdown("### Account")
