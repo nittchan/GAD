@@ -812,7 +812,7 @@ def _bootstrap_historical_data() -> None:
     try:
         import subprocess
         result = subprocess.run(
-            [sys.executable, "scripts/fetch_historical_openmeteo.py", "--years", "5", "--delay", "1.5"],
+            [sys.executable, "scripts/fetch_historical_openmeteo.py", "--years", "5", "--delay", "3"],
             capture_output=True, text=True, timeout=3600,
         )
         if result.returncode == 0:

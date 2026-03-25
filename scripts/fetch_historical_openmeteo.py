@@ -159,15 +159,18 @@ def write_csv(iata: str, records: list[dict]) -> Path:
 
 def _fetch_with_retry(
     iata: str, lat: float, lon: float, years: int,
-    trigger_info: dict | None, max_retries: int = 3, base_delay: float = 2.0,
+    trigger_info: dict | None, max_retries: int = 5, base_delay: float = 5.0,
 ) -> list[dict]:
-    """Fetch with exponential backoff on failure."""
+    """Fetch with exponential backoff on failure. Extra patience for 429s."""
     for attempt in range(max_retries):
         try:
             return fetch_airport_weather(iata, lat, lon, years=years, trigger_info=trigger_info)
         except Exception as e:
+            is_rate_limit = "429" in str(e)
             if attempt < max_retries - 1:
                 wait = base_delay * (2 ** attempt)
+                if is_rate_limit:
+                    wait = max(wait, 30)  # min 30s backoff on 429
                 print(f"    retry {attempt + 1}/{max_retries} in {wait:.0f}s ({e})")
                 time.sleep(wait)
             else:
@@ -178,7 +181,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Fetch historical weather data from Open-Meteo")
     parser.add_argument("--airports", type=str, help="Comma-separated IATA codes (default: all)")
     parser.add_argument("--years", type=int, default=5, help="Years of history (default: 5)")
-    parser.add_argument("--delay", type=float, default=1.5, help="Delay between API calls in seconds")
+    parser.add_argument("--delay", type=float, default=3.0, help="Delay between API calls in seconds")
     parser.add_argument("--force", action="store_true", help="Re-fetch even if CSV already exists")
     args = parser.parse_args()
 
