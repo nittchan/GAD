@@ -98,6 +98,8 @@ def fetch_airport_status(iata_code: str, trigger_id: str) -> dict | None:
                 # No delays — airport operating normally
                 result = {
                     "avg_delay_min": 0,
+                    "total_flights": 0,
+                    "delayed_count": 0,
                     "delay_type": "none",
                     "delay_reason": "",
                     "ground_delay": False,
@@ -114,6 +116,8 @@ def fetch_airport_status(iata_code: str, trigger_id: str) -> dict | None:
 
         result = {
             "avg_delay_min": round(avg_delay, 1),
+            "total_flights": len(delays),
+            "delayed_count": sum(1 for d in delays if d > 15),
             "delay_type": "ground_stop" if has_ground_stop else "ground_delay" if has_ground_delay else "departure" if delays else "none",
             "delay_reason": "; ".join(delay_reasons[:3]) if delay_reasons else "",
             "ground_delay": has_ground_delay,
