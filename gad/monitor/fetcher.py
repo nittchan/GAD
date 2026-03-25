@@ -95,6 +95,7 @@ RATE_LIMITS: dict[str, tuple[int, int]] = {
     "waqi": (1000, 86400),        # 1000 requests per day
     "openaq": (1000, 86400),      # 1000 requests per day (same API under the hood)
     "aviationstack": (16, 86400), # 500 req/month ≈ 16/day
+    "opensky": (3000, 86400),     # 4000 credits/day — leave headroom
 }
 
 # Timestamps of recent calls per source
