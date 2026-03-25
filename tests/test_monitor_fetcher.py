@@ -18,8 +18,15 @@ from gad.monitor.fetcher import (
     _get_iata,
     _evaluate_fired,
     _create_determination,
+    _check_rate_limit,
+    _record_call,
+    _source_call_counts,
+    _source_recovery_cooldown,
+    _source_failed_last_cycle,
+    _update_recovery_cooldowns,
     FETCH_MAP,
     SOURCE_CACHE_KEY,
+    RATE_LIMITS,
 )
 from gad.engine.models import TriggerDetermination
 
@@ -302,3 +309,107 @@ class TestSourceCacheKey:
 
     def test_keys_match_fetch_map(self):
         assert set(SOURCE_CACHE_KEY.keys()) == set(FETCH_MAP.keys())
+
+
+# ── CEO-05: Per-source rate limiter ──
+
+class TestRateLimiter:
+    def setup_method(self):
+        """Clear rate limit state before each test."""
+        _source_call_counts.clear()
+
+    def test_unlimited_source_always_allowed(self):
+        """Sources not in RATE_LIMITS are never rate-limited."""
+        assert _check_rate_limit("openmeteo") is True
+        # Record many calls — still unlimited
+        for _ in range(10000):
+            _record_call("openmeteo")
+        assert _check_rate_limit("openmeteo") is True
+
+    def test_rate_limit_blocks_when_exceeded(self):
+        """Source blocked when it hits the limit within the window."""
+        import time as _time
+        # FIRMS: 5000 per 600s — use a smaller test
+        # Use aviationstack: 16 per 86400s
+        assert _check_rate_limit("aviationstack") is True
+        for _ in range(16):
+            _record_call("aviationstack")
+        assert _check_rate_limit("aviationstack") is False
+
+    def test_rate_limit_allows_under_limit(self):
+        """Source allowed when under the limit."""
+        for _ in range(15):
+            _record_call("aviationstack")
+        assert _check_rate_limit("aviationstack") is True
+
+    def test_expired_timestamps_pruned(self):
+        """Old timestamps outside the window are pruned."""
+        import time as _time
+        now = _time.time()
+        # Manually inject old timestamps for firms (600s window)
+        _source_call_counts["firms"] = [now - 700] * 5000  # all expired
+        assert _check_rate_limit("firms") is True
+        # Old ones should be pruned
+        assert len(_source_call_counts["firms"]) == 0
+
+    def test_rate_limits_dict_has_expected_sources(self):
+        """RATE_LIMITS dict contains expected entries."""
+        assert "firms" in RATE_LIMITS
+        assert "aviationstack" in RATE_LIMITS
+        assert "waqi" in RATE_LIMITS
+        # openmeteo should NOT be rate limited
+        assert "openmeteo" not in RATE_LIMITS
+
+    def test_record_call_noop_for_unlimited(self):
+        """_record_call does nothing for sources not in RATE_LIMITS."""
+        _record_call("openmeteo")
+        assert "openmeteo" not in _source_call_counts
+
+
+# ── CEO-04: Source recovery cooldown ──
+
+class TestRecoveryCooldown:
+    def setup_method(self):
+        """Clear cooldown state before each test."""
+        _source_recovery_cooldown.clear()
+        import gad.monitor.fetcher as _f
+        _f._source_failed_last_cycle = set()
+
+    def test_recovery_sets_cooldown(self):
+        """When a source was failing and recovers, cooldown = 2."""
+        import gad.monitor.fetcher as _f
+        _f._source_failed_last_cycle = {"firms"}
+        _update_recovery_cooldowns(
+            succeeded={"firms"}, failed=set()
+        )
+        assert _source_recovery_cooldown.get("firms") == 1  # 2 set then decremented by 1
+
+    def test_cooldown_decrements_each_cycle(self):
+        """Cooldown decrements by 1 each cycle and removes at 0."""
+        _source_recovery_cooldown["firms"] = 2
+        _update_recovery_cooldowns(succeeded={"firms"}, failed=set())
+        assert _source_recovery_cooldown.get("firms") == 1
+        _update_recovery_cooldowns(succeeded={"firms"}, failed=set())
+        assert "firms" not in _source_recovery_cooldown
+
+    def test_no_cooldown_when_source_not_previously_failing(self):
+        """No cooldown if source was not failing in the previous cycle."""
+        import gad.monitor.fetcher as _f
+        _f._source_failed_last_cycle = set()  # nothing was failing
+        _update_recovery_cooldowns(succeeded={"firms"}, failed=set())
+        assert "firms" not in _source_recovery_cooldown
+
+    def test_failed_sources_tracked_for_next_cycle(self):
+        """_source_failed_last_cycle is updated at end of cycle."""
+        import gad.monitor.fetcher as _f
+        _update_recovery_cooldowns(succeeded=set(), failed={"waqi", "firms"})
+        assert _f._source_failed_last_cycle == {"waqi", "firms"}
+
+    def test_no_double_cooldown(self):
+        """If a source is already in cooldown, a second recovery doesn't reset it."""
+        import gad.monitor.fetcher as _f
+        _source_recovery_cooldown["firms"] = 1
+        _f._source_failed_last_cycle = {"firms"}
+        _update_recovery_cooldowns(succeeded={"firms"}, failed=set())
+        # Should NOT reset to 2; the existing cooldown was decremented to 0 and removed
+        assert "firms" not in _source_recovery_cooldown

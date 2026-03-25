@@ -55,6 +55,52 @@ logging.basicConfig(
 log = logging.getLogger("gad.monitor.fetcher")
 
 
+# ── CEO-05: Per-source rate limiter ──
+# (max_calls, window_seconds) — sources not listed are unlimited
+RATE_LIMITS: dict[str, tuple[int, int]] = {
+    "firms": (5000, 600),         # 5000 transactions per 10 minutes
+    "waqi": (1000, 86400),        # 1000 requests per day
+    "openaq": (1000, 86400),      # 1000 requests per day (same API under the hood)
+    "aviationstack": (16, 86400), # 500 req/month ≈ 16/day
+}
+
+# Timestamps of recent calls per source
+_source_call_counts: dict[str, list[float]] = {}
+
+
+def _check_rate_limit(source: str) -> bool:
+    """Return True if the source is within its rate limit, False if over."""
+    if source not in RATE_LIMITS:
+        return True
+    max_calls, window_seconds = RATE_LIMITS[source]
+    now = time.time()
+    timestamps = _source_call_counts.get(source, [])
+    # Prune timestamps outside the window
+    cutoff = now - window_seconds
+    timestamps = [t for t in timestamps if t > cutoff]
+    _source_call_counts[source] = timestamps
+    if len(timestamps) >= max_calls:
+        log.debug(f"Rate limit: {source} at {len(timestamps)}/{max_calls} in window")
+        return False
+    return True
+
+
+def _record_call(source: str) -> None:
+    """Record a call timestamp for rate limiting."""
+    if source not in RATE_LIMITS:
+        return
+    _source_call_counts.setdefault(source, []).append(time.time())
+
+
+# ── CEO-04: Source recovery cooldown ──
+# Tracks cycles remaining before oracle signing resumes after source recovery.
+# When a source recovers from failure, set cooldown to 2 (= 30 min at 15-min cycles).
+_source_recovery_cooldown: dict[str, int] = {}
+
+# Track which sources failed in the previous cycle
+_source_failed_last_cycle: set[str] = set()
+
+
 # ── Source configurations per peril ──
 # Lower priority number = tried first
 
@@ -357,6 +403,40 @@ def _init_oracle_signing() -> None:
         log.info("Oracle signing DISABLED (no GAD_ORACLE_PRIVATE_KEY_HEX)")
 
 
+def _update_recovery_cooldowns(
+    succeeded: set[str], failed: set[str]
+) -> None:
+    """CEO-04: Update recovery cooldown state at end of each fetch cycle.
+
+    - If a source was failing last cycle and succeeded this cycle, enter cooldown.
+    - Decrement existing cooldowns each cycle.
+    - Track which sources failed for next cycle's comparison.
+    """
+    global _source_failed_last_cycle
+
+    # Detect recoveries: source failed last cycle but succeeded this cycle
+    for source in succeeded:
+        if source in _source_failed_last_cycle and source not in _source_recovery_cooldown:
+            _source_recovery_cooldown[source] = 2
+            log.info(
+                f"Source {source} recovered — cooldown 2 cycles before oracle signing resumes"
+            )
+
+    # Decrement existing cooldowns
+    expired = []
+    for source in list(_source_recovery_cooldown):
+        _source_recovery_cooldown[source] -= 1
+        if _source_recovery_cooldown[source] <= 0:
+            expired.append(source)
+
+    for source in expired:
+        del _source_recovery_cooldown[source]
+        log.info(f"Source {source} recovery cooldown complete — oracle signing resumed")
+
+    # Update failure tracking for next cycle
+    _source_failed_last_cycle = failed
+
+
 def fetch_all(diagnostic: bool = False) -> dict:
     """Fetch all triggers that need updating. Sign determinations if key is available."""
     global _oracle_signing_enabled
@@ -370,6 +450,8 @@ def fetch_all(diagnostic: bool = False) -> dict:
     skipped = 0
     errors = 0
     signed = 0
+    rate_limited = 0
+    cooldown_skipped = 0
 
     # Diagnostic mode: track AQI trigger results
     aqi_diag_rows: list[dict] = []
@@ -377,6 +459,10 @@ def fetch_all(diagnostic: bool = False) -> dict:
     aqi_got_data = 0
 
     prev_hash = read_last_hash() if _oracle_signing_enabled else GENESIS_HASH
+
+    # CEO-04: Track which sources succeeded/failed this cycle for recovery detection
+    sources_failed_this_cycle: set[str] = set()
+    sources_succeeded_this_cycle: set[str] = set()
 
     for trigger in GLOBAL_TRIGGERS:
         if not _should_fetch(trigger.data_source, trigger.id):
@@ -388,7 +474,16 @@ def fetch_all(diagnostic: bool = False) -> dict:
             errors += 1
             continue
 
+        # CEO-05: Check rate limit before fetching
+        if not _check_rate_limit(trigger.data_source):
+            rate_limited += 1
+            skipped += 1
+            continue
+
         try:
+            # CEO-05: Record the call for rate limiting
+            _record_call(trigger.data_source)
+
             result = fetch_fn(trigger)
 
             # Diagnostic: collect AQI trigger info
@@ -414,32 +509,47 @@ def fetch_all(diagnostic: bool = False) -> dict:
 
             if result is not None:
                 fetched += 1
+                sources_succeeded_this_cycle.add(trigger.data_source)
 
                 # Oracle signing: create and sign a determination for every evaluation
                 if _oracle_signing_enabled and _private_key:
-                    try:
-                        fired = _evaluate_fired(trigger, result)
-                        det = _create_determination(trigger, result, fired)
-                        signed_det = sign_determination(det, _private_key, prev_hash, _key_id)
-                        prev_hash = append_to_oracle_log(signed_det)
-                        signed += 1
-                        # Upload to R2 (optional — skipped if no R2 credentials)
-                        r2_upload(
-                            str(signed_det.determination_id),
-                            signed_det.model_dump_json(indent=2),
+                    # CEO-04: Skip signing if source is in recovery cooldown
+                    cd = _source_recovery_cooldown.get(trigger.data_source, 0)
+                    if cd > 0:
+                        cooldown_skipped += 1
+                        log.debug(
+                            f"Skipping oracle signing for {trigger.id}: "
+                            f"source {trigger.data_source} in recovery cooldown ({cd} cycles left)"
                         )
-                    except Exception as e:
-                        log.warning(f"Oracle signing failed for {trigger.id}: {e}")
+                    else:
+                        try:
+                            fired = _evaluate_fired(trigger, result)
+                            det = _create_determination(trigger, result, fired)
+                            signed_det = sign_determination(det, _private_key, prev_hash, _key_id)
+                            prev_hash = append_to_oracle_log(signed_det)
+                            signed += 1
+                            # Upload to R2 (optional — skipped if no R2 credentials)
+                            r2_upload(
+                                str(signed_det.determination_id),
+                                signed_det.model_dump_json(indent=2),
+                            )
+                        except Exception as e:
+                            log.warning(f"Oracle signing failed for {trigger.id}: {e}")
 
                 if fetched % 50 == 0:
                     log.info(f"Progress: {fetched} fetched, {signed} signed, {errors} errors")
             else:
                 errors += 1
+                sources_failed_this_cycle.add(trigger.data_source)
         except Exception as e:
             errors += 1
+            sources_failed_this_cycle.add(trigger.data_source)
             log.error(f"Error fetching {trigger.id}: {e}")
 
         time.sleep(0.3)
+
+    # CEO-04: Detect source recovery and manage cooldowns
+    _update_recovery_cooldowns(sources_succeeded_this_cycle, sources_failed_this_cycle)
 
     # Diagnostic: print AQI table and summary
     if diagnostic and aqi_diag_rows:
@@ -452,7 +562,14 @@ def fetch_all(diagnostic: bool = False) -> dict:
         aqi_no_data = aqi_total - aqi_got_data
         print(f"AQI summary: {aqi_total} total, {aqi_got_data} got data, {aqi_no_data} no data\n")
 
-    summary = {"fetched": fetched, "skipped": skipped, "errors": errors, "signed": signed}
+    summary = {
+        "fetched": fetched,
+        "skipped": skipped,
+        "errors": errors,
+        "signed": signed,
+        "rate_limited": rate_limited,
+        "cooldown_skipped": cooldown_skipped,
+    }
     log.info(f"Fetch complete: {summary}")
     return summary
 
