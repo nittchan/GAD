@@ -386,17 +386,64 @@ elif csv_path and csv_path.is_file():
         except Exception as e:
             st.error(f"Basis risk computation failed: {e}")
 else:
-    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div class="detail-card" style="border-color:#D4CCC0;">
-        <div class="detail-label">Basis Risk Analysis</div>
-        <div class="detail-value-small" style="color:#7A7267;">
-            Historical basis risk analysis requires time-series data for this location.
-            Currently showing live monitoring data. Full Spearman ρ, back-test, and Lloyd's
-            scoring will be available when historical data is loaded for this trigger.
+    # SL-06b: Try cold-start inference before showing NO DATA
+    _cold_start_shown = False
+    try:
+        from gad.engine.cold_start import infer_cold_start, check_graduation
+
+        _grad = check_graduation(trigger.id)
+        if not _grad["graduated"]:
+            _cs = infer_cold_start(trigger.id)
+            if _cs and _cs["peers_used"] > 0:
+                _cold_start_shown = True
+                st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+                st.markdown("### Basis Risk Estimate")
+                st.caption("Cold-start estimate -- will switch to direct measurement at 30 observations")
+
+                _cs_c1, _cs_c2, _cs_c3 = st.columns(3)
+                with _cs_c1:
+                    st.markdown(f"""
+                    <div class="detail-card">
+                        <div class="detail-label">Inferred Mean</div>
+                        <div class="detail-value">{_cs['inferred_mean']:.2f}</div>
+                        <div style="color:#7A7267;font-size:12px;margin-top:4px;">from {_cs['peers_used']} peers</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with _cs_c2:
+                    st.markdown(f"""
+                    <div class="detail-card">
+                        <div class="detail-label">Inferred Firing Rate</div>
+                        <div class="detail-value">{_cs['inferred_firing_rate']*100:.1f}%</div>
+                        <div style="color:#7A7267;font-size:12px;margin-top:4px;">weighted average</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with _cs_c3:
+                    _obs_count = _grad.get("observations", 0)
+                    st.markdown(f"""
+                    <div class="detail-card">
+                        <div class="detail-label">Data Progress</div>
+                        <div class="detail-value">{_obs_count} / 30</div>
+                        <div style="color:#7A7267;font-size:12px;margin-top:4px;">{_grad['progress']:.0f}% to direct measurement</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.progress(min(_grad["progress"] / 100.0, 1.0))
+                st.info(f"Inferred from {_cs['peers_used']} peers. Collecting observations -- direct measurement begins at 30.")
+    except Exception:
+        pass  # SL-06b: Never crash the page if cold-start fails
+
+    if not _cold_start_shown:
+        st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="detail-card" style="border-color:#D4CCC0;">
+            <div class="detail-label">Basis Risk Analysis</div>
+            <div class="detail-value-small" style="color:#7A7267;">
+                Historical basis risk analysis requires time-series data for this location.
+                Currently showing live monitoring data. Full Spearman &#x3C1;, back-test, and Lloyd's
+                scoring will be available when historical data is loaded for this trigger.
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 # ── Distribution Section (SL-02b) ──
 try:
@@ -484,6 +531,52 @@ try:
                 st.plotly_chart(_hist_fig, use_container_width=True, config={"displayModeBar": False})
 except Exception:
     pass  # SL-02b: Never crash the page if distribution section fails
+
+# ── Threshold Advisor (SL-04c) ──
+try:
+    from gad.engine.db_read import get_threshold_suggestion as _get_thresh
+
+    _thresh_df = _get_thresh(trigger.id)
+    if _thresh_df is not None and not _thresh_df.empty:
+        _ts = _thresh_df.iloc[0]
+        _suggested = _ts.get("suggested_threshold")
+        _conf = _ts.get("confidence", "---")
+        _method = _ts.get("method", "---")
+        _obs_n = int(_ts.get("observation_count", 0))
+        _current = _ts.get("current_threshold", trigger.threshold)
+
+        # Confidence badge color
+        _badge_colors = {"high": "#2E8B6F", "medium": "#C8553D", "low": "#7A7267"}
+        _badge_color = _badge_colors.get(_conf, "#7A7267")
+
+        st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+        st.markdown("### Threshold Advisor")
+        st.caption("AI-optimized threshold suggestion based on historical observations")
+
+        st.markdown(f"""
+        <div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:8px;padding:20px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <span style="font-size:14px;font-weight:700;color:#1E1B18;">Optimal Threshold Suggestion</span>
+                <span style="background:{_badge_color};color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;text-transform:uppercase;letter-spacing:1px;">{_conf}</span>
+            </div>
+            <div style="display:flex;gap:32px;margin-bottom:12px;">
+                <div>
+                    <div style="color:#7A7267;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Current</div>
+                    <div style="font-size:20px;font-weight:700;color:#1E1B18;font-family:'JetBrains Mono',ui-monospace,monospace;">{_current}</div>
+                </div>
+                <div style="display:flex;align-items:center;color:#7A7267;font-size:20px;">&#8594;</div>
+                <div>
+                    <div style="color:#7A7267;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Suggested</div>
+                    <div style="font-size:20px;font-weight:700;color:#C8553D;font-family:'JetBrains Mono',ui-monospace,monospace;">{_suggested:.4f if isinstance(_suggested, float) else _suggested}</div>
+                </div>
+            </div>
+            <div style="color:#7A7267;font-size:12px;">
+                Method: {_method} &middot; Based on {_obs_n:,} observations
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+except Exception:
+    pass  # SL-04c: Never crash the page if threshold advisor fails
 
 # ── Risk Brief (AI-generated) ──
 try:

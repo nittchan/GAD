@@ -701,11 +701,35 @@ def _run_daily_jobs():
 
 
 def _run_weekly_jobs():
-    """Run once per week: peer calibration, correlation matrix."""
+    """Run once per week: threshold optimization, peer calibration, correlation matrix."""
     log.info("Running weekly jobs...")
-    # Phase 3+ will add: peer index, correlation matrix, seasonal decomposition
+
+    # SL-04a: Threshold optimization for all triggers with sufficient data
+    try:
+        from gad.engine.threshold_optimizer import optimize_all_thresholds
+        opt_result = optimize_all_thresholds()
+        log.info(f"Threshold optimizer: {len(opt_result)} triggers optimized")
+    except Exception as e:
+        log.warning(f"Threshold optimization failed: {e}")
+
+    # SL-05b: Compute peer index for all triggers with sufficient observations
+    try:
+        from gad.engine.peer_index import compute_all_peers
+        compute_all_peers()
+    except Exception as e:
+        log.warning(f"Peer index computation failed: {e}")
+
+    # SL-05c: Detect outlier triggers (>2 sigma from peer median firing rate)
+    try:
+        from gad.engine.peer_index import detect_outliers
+        outliers = detect_outliers()
+        if outliers:
+            log.info(f"Outlier triggers: {[o['trigger_id'] for o in outliers]}")
+    except Exception as e:
+        log.warning(f"Outlier detection failed: {e}")
+
     _mark_weekly_done()
-    log.info("Weekly jobs complete (no learning tasks yet).")
+    log.info("Weekly jobs complete.")
 
 
 def run_loop(interval_seconds: int = 900) -> None:
