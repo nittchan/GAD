@@ -220,11 +220,24 @@ fly secrets set R2_SECRET_ACCESS_KEY=<r2_token_secret_key> --app gad-dashboard
 
 Without these, determinations are still signed and logged locally but not uploaded to R2.
 
-## Background fetcher
+## Process management
 
-The Dockerfile runs the fetcher in the background on startup:
-```dockerfile
-CMD python -m gad.monitor.fetcher & streamlit run dashboard/app.py ...
+The Dockerfile uses supervisord to manage 3 processes with auto-restart:
+
+| Process | Port | Command |
+|---------|------|---------|
+| Streamlit dashboard | 8501 | `streamlit run dashboard/app.py` |
+| Background fetcher | — | `python -m gad.monitor.fetcher --loop` |
+| REST API (FastAPI) | 8502 | `uvicorn gad.api.main:app` |
+
+Config: `supervisord.conf`. All processes restart automatically on failure.
+
+### REST API
+
+OpenAPI docs at `/v1/docs`. Open by default — API key auth opt-in via:
+```bash
+fly secrets set API_REQUIRE_AUTH=true --app gad-dashboard
+fly secrets set API_MASTER_KEY=<your-key> --app gad-dashboard
 ```
 
 Data is fetched once on machine start, then cached. When the machine auto-stops and restarts, it fetches fresh data again.

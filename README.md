@@ -98,6 +98,21 @@ Oracle layer (v0.2.2)
 └── Cloudflare Worker     /determination/{uuid} — permanent public ledger
 ```
 
+## REST API
+
+```
+GET /v1/triggers              — all triggers with status
+GET /v1/triggers/{id}         — single trigger profile
+GET /v1/triggers/{id}/basis-risk — precomputed Spearman report
+GET /v1/triggers/{id}/determinations — oracle log
+GET /v1/status                — per-peril health
+GET /v1/ports                 — marine port list
+GET /v1/perils                — peril categories
+GET /v1/docs                  — OpenAPI documentation
+```
+
+Open by default. API key auth opt-in via `API_REQUIRE_AUTH=true` + `X-API-Key` header.
+
 ## Security
 
 The public dashboard makes **zero external API calls**. All data is pre-fetched by a background worker and served from a local cache. 10,000 concurrent users cost the same in API calls as zero users.
