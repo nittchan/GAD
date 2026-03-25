@@ -4,7 +4,7 @@
 
 [parametricdata.io](https://parametricdata.io)
 
-Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, crop stress, solar storms, and disease outbreaks — and evaluates how well parametric insurance triggers perform against them. 521 triggers. 144 airports. 10 ports. 12 peril categories. 15 data sources. All open. All free.
+Parametric Data monitors real-world risks — flight delays, air quality, wildfires, droughts, earthquakes, extreme weather, port congestion, floods, tropical cyclones, crop stress, solar storms, and disease outbreaks — and evaluates how well parametric insurance triggers perform against them. 521 triggers. 144 airports. 10 ports. 12 peril categories. 16 data sources. All open. All free.
 
 ## What you see
 
@@ -20,7 +20,7 @@ Every trigger determination can be cryptographically signed, hash-chained, and i
 
 | Peril | Triggers | Data sources | Coverage |
 |-------|----------|-------------|----------|
-| Flight delay | 144 | AviationStack, OpenSky | 144 airports across 6 continents |
+| Flight delay | 144 | FAA ATCSCC (US), AviationStack, OpenSky | 144 airports — real delay minutes for US via FAA |
 | Air quality | 125 | AirNow EPA, WAQI, OpenAQ | Global + authoritative US EPA data |
 | Extreme weather | 144 | Open-Meteo | Heat, freeze, wind, rainfall at every airport |
 | Earthquake | 10 | USGS | Major seismic zones worldwide |
@@ -75,6 +75,7 @@ parametricdata.io
 └── Oracle Ledger         Signed determinations + chain verification
 
 Background fetcher (every 15 min)
+├── FAA ATCSCC            US airport delays (real minutes, free)
 ├── AviationStack         Flight schedules (tier-1 airports)
 ├── OpenSky Network       Flight departures (all airports)
 ├── AirNow EPA            US air quality (authoritative)

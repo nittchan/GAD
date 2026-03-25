@@ -62,7 +62,8 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - cache.py: JSON file cache with TTL, staleness detection
 - fetcher.py: Background worker fetches all sources on schedule
 - security.py: Rate limiter, input sanitization, key management
-- sources/opensky.py: Flight departure data (OpenSky Network API — departure count only, no delay)
+- sources/faa_atcscc.py: US airport delays — real delay minutes from FAA ATCSCC (free, no key, tier-0 for US)
+- sources/opensky.py: Flight departure data (OpenSky Network API — departure count, global fallback)
 - sources/openaq.py: Air quality (OpenAQ v3 + WAQI fallback, 15km radius from city centre). AirNow is tried first for US airports (see airnow.py).
 - sources/airnow.py: Air quality (US EPA authoritative, 15mi radius from city centre)
 - sources/firms.py: Wildfire detection (NASA FIRMS)

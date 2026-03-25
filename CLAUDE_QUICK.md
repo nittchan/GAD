@@ -16,7 +16,7 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 ## Stage
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
-- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 521 triggers, 144 airports + 10 ports, multi-source data (15 APIs), all pages unified.
+- v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 521 triggers, 144 airports + 10 ports, multi-source data (16 APIs), all pages unified.
 - v0.2.2 (next): Oracle signing layer under the visible dashboard.
 - v0.3: Self-Learning Actuary — DuckDB analytical datastore, distribution tracking, drift detection, threshold optimization, peer calibration, correlation matrix.
 - v0.4: Platform — API on CF Workers (community service), Redis for API cache, verification SDK.
@@ -40,7 +40,7 @@ All work on `dev`. Merge to `staging` to test. Merge to `main` to ship. GitHub A
 
 ```
 Background fetcher (cron every 15 min)
-  → Fetches from OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI, NOAA SWPC, WHO DON
+  → Fetches from FAA ATCSCC, OpenSky, AviationStack, AirNow, OpenAQ, WAQI, NASA FIRMS, Open-Meteo, GPM IMERG, USGS, AISstream, USGS Water Services, NOAA NHC, Copernicus/MODIS NDVI, NOAA SWPC, WHO DON
   → Writes to data/monitor_cache/ (JSON files)
 
 Dashboard (Streamlit)
@@ -80,6 +80,7 @@ Compute engine: gad/engine/ package
 | Copernicus/MODIS | Crop / NDVI vegetation health | No key needed |
 | NOAA SWPC | Solar/space weather alerts | No key needed |
 | WHO DON | Health/pandemic outbreak alerts | No key needed |
+| FAA ATCSCC | US airport delays (real minutes) | No key needed |
 
 ## Env Vars
 

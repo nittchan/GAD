@@ -46,7 +46,7 @@ The product goal: become THE default global parametric insurance monitor. v0.2 s
 
 Current capabilities:
   - Global Monitor: live risk map with 521 triggers, hover tooltips, peril/country filters.
-  - Multi-source fetcher: priority fallback across 15 data sources.
+  - Multi-source fetcher: priority fallback across 16 data sources.
   - All pages wired to the trigger registry (Trigger Profile, Compare, Guided Mode, Expert Mode, Monitor Status).
   - Oracle signing primitives exist (Ed25519 sign/verify) but not yet wired to live monitor (v0.2.2).
   - Deployed at parametricdata.io with Cloudflare DDoS protection.
@@ -77,7 +77,7 @@ Top-level domains and responsibilities:
   - gad/engine/ — compute core (basis risk, lloyds, oracle, models, loader, analytics, pdf_export, db, db_write, db_read, timeseries, distribution_tracker, drift_detector, threshold_optimizer, peer_index, cold_start, model_registry, backup).
   - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources, intelligence, risk_index, climate_zones).
   - gad/monitor/ports.py — Port registry (10 tier-1 global ports with anchorage bounding boxes).
-  - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don).
+  - gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, imerg, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, faa_atcscc).
   - gad/api/ — FastAPI REST API (12+ routes, Pydantic response models, OpenAPI docs at /v1/docs).
   - gad/mcp/ — MCP server for AI agents (4 tools, JSON-RPC 2.0 stdio).
   - gad/pipeline.py — CHIRPS raster fetch and extraction.
