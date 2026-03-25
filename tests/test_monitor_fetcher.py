@@ -274,8 +274,8 @@ class TestCreateDetermination:
 class TestFetchMap:
     EXPECTED_SOURCES = [
         "opensky", "openaq", "firms", "openmeteo",
-        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "noaa_swpc",
-        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "who_don",
+        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi",
+        "noaa_swpc", "who_don", "gdacs", "nasa_eonet",
     ]
 
     def test_all_expected_sources_present(self):
@@ -295,8 +295,8 @@ class TestFetchMap:
 class TestSourceCacheKey:
     EXPECTED_SOURCES = [
         "opensky", "openaq", "firms", "openmeteo",
-        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "noaa_swpc",
-        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi", "who_don",
+        "chirps", "usgs", "aisstream", "usgs_water", "noaa_nhc", "ndvi",
+        "noaa_swpc", "who_don", "gdacs", "nasa_eonet",
     ]
 
     def test_all_expected_sources_present(self):
