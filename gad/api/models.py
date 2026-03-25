@@ -208,3 +208,26 @@ class ModelDriftResponse(BaseModel):
     current_accuracy: Optional[float] = Field(None, description="Latest model accuracy")
     baseline_accuracy: Optional[float] = Field(None, description="First model accuracy (baseline)")
     message: str = Field(..., description="Human-readable drift status")
+
+
+# ── Data source freshness (FRESH-01a) ──
+
+class SourceHealth(BaseModel):
+    """Health status for a single data source."""
+
+    source: str = Field(..., description="Source prefix key, e.g. 'flights'")
+    name: str = Field(..., description="Human-readable source name")
+    last_fetch: Optional[str] = Field(None, description="ISO-8601 timestamp of most recent cache write")
+    age_seconds: Optional[float] = Field(None, description="Seconds since last_fetch")
+    file_count: int = Field(0, description="Total cache files for this source")
+    fresh_count: int = Field(0, description="Files where expires_at > now")
+    stale_count: int = Field(0, description="Files where expires_at <= now")
+    freshness: str = Field("red", description="Traffic-light status: green (>80%), amber (>50%), red")
+
+
+class HealthResponse(BaseModel):
+    """Response for GET /v1/health."""
+
+    sources: list[SourceHealth] = Field(..., description="Per-source data freshness")
+    total_files: int = Field(..., description="Total cache files across all sources")
+    overall_freshness: str = Field(..., description="Overall traffic-light status")

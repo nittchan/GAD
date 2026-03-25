@@ -7,6 +7,7 @@ Routes:
   GET /v1/triggers/{id}/basis-risk    — precomputed basis risk report
   GET /v1/triggers/{id}/determinations — last 20 signed determinations
   GET /v1/status                      — data source health per peril
+  GET /v1/health                      — per-source data freshness with traffic-light status
   GET /v1/ports                       — marine port list
   GET /v1/perils                      — peril categories
   GET /v1/intelligence/peril-patterns — firing rates and drift per peril
@@ -46,6 +47,7 @@ from gad.api.models import (
     LocationTriggerEntry,
     ClimateZoneResponse,
     ModelDriftResponse,
+    HealthResponse,
 )
 
 app = FastAPI(
@@ -97,7 +99,7 @@ SOURCE_KEY_MAP = {
     "ndvi": "ndvi", "noaa_swpc": "solar", "who_don": "health",
 }
 
-from gad.config import BASIS_RISK_DIR, ORACLE_DIR
+from gad.config import BASIS_RISK_DIR, ORACLE_DIR, CACHE_DIR
 
 # ORACLE_LOG_DIR used locally for the JSONL path — points to the oracle root
 _ORACLE_LOG_DIR = ORACLE_DIR
@@ -334,6 +336,137 @@ async def get_status(_key=Depends(verify_api_key)):
             "coverage_pct": round(cached / total * 100) if total > 0 else 0,
         }
     return {"perils": peril_status, "total_triggers": len(GLOBAL_TRIGGERS)}
+
+
+# ── Source-level freshness (FRESH-01a) ──
+
+SOURCE_NAMES = {
+    "flights": "Flight Delay (FAA/AviationStack/OpenSky)",
+    "aqi": "Air Quality (AirNow/WAQI/OpenAQ)",
+    "weather": "Weather (Open-Meteo)",
+    "fire": "Wildfire (NASA FIRMS)",
+    "drought": "Drought (CHIRPS/GPM IMERG)",
+    "earthquake": "Earthquake (USGS)",
+    "marine": "Marine (AISstream)",
+    "flood": "Flood (USGS Water Services)",
+    "cyclone": "Cyclone (NOAA NHC)",
+    "ndvi": "Crop/NDVI (Copernicus/MODIS)",
+    "solar": "Solar (NOAA SWPC)",
+    "health": "Health (WHO DON)",
+}
+
+
+@app.get("/v1/health", tags=["Status"], response_model=HealthResponse)
+async def get_health(_key=Depends(verify_api_key)):
+    """
+    Per-source data freshness with traffic-light status.
+
+    Scans the monitor cache directory and groups files by source prefix.
+    For each source, computes freshness metrics including the most recent
+    fetch time, fresh/stale file counts, and a traffic-light indicator
+    (green >80% fresh, amber >50%, red otherwise).
+
+    Example response:
+    ```json
+    {
+      "sources": [
+        {"source": "flights", "name": "Flight Delay (FAA/AviationStack/OpenSky)",
+         "last_fetch": "2026-03-25T10:05:00Z", "age_seconds": 120,
+         "file_count": 144, "fresh_count": 140, "stale_count": 4, "freshness": "green"}
+      ],
+      "total_files": 521,
+      "overall_freshness": "green"
+    }
+    ```
+    """
+    import time as _time
+    from datetime import datetime, timezone
+
+    now = _time.time()
+    source_buckets: dict[str, list[dict]] = {prefix: [] for prefix in SOURCE_NAMES}
+
+    # Scan all JSON files in cache directory
+    if CACHE_DIR.is_dir():
+        for path in sorted(CACHE_DIR.glob("*.json")):
+            try:
+                entry = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+
+            fname = path.stem  # e.g. "flights_flight-delay-del"
+            matched = False
+            for prefix in SOURCE_NAMES:
+                if fname.startswith(prefix + "_"):
+                    source_buckets[prefix].append(entry)
+                    matched = True
+                    break
+            # Files that don't match any known prefix are ignored
+
+    sources = []
+    total_files = 0
+    total_fresh = 0
+
+    for prefix, entries in source_buckets.items():
+        file_count = len(entries)
+        total_files += file_count
+
+        if file_count == 0:
+            sources.append({
+                "source": prefix,
+                "name": SOURCE_NAMES[prefix],
+                "last_fetch": None,
+                "age_seconds": None,
+                "file_count": 0,
+                "fresh_count": 0,
+                "stale_count": 0,
+                "freshness": "red",
+            })
+            continue
+
+        fresh_count = sum(1 for e in entries if e.get("expires_at", 0) > now)
+        stale_count = file_count - fresh_count
+        total_fresh += fresh_count
+
+        # Most recent cached_at across all files for this source
+        latest_ts = max(e.get("cached_at", 0) for e in entries)
+        age_seconds = round(now - latest_ts, 1) if latest_ts > 0 else None
+        last_fetch_iso = (
+            datetime.fromtimestamp(latest_ts, tz=timezone.utc).isoformat()
+            if latest_ts > 0 else None
+        )
+
+        pct = fresh_count / file_count
+        if pct > 0.8:
+            freshness = "green"
+        elif pct > 0.5:
+            freshness = "amber"
+        else:
+            freshness = "red"
+
+        sources.append({
+            "source": prefix,
+            "name": SOURCE_NAMES[prefix],
+            "last_fetch": last_fetch_iso,
+            "age_seconds": age_seconds,
+            "file_count": file_count,
+            "fresh_count": fresh_count,
+            "stale_count": stale_count,
+            "freshness": freshness,
+        })
+
+    # Overall freshness
+    if total_files == 0:
+        overall = "red"
+    else:
+        overall_pct = total_fresh / total_files
+        if overall_pct > 0.8:
+            overall = "green"
+        elif overall_pct > 0.5:
+            overall = "amber"
+        else:
+            overall = "red"
+
+    return {"sources": sources, "total_files": total_files, "overall_freshness": overall}
 
 
 @app.get("/v1/ports", tags=["Marine"], response_model=PortListResponse)

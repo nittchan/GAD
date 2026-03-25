@@ -115,6 +115,132 @@ for peril_key, label in PERIL_LABELS.items():
     </div>
     """, unsafe_allow_html=True)
 
+# ── Data Source Freshness (FRESH-01b) ──
+st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
+st.markdown("### Data Source Freshness")
+
+try:
+    import json as _json
+    import time as _time
+    from datetime import datetime as _dt, timezone as _tz
+    from gad.config import CACHE_DIR as _CACHE_DIR
+
+    _SOURCE_NAMES = {
+        "flights": "Flight Delay (FAA/AviationStack/OpenSky)",
+        "aqi": "Air Quality (AirNow/WAQI/OpenAQ)",
+        "weather": "Weather (Open-Meteo)",
+        "fire": "Wildfire (NASA FIRMS)",
+        "drought": "Drought (CHIRPS/GPM IMERG)",
+        "earthquake": "Earthquake (USGS)",
+        "marine": "Marine (AISstream)",
+        "flood": "Flood (USGS Water Services)",
+        "cyclone": "Cyclone (NOAA NHC)",
+        "ndvi": "Crop/NDVI (Copernicus/MODIS)",
+        "solar": "Solar (NOAA SWPC)",
+        "health": "Health (WHO DON)",
+    }
+
+    _FRESHNESS_COLORS = {"green": "#2E8B6F", "amber": "#D4A017", "red": "#A63D40"}
+
+    @st.cache_data(ttl=120)
+    def _compute_source_freshness() -> list[dict]:
+        """Scan cache dir and compute per-source freshness. Cached 2 min."""
+        now = _time.time()
+        buckets: dict[str, list[dict]] = {p: [] for p in _SOURCE_NAMES}
+
+        if _CACHE_DIR.is_dir():
+            for path in _CACHE_DIR.glob("*.json"):
+                try:
+                    entry = _json.loads(path.read_text(encoding="utf-8"))
+                except (ValueError, OSError):
+                    continue
+                fname = path.stem
+                for prefix in _SOURCE_NAMES:
+                    if fname.startswith(prefix + "_"):
+                        buckets[prefix].append(entry)
+                        break
+
+        rows = []
+        for prefix, entries in buckets.items():
+            fc = len(entries)
+            if fc == 0:
+                rows.append({
+                    "name": _SOURCE_NAMES[prefix], "last_fetch_rel": "—",
+                    "fresh": 0, "stale": 0, "freshness": "red",
+                })
+                continue
+
+            fresh = sum(1 for e in entries if e.get("expires_at", 0) > now)
+            stale = fc - fresh
+            latest = max(e.get("cached_at", 0) for e in entries)
+            age = now - latest if latest > 0 else None
+
+            # Relative time string
+            if age is None:
+                rel = "—"
+            elif age < 60:
+                rel = f"{int(age)}s ago"
+            elif age < 3600:
+                rel = f"{int(age // 60)} min ago"
+            elif age < 86400:
+                rel = f"{int(age // 3600)}h ago"
+            else:
+                rel = f"{int(age // 86400)}d ago"
+
+            pct = fresh / fc
+            if pct > 0.8:
+                freshness = "green"
+            elif pct > 0.5:
+                freshness = "amber"
+            else:
+                freshness = "red"
+
+            rows.append({
+                "name": _SOURCE_NAMES[prefix], "last_fetch_rel": rel,
+                "fresh": fresh, "stale": stale, "freshness": freshness,
+            })
+        return rows
+
+    _freshness_rows = _compute_source_freshness()
+
+    # Render as a styled HTML table
+    _table_rows_html = ""
+    for _r in _freshness_rows:
+        _color = _FRESHNESS_COLORS.get(_r["freshness"], "#A63D40")
+        _badge = _r["freshness"].upper()
+        _table_rows_html += f"""
+        <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #D4CCC0;color:#1E1B18;font-size:13px;">{_r['name']}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #D4CCC0;font-family:monospace;font-size:13px;color:#7A7267;">{_r['last_fetch_rel']}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #D4CCC0;font-family:monospace;font-size:13px;color:#2E8B6F;">{_r['fresh']}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #D4CCC0;font-family:monospace;font-size:13px;color:#D4A017;">{_r['stale']}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #D4CCC0;text-align:center;">
+                <span style="background:{_color};color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:1px;">{_badge}</span>
+            </td>
+        </tr>"""
+
+    st.markdown(f"""
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;background:#EDE7E0;border:1px solid #D4CCC0;border-radius:8px;">
+        <thead>
+            <tr style="background:#E5DFD8;">
+                <th style="padding:10px 12px;text-align:left;font-size:12px;color:#7A7267;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #D4CCC0;">Source</th>
+                <th style="padding:10px 12px;text-align:left;font-size:12px;color:#7A7267;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #D4CCC0;">Last Fetch</th>
+                <th style="padding:10px 12px;text-align:left;font-size:12px;color:#7A7267;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #D4CCC0;">Fresh</th>
+                <th style="padding:10px 12px;text-align:left;font-size:12px;color:#7A7267;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #D4CCC0;">Stale</th>
+                <th style="padding:10px 12px;text-align:center;font-size:12px;color:#7A7267;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #D4CCC0;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {_table_rows_html}
+        </tbody>
+    </table>
+    </div>
+    """, unsafe_allow_html=True)
+
+except Exception as _freshness_err:
+    st.warning(f"Could not load source freshness: {_freshness_err}")
+
 # ── Data sources ──
 st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
 st.markdown("### Data Sources")
