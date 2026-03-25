@@ -3,12 +3,6 @@
 # dev branch      → no auto-deploy (local development only)
 # staging branch  → deploys to gad-dashboard-staging.fly.dev
 # main branch     → deploys to parametricdata.io (production)
-#
-# Workflow:
-#   1. Work on dev branch
-#   2. Merge dev → staging (triggers staging deploy)
-#   3. Verify at gad-dashboard-staging.fly.dev
-#   4. Merge staging → main (triggers production deploy)
 
 name: Deploy
 
@@ -29,7 +23,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only --app gad-dashboard-staging
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_STAGING }}
 
   deploy-production:
     name: Deploy to production
