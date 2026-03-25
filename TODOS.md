@@ -87,11 +87,11 @@
 | Eurocontrol ANS | 2019-2025 | Europe | Medium — real delay minutes |
 | DGCA India | 2020-2025 | India | Low — PDF parsing effort |
 
-- [ ] **DATA-03a:** `scripts/fetch_bts_transtats.py` — download US on-time performance CSV from BTS TranStats. Parse FL_DATE, DEP_DELAY, ORIGIN. Aggregate daily avg delay per airport. Output: `data/series/flights/{IATA}_daily.csv`. Covers JFK, LAX, ORD, ATL, DFW, DEN, SFO, MIA, EWR, BOS, SEA, DTW, MSP, IAH, PHL (~15 US airports).
-- [ ] **DATA-03b:** `scripts/fetch_opensky_zenodo.py` — download OpenSky Zenodo Parquet dumps. Parse firstseen, origin. Compute daily departure count per airport. Output: same CSV format. Covers all 144 airports globally.
-- [ ] **DATA-03c:** `scripts/fetch_eurocontrol.py` — download Eurocontrol ANS Performance CSV. Parse date, apt_icao, avg_dep_delay. Output: same format. Covers LHR, CDG, FRA, AMS, MAD, BCN, FCO, MXP, MUC, ZRH (~15 European airports).
-- [ ] **DATA-03d:** `scripts/fetch_dgca_india.py` — parse DGCA monthly PDF reports for Indian airports. Extract delay/cancellation data. Output: same format. Covers DEL, BOM, BLR, MAA, CCU, HYD (~6 Indian airports). *(Lower priority — PDF parsing effort.)*
-- [ ] **DATA-03e:** Update `scripts/precompute_basis_risk.py` to map flight trigger IDs to flight CSVs (e.g. `flight-delay-jfk` → `data/series/flights/JFK_daily.csv`). Run precompute for all flight triggers with new data.
+- [x] **DATA-03a:** `scripts/fetch_bts_transtats.py` — download US on-time performance CSV from BTS TranStats. Parse FL_DATE, DEP_DELAY, ORIGIN. Aggregate daily avg delay per airport. Output: `data/series/flights/{IATA}_daily.csv`. Covers JFK, LAX, ORD, ATL, DFW, DEN, SFO, MIA, EWR, BOS, SEA, DTW, MSP, IAH, PHL (~15 US airports).
+- [x] **DATA-03b:** `scripts/fetch_opensky_zenodo.py` — download OpenSky Zenodo Parquet dumps. Parse firstseen, origin. Compute daily departure count per airport. Output: same CSV format. Covers all 144 airports globally.
+- [x] **DATA-03c:** `scripts/fetch_eurocontrol.py` — download Eurocontrol ANS Performance CSV. Parse date, apt_icao, avg_dep_delay. Output: same format. Covers LHR, CDG, FRA, AMS, MAD, BCN, FCO, MXP, MUC, ZRH (~15 European airports).
+- [x] **DATA-03d:** `scripts/fetch_dgca_india.py` — parse DGCA monthly PDF reports for Indian airports. Extract delay/cancellation data. Output: same format. Covers DEL, BOM, BLR, MAA, CCU, HYD (~6 Indian airports). *(Lower priority — PDF parsing effort.)*
+- [x] **DATA-03e:** Update `scripts/precompute_basis_risk.py` to map flight trigger IDs to flight CSVs (e.g. `flight-delay-jfk` → `data/series/flights/JFK_daily.csv`). Run precompute for all flight triggers with new data.
 - [x] **UX-01:** Searchable dropdowns — rich labels ("Delhi DEL — Flight Delay (India)"), sorted alphabetically, type-to-filter. Shared `trigger_selector.py`. Applied to Trigger Profile, Compare, Guided Mode.
 
 ---
