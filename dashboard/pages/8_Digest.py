@@ -67,6 +67,7 @@ st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="\u269
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="\U0001f464")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="\U0001f510")
 st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest", icon="\U0001f4e8")
+st.sidebar.page_link("pages/9_Composer.py", label="Product Composer", icon="\U0001f9e9")
 
 # ── Header ──
 st.markdown(

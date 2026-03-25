@@ -92,6 +92,7 @@ st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖�
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest", icon="📨")
+st.sidebar.page_link("pages/9_Composer.py", label="Product Composer", icon="🧩")
 
 # ── Hero ──
 st.markdown('<div style="padding:56px 0 8px 0;">', unsafe_allow_html=True)

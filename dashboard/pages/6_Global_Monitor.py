@@ -20,7 +20,7 @@ from gad.monitor.triggers import (
     get_triggers_by_peril,
 )
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, gdacs, nasa_eonet
 
 import json as _json
 
@@ -129,6 +129,8 @@ SOURCE_KEY_MAP = {
     "ndvi": "ndvi",
     "noaa_swpc": "solar",
     "who_don": "health",
+    "gdacs": "disaster",
+    "nasa_eonet": "eonet",
 }
 
 
@@ -164,6 +166,10 @@ def _evaluate_trigger(trigger: MonitorTrigger, data: dict) -> dict:
         return noaa_swpc.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "who_don":
         return who_don.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "gdacs":
+        return gdacs.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "nasa_eonet":
+        return nasa_eonet.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 
@@ -223,6 +229,7 @@ st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖�
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest", icon="📨")
+st.sidebar.page_link("pages/9_Composer.py", label="Product Composer", icon="🧩")
 
 # ── Page Header ──
 st.markdown(

@@ -17,6 +17,11 @@ from gad.engine.models import (
     TriggerObservation,
 )
 from gad.engine.pdf_export import generate_lloyds_report
+from gad.engine.product_composer import (
+    CompositeProduct,
+    evaluate_composite,
+    evaluate_composite_from_dict,
+)
 from gad.engine.oracle import (
     GENESIS_HASH,
     append_to_oracle_log,
@@ -45,4 +50,7 @@ __all__ = [
     "sign_determination",
     "verify_determination",
     "append_to_oracle_log",
+    "CompositeProduct",
+    "evaluate_composite",
+    "evaluate_composite_from_dict",
 ]

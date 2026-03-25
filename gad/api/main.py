@@ -14,6 +14,7 @@ Routes:
   GET /v1/intelligence/location/{lat}/{lon} — triggers near a point
   GET /v1/intelligence/climate-zone/{zone}  — triggers in a climate zone (Phase 3)
   GET /v1/triggers/{id}/model-drift   — model drift status for a trigger
+  POST /v1/products/evaluate          — evaluate a composite multi-peril product
 
 Auto-generated OpenAPI docs at /v1/docs.
 """
@@ -48,6 +49,8 @@ from gad.api.models import (
     ClimateZoneResponse,
     ModelDriftResponse,
     HealthResponse,
+    CompositeProductRequest,
+    CompositeEvaluationResponse,
 )
 
 app = FastAPI(
@@ -66,7 +69,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -778,3 +781,62 @@ async def get_model_drift(
             "baseline_accuracy": None,
             "message": "Model history not available",
         }
+
+
+# ── Product composer (CEO-10) ──
+
+@app.post("/v1/products/evaluate", tags=["Products"], response_model=CompositeEvaluationResponse)
+async def evaluate_product(
+    body: CompositeProductRequest,
+    _key=Depends(verify_api_key),
+):
+    """
+    Evaluate a composite multi-peril parametric product.
+
+    Combine 2-3 triggers with AND or OR logic. AND means all component triggers
+    must fire for the product to trigger. OR means any single trigger firing
+    activates the product.
+
+    This is the key differentiator vs single-peril parametric products: compose
+    flight delay + air quality + weather triggers into one bundled product.
+
+    Example request:
+    ```json
+    {
+      "triggers": ["flight-delay-del", "aqi-del", "weather-heat-del"],
+      "logic": "OR",
+      "name": "Delhi Airport Resilience"
+    }
+    ```
+
+    Example response:
+    ```json
+    {
+      "product_name": "Delhi Airport Resilience",
+      "logic": "OR",
+      "fired": true,
+      "trigger_count": 3,
+      "triggers_fired": 1,
+      "perils_covered": ["air_quality", "extreme_weather", "flight_delay"],
+      "trigger_details": [...]
+    }
+    ```
+    """
+    # Validate logic
+    logic = body.logic.upper()
+    if logic not in ("AND", "OR"):
+        raise HTTPException(status_code=400, detail="logic must be 'AND' or 'OR'")
+
+    # Validate all trigger IDs exist
+    for tid in body.triggers:
+        if not get_trigger_by_id(tid):
+            raise HTTPException(status_code=404, detail=f"Trigger '{tid}' not found")
+
+    from gad.engine.product_composer import evaluate_composite_from_dict
+
+    result = evaluate_composite_from_dict(
+        trigger_ids=body.triggers,
+        logic=logic,
+        name=body.name,
+    )
+    return result

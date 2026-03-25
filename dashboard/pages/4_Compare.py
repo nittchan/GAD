@@ -8,7 +8,7 @@ from dashboard.components.theme import inject_theme
 from dashboard.components.trigger_selector import build_trigger_options
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, MonitorTrigger, get_trigger_by_id
 from gad.monitor.cache import read_cache_with_staleness
-from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don
+from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, gdacs, nasa_eonet
 
 st.set_page_config(page_title="Compare | Parametric Data", layout="wide", initial_sidebar_state="collapsed")
 inject_theme(st)
@@ -43,6 +43,7 @@ st.sidebar.page_link("pages/4_Compare.py", label="Compare triggers", icon="⚖�
 st.sidebar.page_link("pages/5_Account.py", label="Account", icon="👤")
 st.sidebar.page_link("pages/7_Oracle.py", label="Oracle Ledger", icon="🔐")
 st.sidebar.page_link("pages/8_Digest.py", label="Daily Digest", icon="📨")
+st.sidebar.page_link("pages/9_Composer.py", label="Product Composer", icon="🧩")
 
 # ── Helpers ──
 SOURCE_KEY_MAP = {
@@ -54,6 +55,8 @@ SOURCE_KEY_MAP = {
     "ndvi": "ndvi",
     "noaa_swpc": "solar",
     "who_don": "health",
+    "gdacs": "disaster",
+    "nasa_eonet": "eonet",
 }
 
 def _evaluate(trigger, data):
@@ -81,6 +84,10 @@ def _evaluate(trigger, data):
         return noaa_swpc.evaluate_trigger(data, trigger.threshold)
     elif trigger.data_source == "who_don":
         return who_don.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "gdacs":
+        return gdacs.evaluate_trigger(data, trigger.threshold)
+    elif trigger.data_source == "nasa_eonet":
+        return nasa_eonet.evaluate_trigger(data, trigger.threshold)
     return {"fired": False, "value": None, "status": "no_data"}
 
 def _get_data(trigger):

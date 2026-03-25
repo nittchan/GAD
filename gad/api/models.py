@@ -231,3 +231,41 @@ class HealthResponse(BaseModel):
     sources: list[SourceHealth] = Field(..., description="Per-source data freshness")
     total_files: int = Field(..., description="Total cache files across all sources")
     overall_freshness: str = Field(..., description="Overall traffic-light status")
+
+
+# ── Product composer (CEO-10) ──
+
+class CompositeProductRequest(BaseModel):
+    """Request body for POST /v1/products/evaluate."""
+
+    triggers: list[str] = Field(..., min_length=2, max_length=3, description="List of 2-3 trigger IDs to combine")
+    logic: str = Field("AND", description="Composite logic: 'AND' (all must fire) or 'OR' (any fires)")
+    name: str = Field("Composite Product", description="Optional product name")
+
+
+class TriggerEvaluationEntry(BaseModel):
+    """Evaluation result for a single trigger within a composite product."""
+
+    trigger_id: str
+    trigger_name: str
+    peril: str
+    peril_label: str
+    location: str
+    fired: bool
+    value: Optional[float] = None
+    threshold: Optional[float] = None
+    unit: str = ""
+    status: str
+    has_data: bool
+
+
+class CompositeEvaluationResponse(BaseModel):
+    """Response for POST /v1/products/evaluate."""
+
+    product_name: str = Field(..., description="Name of the composite product")
+    logic: str = Field(..., description="Composite logic applied: 'AND' or 'OR'")
+    fired: bool = Field(..., description="Whether the composite product has fired")
+    trigger_count: int = Field(..., description="Number of component triggers")
+    triggers_fired: int = Field(..., description="Number of component triggers currently fired")
+    perils_covered: list[str] = Field(..., description="Distinct peril categories in this product")
+    trigger_details: list[TriggerEvaluationEntry] = Field(..., description="Per-trigger evaluation results")
