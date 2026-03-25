@@ -121,8 +121,9 @@ st.markdown("### Data Sources")
 st.markdown("""
 | Source | Type | Status | Rate Limit |
 |--------|------|--------|------------|
-| OpenSky Network | Flight departures | OAuth2 authenticated | 4000 credits/day |
-| AviationStack | Flight schedules | API key (tier-1 only) | 500 req/month |
+| FAA ATCSCC | US airport delays (real minutes) | No key needed | Unlimited |
+| OpenSky Network | Flight departures (global) | OAuth2 authenticated | 4000 credits/day |
+| AviationStack | Flight schedules (tier-1) | API key | 500 req/month |
 | WAQI | Air quality (global) | API key | Generous |
 | AirNow EPA | Air quality (US) | API key | Generous |
 | OpenAQ v3 | Air quality (open data) | API key | Generous |

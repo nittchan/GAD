@@ -159,6 +159,11 @@ def evaluate_trigger(data: dict, threshold: float) -> dict:
     source = data.get("source", "opensky")
     total = data.get("total_flights", 0)
 
+    # FAA ATCSCC provides real delay data for US airports
+    if source == "faa_atcscc":
+        from gad.monitor.sources.faa_atcscc import evaluate_trigger as faa_eval
+        return faa_eval(data, threshold)
+
     # AviationStack provides real delay data
     if source == "aviationstack":
         avg_delay = data.get("avg_delay_min", 0)

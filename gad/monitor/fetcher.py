@@ -37,8 +37,7 @@ from gad.monitor.triggers import GLOBAL_TRIGGERS, MonitorTrigger
 from gad.monitor.protocol import SourceConfig, fetch_with_fallback
 from gad.monitor.sources import openmeteo, openaq, firms, opensky, chirps_monitor
 from gad.monitor.sources import aviationstack, airnow, gpm_imerg, usgs_earthquake, aisstream
-from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, noaa_swpc
-from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, who_don
+from gad.monitor.sources import noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, faa_atcscc
 from gad.monitor.ports import ALL_PORTS, get_port_by_id
 from gad.engine.oracle import (
     sign_determination, append_to_oracle_log, read_last_hash,
@@ -157,10 +156,18 @@ def _get_iata(trigger: MonitorTrigger) -> str:
 
 
 def fetch_flight_delay(trigger: MonitorTrigger) -> dict | None:
-    """Multi-source flight delay: AviationStack (tier-1) → OpenSky (all)."""
+    """Multi-source flight delay: FAA ATCSCC (US) → AviationStack (tier-1) → OpenSky (all)."""
     iata = _get_iata(trigger)
 
     sources = []
+
+    # FAA ATCSCC: US airports only — real delay minutes, free, no key
+    if _is_us_airport(trigger):
+        sources.append(SourceConfig(
+            name="faa_atcscc", priority=0,
+            fetch_fn=lambda: faa_atcscc.fetch_airport_status(iata, trigger.id),
+            rate_limit_note="free, no limit",
+        ))
 
     # AviationStack: only for tier-1 (500 req/mo free = ~16/day)
     if _is_tier1_airport(trigger) and os.environ.get("AVIATIONSTACK_API_KEY"):
