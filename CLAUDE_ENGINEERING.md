@@ -44,6 +44,10 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 - threshold_optimizer.py: Frequency matching + KS separability, evidence gating
 - peer_index.py: Cosine similarity peer matching (top-5), outlier detection (>2σ)
 - cold_start.py: Weighted-average inference from peers for triggers with <30 observations
+- correlation_matrix.py: Co-firing phi coefficient with 2000km geographic bounding, lead-lag analysis
+- proximity_alerts.py: Triggers within 20% of threshold (daily digest integration)
+- user_annotations.py: User watchlist with firing_rate snapshots and drift detection
+- webhook.py: HMAC-SHA256 signed webhook delivery with retry + dead-letter queue
 
 ### gad/monitor/ — Global Monitor
 - climate_zones.py: Koppen climate zone lookup (rule-based approximation)
