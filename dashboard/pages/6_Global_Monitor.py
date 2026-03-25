@@ -339,6 +339,7 @@ for trigger in GLOBAL_TRIGGERS:
         "value_str": value_str,
         "status_label": status_label,
         "status": result["status"],
+        "peril": trigger.peril,
         "color_r": color[0],
         "color_g": color[1],
         "color_b": color[2],
@@ -350,62 +351,225 @@ for trigger in GLOBAL_TRIGGERS:
 if not map_rows:
     st.info("No cached data yet. The background fetcher runs every 15 minutes and populates the map automatically. Run `python -m gad.monitor.fetcher` to fetch immediately.")
 
+# MAP-01a: KeplerGL toggle — check if library is available
+_kepler_available = False
+try:
+    from keplergl import KeplerGl as _KeplerGl  # noqa: F401
+    from streamlit_keplergl import keplergl_static as _keplergl_static  # noqa: F401
+    _kepler_available = True
+except Exception:
+    pass  # KeplerGL not installed — Standard view only
+
 if map_rows:
-    import pydeck as pdk
+    # MAP-01a: Map view toggle
+    _view_options = ["Standard", "Advanced (KeplerGL)"] if _kepler_available else ["Standard"]
+    map_mode = st.radio("Map view", _view_options, horizontal=True, key="map_view_mode")
 
-    df = pd.DataFrame(map_rows)
+    if map_mode == "Advanced (KeplerGL)" and _kepler_available:
+        # ── MAP-01a: KeplerGL map ──
+        try:
+            from keplergl import KeplerGl
+            from streamlit_keplergl import keplergl_static
 
-    # Main markers
-    scatter = pdk.Layer(
-        "ScatterplotLayer",
-        data=df,
-        get_position=["lon", "lat"],
-        get_fill_color=["color_r", "color_g", "color_b", "color_a"],
-        get_radius="size",
-        pickable=True,
-        radius_min_pixels=8,
-        radius_max_pixels=24,
-        opacity=0.85,
-    )
+            # Build dataframe for KeplerGL
+            kepler_df = pd.DataFrame([{
+                "lat": r["lat"],
+                "lon": r["lon"],
+                "name": r["name"],
+                "location": r.get("location", ""),
+                "status": r["status"],
+                "value_str": r["value_str"],
+                "peril": r.get("peril", ""),
+                "size": 20 if r["status"] == "critical" else (15 if r["status"] == "drifting" else 10),
+            } for r in map_rows])
 
-    # Outer glow ring for triggered alerts
-    triggered = df[df["status"] == "critical"]
-    glow = pdk.Layer(
-        "ScatterplotLayer",
-        data=triggered,
-        get_position=["lon", "lat"],
-        get_fill_color=[248, 81, 73, 60],
-        get_radius=160000,
-        radius_min_pixels=16,
-        radius_max_pixels=40,
-        pickable=False,
-    ) if len(triggered) > 0 else None
+            # MAP-01b: Heatmap + arc layer config
+            kepler_layers = [
+                # Point layer — color-coded by status
+                {
+                    "id": "trigger-points",
+                    "type": "point",
+                    "config": {
+                        "dataId": "triggers",
+                        "label": "Triggers",
+                        "columns": {"lat": "lat", "lng": "lon"},
+                        "isVisible": True,
+                        "visConfig": {
+                            "radius": 12,
+                            "opacity": 0.85,
+                            "filled": True,
+                        },
+                        "colorField": {"name": "status", "type": "string"},
+                        "colorScale": "ordinal",
+                        "colorDomain": ["critical", "normal", "stale", "no_data", "drifting"],
+                        "colorRange": {
+                            "colors": ["#A63D40", "#2E8B6F", "#D4A017", "#9B9286", "#D4A017"],
+                        },
+                        "sizeField": {"name": "size", "type": "integer"},
+                    },
+                },
+                # MAP-01b: Heatmap layer — peril density
+                {
+                    "id": "trigger-heatmap",
+                    "type": "heatmap",
+                    "config": {
+                        "dataId": "triggers",
+                        "label": "Peril Density",
+                        "columns": {"lat": "lat", "lng": "lon"},
+                        "isVisible": False,  # toggle-able by user in KeplerGL panel
+                        "visConfig": {
+                            "radius": 40,
+                            "opacity": 0.6,
+                            "intensity": 1,
+                        },
+                    },
+                },
+            ]
 
-    # No text labels — too dense with 436 triggers. Info shown via hover tooltip.
+            # MAP-01b: Arc layer for correlated trigger pairs (if correlation data exists)
+            arc_data = None
+            try:
+                from gad.engine.db import get_connection as _kepler_get_conn
+                _kepler_conn = _kepler_get_conn()
+                _arc_df = _kepler_conn.execute(
+                    "SELECT trigger_a, trigger_b, phi_coefficient "
+                    "FROM trigger_correlations WHERE phi_coefficient >= 0.3 "
+                    "ORDER BY phi_coefficient DESC LIMIT 50"
+                ).fetchdf()
 
-    view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.8, pitch=0)
+                if _arc_df is not None and not _arc_df.empty:
+                    from gad.monitor.triggers import get_trigger_by_id as _kepler_get_trig
+                    arc_rows = []
+                    for _, _arow in _arc_df.iterrows():
+                        _ta = _kepler_get_trig(_arow["trigger_a"])
+                        _tb = _kepler_get_trig(_arow["trigger_b"])
+                        if _ta and _tb:
+                            arc_rows.append({
+                                "src_lat": _ta.lat,
+                                "src_lon": _ta.lon,
+                                "dst_lat": _tb.lat,
+                                "dst_lon": _tb.lon,
+                                "name_a": _ta.name,
+                                "name_b": _tb.name,
+                                "phi": round(_arow["phi_coefficient"], 3),
+                            })
+                    if arc_rows:
+                        arc_data = pd.DataFrame(arc_rows)
+                        kepler_layers.append({
+                            "id": "correlation-arcs",
+                            "type": "arc",
+                            "config": {
+                                "dataId": "correlations",
+                                "label": "Co-firing Correlations",
+                                "columns": {
+                                    "lat0": "src_lat",
+                                    "lng0": "src_lon",
+                                    "lat1": "dst_lat",
+                                    "lng1": "dst_lon",
+                                },
+                                "isVisible": True,
+                                "visConfig": {
+                                    "opacity": 0.6,
+                                    "thickness": 2,
+                                },
+                                "colorField": {"name": "phi", "type": "real"},
+                                "colorScale": "quantize",
+                                "colorRange": {
+                                    "colors": ["#D4A017", "#C8553D", "#A63D40"],
+                                },
+                            },
+                        })
+            except Exception:
+                pass  # No correlation data — skip arc layer
 
-    tooltip = {
-        "html": "<div style='font-family:JetBrains Mono,ui-monospace,monospace;background:#F5F0EB;padding:10px 14px;border:1px solid #D4CCC0;border-radius:4px;min-width:200px;box-shadow:0 1px 3px rgba(0,0,0,0.12)'>"
-                "<div style='font-size:13px;font-weight:700;color:#1E1B18;margin-bottom:4px'>{name}</div>"
-                "<div style='font-size:11px;color:#7A7267;margin-bottom:6px'>{location}</div>"
-                "<div style='font-size:18px;font-weight:700;color:#C8553D;margin-bottom:2px'>{value_str}</div>"
-                "<div style='font-size:11px;font-weight:600;color:#1E1B18'>{status_label}</div>"
-                "</div>",
-        "style": {"backgroundColor": "transparent", "border": "none"},
-    }
+            config = {
+                "version": "v1",
+                "config": {
+                    "mapStyle": {"styleType": "light"},
+                    "visState": {
+                        "layers": kepler_layers,
+                    },
+                    "mapState": {
+                        "latitude": 20,
+                        "longitude": 30,
+                        "zoom": 1.8,
+                    },
+                },
+            }
 
-    layers = [scatter]
-    if glow is not None:
-        layers.insert(0, glow)
+            kepler_data = {"triggers": kepler_df}
+            if arc_data is not None:
+                kepler_data["correlations"] = arc_data
 
-    deck = pdk.Deck(
-        layers=layers,
-        initial_view_state=view_state,
-        map_style="light",
-        tooltip=tooltip,
-    )
-    st.pydeck_chart(deck, use_container_width=True, height=500)
+            kepler_map = KeplerGl(data=kepler_data, config=config, height=500)
+            keplergl_static(kepler_map, center_map=True)
+
+            st.caption(
+                "Advanced view powered by KeplerGL. Use the layer panel (top-left) to toggle heatmap density "
+                "and correlation arcs. Drag to pan, scroll to zoom."
+            )
+        except Exception as e:
+            # Fallback to PyDeck if KeplerGL rendering fails
+            st.warning(f"KeplerGL rendering failed, falling back to Standard view. ({e})")
+            map_mode = "Standard"
+
+    if map_mode == "Standard":
+        # ── Standard PyDeck map ──
+        import pydeck as pdk
+
+        df = pd.DataFrame(map_rows)
+
+        # Main markers
+        scatter = pdk.Layer(
+            "ScatterplotLayer",
+            data=df,
+            get_position=["lon", "lat"],
+            get_fill_color=["color_r", "color_g", "color_b", "color_a"],
+            get_radius="size",
+            pickable=True,
+            radius_min_pixels=8,
+            radius_max_pixels=24,
+            opacity=0.85,
+        )
+
+        # Outer glow ring for triggered alerts
+        triggered = df[df["status"] == "critical"]
+        glow = pdk.Layer(
+            "ScatterplotLayer",
+            data=triggered,
+            get_position=["lon", "lat"],
+            get_fill_color=[248, 81, 73, 60],
+            get_radius=160000,
+            radius_min_pixels=16,
+            radius_max_pixels=40,
+            pickable=False,
+        ) if len(triggered) > 0 else None
+
+        # No text labels — too dense with 436 triggers. Info shown via hover tooltip.
+
+        view_state = pdk.ViewState(latitude=20, longitude=30, zoom=1.8, pitch=0)
+
+        tooltip = {
+            "html": "<div style='font-family:JetBrains Mono,ui-monospace,monospace;background:#F5F0EB;padding:10px 14px;border:1px solid #D4CCC0;border-radius:4px;min-width:200px;box-shadow:0 1px 3px rgba(0,0,0,0.12)'>"
+                    "<div style='font-size:13px;font-weight:700;color:#1E1B18;margin-bottom:4px'>{name}</div>"
+                    "<div style='font-size:11px;color:#7A7267;margin-bottom:6px'>{location}</div>"
+                    "<div style='font-size:18px;font-weight:700;color:#C8553D;margin-bottom:2px'>{value_str}</div>"
+                    "<div style='font-size:11px;font-weight:600;color:#1E1B18'>{status_label}</div>"
+                    "</div>",
+            "style": {"backgroundColor": "transparent", "border": "none"},
+        }
+
+        layers = [scatter]
+        if glow is not None:
+            layers.insert(0, glow)
+
+        deck = pdk.Deck(
+            layers=layers,
+            initial_view_state=view_state,
+            map_style="light",
+            tooltip=tooltip,
+        )
+        st.pydeck_chart(deck, use_container_width=True, height=500)
 else:
     st.info("No triggers match the selected filters.")
 
