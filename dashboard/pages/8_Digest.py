@@ -150,11 +150,11 @@ if digest_content:
             continue
 
         if current_section == "fired" and line.strip().startswith("- "):
-            fired_lines.append(line.strip()[2:])
+            fired_lines.append(line.strip()[2:].replace("**", ""))
         elif current_section == "approaching" and line.strip().startswith("- "):
-            approaching_lines.append(line.strip()[2:])
+            approaching_lines.append(line.strip()[2:].replace("**", ""))
         elif current_section == "elevated" and line.strip().startswith("- "):
-            elevated_lines.append(line.strip()[2:])
+            elevated_lines.append(line.strip()[2:].replace("**", ""))
 
     # Summary cards
     c1, c2, c3 = st.columns(3)
