@@ -144,6 +144,43 @@ elif step == 3:
     threshold = st.number_input(f"Threshold ({cfg['unit']})", value=float(cfg["default"]), min_value=0.0)
     direction = "above" if cfg["above"] else "below"
     st.info(f"Trigger fires when **{cfg['label'].lower()}** is **{direction} {threshold} {cfg['unit']}**.")
+
+    # SL-04d: Suggest optimal threshold
+    try:
+        loc = st.session_state.get("wizard_location", {})
+        loc_name = loc.get("name", "location").lower().replace(" ", "-")
+        _opt_trigger_id = f"custom-{peril}-{loc_name}"
+        if st.button("Suggest optimal threshold", use_container_width=False):
+            try:
+                from gad.engine.threshold_optimizer import optimize_threshold
+                _suggestion = optimize_threshold(
+                    _opt_trigger_id, threshold, fires_when_above=cfg["above"],
+                )
+                if _suggestion:
+                    _conf = _suggestion.get("confidence", "---")
+                    _badge_colors = {"high": "#2E8B6F", "medium": "#C8553D", "low": "#7A7267"}
+                    _badge_color = _badge_colors.get(_conf, "#7A7267")
+                    st.markdown(f"""
+                    <div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:8px;padding:16px;margin:8px 0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:13px;font-weight:700;color:#1E1B18;">Suggested threshold</span>
+                            <span style="background:{_badge_color};color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;text-transform:uppercase;">{_conf}</span>
+                        </div>
+                        <div style="font-size:20px;font-weight:700;color:#C8553D;font-family:'JetBrains Mono',ui-monospace,monospace;">
+                            {_suggestion['suggested_threshold']} {cfg['unit']}
+                        </div>
+                        <div style="color:#7A7267;font-size:11px;margin-top:4px;">
+                            Based on {_suggestion['observation_count']:,} observations &middot; {_suggestion['method']}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.warning("Not enough historical data to suggest an optimal threshold.")
+            except Exception:
+                st.warning("Not enough historical data to suggest an optimal threshold.")
+    except Exception:
+        pass  # SL-04d: Never crash the page
+
     c1, c2 = st.columns(2)
     with c1:
         if st.button("← Back", use_container_width=True):
