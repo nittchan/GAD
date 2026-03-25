@@ -229,6 +229,24 @@ with d2:
     </div>
     """, unsafe_allow_html=True)
 
+# ── Save to Watchlist ──
+try:
+    _wl_session = st.session_state.get("supabase_session")
+    _wl_user = getattr(_wl_session, "user", None) if _wl_session else None
+    if _wl_user:
+        _wl_note = st.text_input("Note (optional)", key="wl_note", placeholder="e.g. monitoring for Q2 renewal")
+        if st.button("Save to Watchlist", key="save_watchlist"):
+            from gad.engine.user_annotations import save_trigger_annotation
+            _wl_result = save_trigger_annotation(_wl_user.id, trigger.id, note=_wl_note)
+            if _wl_result:
+                st.success(f"Saved {trigger.name} to your watchlist.")
+            else:
+                st.warning("Could not save — check that Supabase is configured.")
+    else:
+        st.caption("Sign in to save this trigger to your watchlist.")
+except Exception:
+    pass  # Never crash the page if watchlist save fails
+
 # ── Raw Data ──
 if data:
     st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
@@ -577,6 +595,49 @@ try:
         """, unsafe_allow_html=True)
 except Exception:
     pass  # SL-04c: Never crash the page if threshold advisor fails
+
+# ── Correlated Triggers (SL-07c) ──
+try:
+    from gad.engine.db_read import get_correlations as _get_corr
+    from gad.monitor.triggers import get_trigger_by_id as _get_trig_by_id
+
+    _corr_df = _get_corr(trigger.id, min_phi=0.1)
+    if _corr_df is not None and not _corr_df.empty:
+        # Show top-5
+        _top_corr = _corr_df.head(5)
+
+        st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+        st.markdown("### Correlated Triggers")
+        st.caption("Triggers that co-fire with this one (phi coefficient, within 2,000 km)")
+
+        _ct_table = (
+            '<div style="background:#EDE7E0;border:1px solid #D4CCC0;border-radius:8px;padding:16px;margin-bottom:16px;">'
+            '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+            '<tr style="border-bottom:1px solid #D4CCC0;color:#7A7267;">'
+            '<th style="padding:6px 10px;text-align:left;">Trigger</th>'
+            '<th style="padding:6px;text-align:right;">Phi</th>'
+            '<th style="padding:6px;text-align:right;">Overlap</th>'
+            '</tr>'
+        )
+        for _, _cr in _top_corr.iterrows():
+            # Show the *other* trigger in the pair
+            _other_id = _cr["trigger_b"] if _cr["trigger_a"] == trigger.id else _cr["trigger_a"]
+            _other_t = _get_trig_by_id(_other_id)
+            _other_name = f"{_other_t.name} ({_other_t.peril.replace('_', ' ').title()})" if _other_t else _other_id
+            _phi_val = _cr["phi_coefficient"]
+            _phi_c = "#2E8B6F" if _phi_val >= 0.5 else "#D4A017" if _phi_val >= 0.3 else "#7A7267"
+            _ct_table += (
+                f'<tr style="border-bottom:1px solid #E3DCD3;">'
+                f'<td style="padding:6px 10px;">{_other_name}</td>'
+                f'<td style="padding:6px;text-align:right;font-weight:700;color:{_phi_c};'
+                f"font-family:'JetBrains Mono',ui-monospace,monospace;\">{_phi_val:.3f}</td>"
+                f'<td style="padding:6px;text-align:right;color:#7A7267;">{int(_cr["overlap_count"])}</td>'
+                f'</tr>'
+            )
+        _ct_table += '</table></div>'
+        st.markdown(_ct_table, unsafe_allow_html=True)
+except Exception:
+    pass  # SL-07c: Never crash the page if correlation section fails
 
 # ── Risk Brief (AI-generated) ──
 try:

@@ -255,6 +255,66 @@ Cloudflare proxy (orange cloud ON) provides:
 
 Recommended rate limit: 60 requests/minute per IP on the dashboard.
 
+## API Layer Deployment
+
+Sequence for bringing up the public API layer (CF Workers + R2 fallback + key auth).
+
+### 1. Provision Redis (Upstash) — deferred to v0.4
+
+The primary API cache will be Upstash Redis (serverless, per-request pricing). Until then, the fetcher writes trigger-status snapshots directly to R2 as a fallback data source for CF Workers.
+
+### 2. Set up CF Workers KV for API key hashing
+
+API keys are stored as SHA-256 hashes in Cloudflare Workers KV. Generate keys locally:
+
+```bash
+python scripts/hash_api_key.py
+# Outputs: raw key (give to user) + SHA-256 hash (store in KV)
+```
+
+Store the hash in KV namespace `GAD_API_KEYS`:
+```bash
+npx wrangler kv:key put --binding=API_KEYS "<sha256_hash>" \
+  '{"tier":"free","user_id":"<uuid>"}' --env production
+```
+
+### 3. Deploy Workers with dual-write (cache + R2 fallback)
+
+The background fetcher already writes to two destinations on every successful trigger evaluation:
+- **Local JSON cache** (primary, for dashboard reads)
+- **R2 `trigger-status/{trigger_id}.json`** (fallback, for CF Workers when Redis is unavailable)
+
+Deploy the Worker:
+```bash
+cd oracle_ledger
+npx wrangler deploy --env production
+```
+
+The Worker reads from R2 `trigger-status/` when the Redis cache misses.
+
+### 4. Verify with integration test
+
+```bash
+# Confirm R2 snapshots are being written
+npx wrangler r2 object list gad-oracle-determinations --prefix trigger-status/ | head
+
+# Hit the Worker endpoint
+curl -s https://oracle.parametricdata.io/trigger-status/flight-delay-blr | jq .
+
+# Verify API key auth (when enabled)
+curl -H "Authorization: Bearer pk_<key>" https://api.parametricdata.io/v1/triggers
+```
+
+### 5. Cut over DNS
+
+Add a CNAME for `api.parametricdata.io` pointing to the CF Worker:
+
+| Record | Type | Target | Proxy |
+|--------|------|--------|-------|
+| `api` | CNAME | Cloudflare Worker | ON |
+
+Once verified, update client SDKs and docs to use `api.parametricdata.io`.
+
 ## Cost summary (approx.)
 
 | Item | Monthly |

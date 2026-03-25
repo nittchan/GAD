@@ -452,6 +452,55 @@ if prei_data:
         table += '</table>'
         st.markdown(table, unsafe_allow_html=True)
 
+# ── Correlation Clusters (SL-07b) ──
+try:
+    from gad.engine.db_read import get_correlations as _get_all_correlations
+    from gad.monitor.triggers import get_trigger_by_id as _get_trig
+
+    # Read top-20 highest phi pairs across all triggers
+    from gad.engine.db import get_connection as _get_corr_conn
+    _corr_conn = _get_corr_conn()
+    _corr_df = _corr_conn.execute(
+        "SELECT trigger_a, trigger_b, phi_coefficient, overlap_count "
+        "FROM trigger_correlations ORDER BY phi_coefficient DESC LIMIT 20"
+    ).fetchdf()
+
+    if _corr_df is not None and not _corr_df.empty:
+        with st.expander("Correlation Clusters (Co-firing)", expanded=False):
+            st.caption(
+                "Phi coefficient measures co-firing between trigger pairs within 2,000 km. "
+                "Values near 1.0 indicate strong positive co-firing; near -1.0 indicates inverse firing."
+            )
+            _corr_table = (
+                '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+                '<tr style="border-bottom:1px solid #D4CCC0;color:#7A7267;">'
+                '<th style="padding:6px 10px;text-align:left;">Trigger A</th>'
+                '<th style="padding:6px 10px;text-align:left;">Trigger B</th>'
+                '<th style="padding:6px;text-align:right;">Phi</th>'
+                '<th style="padding:6px;text-align:right;">Overlap (days)</th>'
+                '</tr>'
+            )
+            for _, _row in _corr_df.iterrows():
+                _ta = _get_trig(_row["trigger_a"])
+                _tb = _get_trig(_row["trigger_b"])
+                _name_a = _ta.name if _ta else _row["trigger_a"]
+                _name_b = _tb.name if _tb else _row["trigger_b"]
+                _phi = _row["phi_coefficient"]
+                _phi_color = "#2E8B6F" if _phi >= 0.5 else "#D4A017" if _phi >= 0.3 else "#7A7267"
+                _corr_table += (
+                    f'<tr style="border-bottom:1px solid #E3DCD3;">'
+                    f'<td style="padding:6px 10px;">{_name_a}</td>'
+                    f'<td style="padding:6px 10px;">{_name_b}</td>'
+                    f'<td style="padding:6px;text-align:right;font-weight:700;color:{_phi_color};'
+                    f"font-family:'JetBrains Mono',ui-monospace,monospace;\">{_phi:.3f}</td>"
+                    f'<td style="padding:6px;text-align:right;color:#7A7267;">{int(_row["overlap_count"])}</td>'
+                    f'</tr>'
+                )
+            _corr_table += '</table>'
+            st.markdown(_corr_table, unsafe_allow_html=True)
+except Exception:
+    pass  # SL-07b: Never crash the page if correlation section fails
+
 # ── Trigger Display ──
 rho_map = _load_rho_map()
 

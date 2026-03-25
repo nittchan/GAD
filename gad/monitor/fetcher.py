@@ -44,7 +44,7 @@ from gad.engine.oracle import (
     data_snapshot_hash, _load_private_key, GENESIS_HASH,
 )
 from gad.engine.models import TriggerDetermination
-from gad.engine.r2_upload import upload_determination as r2_upload
+from gad.engine.r2_upload import upload_determination as r2_upload, upload_to_r2_key
 from gad.engine.version import get_gad_version
 
 from gad.config import DATA_ROOT
@@ -426,6 +426,28 @@ def _create_determination(trigger: MonitorTrigger, data: dict, fired: bool) -> T
     )
 
 
+# ── CEO-01: R2 as API fallback ──
+def _write_r2_snapshot(trigger_id: str, result: dict) -> None:
+    """Write trigger evaluation snapshot to R2 for CF Workers fallback.
+
+    Writes to ``trigger-status/{trigger_id}.json`` so Cloudflare Workers can
+    serve cached trigger status when Redis is unavailable.  Wrapped in
+    try/except so it never blocks the fetcher.
+    """
+    try:
+        snapshot = {
+            "trigger_id": trigger_id,
+            "data": result,
+            "snapshot_at": datetime.now(timezone.utc).isoformat(),
+        }
+        upload_to_r2_key(
+            f"trigger-status/{trigger_id}.json",
+            json.dumps(snapshot, default=str),
+        )
+    except Exception as e:
+        log.debug(f"R2 snapshot write skipped for {trigger_id}: {e}")
+
+
 # Oracle signing state
 _oracle_signing_enabled = False
 _private_key: bytes | None = None
@@ -558,6 +580,9 @@ def fetch_all(diagnostic: bool = False) -> dict:
             if result is not None:
                 fetched += 1
                 sources_succeeded_this_cycle.add(trigger.data_source)
+
+                # CEO-01: Write trigger status snapshot to R2 (API fallback)
+                _write_r2_snapshot(trigger.id, result)
 
                 # SL-01b: Write observation to DuckDB (never crashes the fetcher)
                 try:
@@ -735,6 +760,14 @@ def _run_weekly_jobs():
             log.info(f"Outlier triggers: {[o['trigger_id'] for o in outliers]}")
     except Exception as e:
         log.warning(f"Outlier detection failed: {e}")
+
+    # SL-07a: Co-firing correlation matrix (phi coefficient, 2000km bounding)
+    try:
+        from gad.engine.correlation_matrix import compute_correlations
+        corr_results = compute_correlations()
+        log.info(f"Correlation matrix: {len(corr_results)} pairs computed")
+    except Exception as e:
+        log.warning(f"Correlation matrix computation failed: {e}")
 
     _mark_weekly_done()
     log.info("Weekly jobs complete.")

@@ -76,3 +76,27 @@ def upload_determination(determination_id: str, json_body: str) -> bool:
     except Exception as e:
         log.warning(f"R2 upload failed for {determination_id}: {e}")
         return False
+
+
+def upload_to_r2_key(key: str, json_body: str) -> bool:
+    """
+    Upload arbitrary JSON to an R2 key (e.g. trigger-status/{id}.json).
+    Returns True on success, False on failure or skip.
+    Never raises — failures are logged and swallowed.
+    """
+    if not _initialized:
+        _init()
+    if not _enabled:
+        return False
+
+    try:
+        _client.put_object(
+            Bucket=_bucket,
+            Key=key,
+            Body=json_body.encode("utf-8"),
+            ContentType="application/json",
+        )
+        return True
+    except Exception as e:
+        log.warning(f"R2 upload failed for {key}: {e}")
+        return False

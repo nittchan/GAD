@@ -374,6 +374,25 @@ def generate_global_digest() -> str:
     except Exception:
         lines.append("Drift detection unavailable (DuckDB not configured).")
 
+    # CEO-09: Proximity alerts section
+    lines += ["", "## Proximity Alerts", ""]
+    try:
+        from gad.engine.proximity_alerts import check_proximity_alerts
+        proximity_items = check_proximity_alerts(threshold_pct=0.8)
+        if proximity_items:
+            # Sort by proximity descending (closest to firing first)
+            proximity_items.sort(key=lambda x: -x["proximity_pct"])
+            for p in proximity_items[:20]:  # cap at 20
+                peril_label = PERIL_LABELS.get(p["peril"], p["peril"])
+                lines.append(
+                    f"- **{p['name']}** ({peril_label}) — "
+                    f"value {p['value']} is {p['proximity_pct']}% of threshold {p['threshold']}"
+                )
+        else:
+            lines.append("No triggers currently within 20% of their threshold.")
+    except Exception:
+        lines.append("Proximity alert check unavailable.")
+
     lines += [
         "",
         "---",

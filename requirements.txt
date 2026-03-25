@@ -20,3 +20,4 @@ uvicorn>=0.29
 duckdb>=0.10.0
 statsmodels>=0.14.0
 scikit-learn>=1.4.0
+streamlit-keplergl>=0.3.0  # SL-07b: reserved for future correlation cluster map visualization
