@@ -233,11 +233,54 @@ All items tagged with their phase dependency.
 - [x] **CEO-06:** Deployment sequence for API layer. **Blocked by:** API-01.
 
 ### CEO Deferred Expansions
-- [ ] **CEO-07:** Data Adapter Plugin Protocol — `DataSourceAdapter` ABC.
-- [ ] **CEO-08:** Verification SDK + CLI — `pip install parametricdata`. *(Note: `python -m gad.verify` already exists — this is packaging.)*
+- [ ] **CEO-07:** Data Adapter Plugin Protocol — `DataSourceAdapter` ABC with plugin discovery. Standardizes how new sources are added so community contributors can plug in without touching core code.
+- [ ] **CEO-08:** Verification SDK + CLI — `pip install parametricdata` + npm package. Package `gad/verify/` as standalone CLI so insurers/reinsurers can independently verify oracle determinations without cloning the repo.
 - [x] **CEO-09:** Trigger Proximity Alerts — notify at 80% threshold.
-- [ ] **CEO-10:** Multi-Peril Product Composer — composite products.
-- [ ] **CEO-11:** Embeddable Trigger Widget — `<script>` for broker portals.
+- [ ] **CEO-10:** Multi-Peril Product Composer — combine 2-3 perils (e.g. flight delay + extreme weather + AQI) into composite parametric product with AND/OR trigger logic, backtesting, and Lloyd's PDF. **Key differentiator vs Parametrix.**
+- [ ] **CEO-11:** Embeddable Trigger Widget — `<iframe>` or Web Component for insurers to embed a single trigger's status on their portal. Great for distribution.
+
+---
+
+## Tier 1 — High Impact, Low Cost (competitive parity)
+
+### FRESH-01: Centralized Data Freshness Dashboard
+**Why:** Knowing exactly which sources are healthy is the biggest operational advantage. Currently no per-source visibility.
+- [ ] **FRESH-01a:** `GET /v1/health` API endpoint — per-source last-fetch time, success/fail counts, freshness status (green/amber/red). Reads cache directory, computes age per source.
+- [ ] **FRESH-01b:** Dashboard panel on Account/Monitor Status page — 16 sources with traffic-light freshness, last-fetch timestamp, success rate. ~100 lines.
+
+### MAP-01: KeplerGL Global Map Upgrade
+**Why:** Current PyDeck scatter markers are basic. KeplerGL gives 80% of WorldMonitor's visual impact at zero cost. `streamlit-keplergl` already in requirements.txt.
+- [ ] **MAP-01a:** Replace or toggle PyDeck with KeplerGL on Global Monitor — all 521 triggers color-coded by status, click-to-expand, filter panel. *(Enhances existing SL-07b which used HTML table fallback.)*
+- [ ] **MAP-01b:** Heatmap layer for peril density. Arc layer for correlation clusters.
+
+---
+
+## Tier 2 — Medium Impact (fill gaps vs WorldMonitor)
+
+### SRC-07: GDACS (Global Disaster Alerts)
+**Why:** Fills the natural disaster gap — volcanoes, tsunamis, floods that USGS/NOAA miss. Free, no key.
+- [ ] **SRC-07a:** `gad/monitor/sources/gdacs.py` — fetch from GDACS RSS/API. Parse events by type + severity.
+- [ ] **SRC-07b:** 10 disaster-prone location triggers (Ring of Fire, Mediterranean, Caribbean, etc.)
+
+### SRC-08: NASA EONET (Earth Observatory Natural Event Tracker)
+**Why:** 13 event categories (wildfires, severe storms, volcanoes, sea ice, dust/haze, etc.). Free, no key.
+- [ ] **SRC-08a:** `gad/monitor/sources/nasa_eonet.py` — fetch from `https://eonet.gsfc.nasa.gov/api/v3/events`.
+- [ ] **SRC-08b:** Auto-generate triggers from active events with proximity evaluation.
+
+### CACHE-01: Redis Caching Layer (Upstash)
+**Why:** Filesystem JSON cache works at current scale but doesn't support real-time push or sub-ms reads. Upstash free tier: 10K commands/day.
+- [ ] **CACHE-01a:** Add `redis` to requirements. Migrate `gad/monitor/cache.py` to Redis with filesystem fallback.
+- [ ] **CACHE-01b:** Atomic TTL management. Foundation for future WebSocket push.
+**Note:** Deferred from v0.3 to avoid premature complexity. Do when API traffic justifies it.
+
+---
+
+## Tier 3 — Nice to Have (do when monetizing)
+
+### SRC-09: ICAO NOTAM Integration
+**Why:** Airspace closures via ICAO NOTAMs. Combined with FAA ATCSCC + AviationStack = best-in-class flight coverage.
+- [ ] **SRC-09a:** `gad/monitor/sources/icao_notam.py` — parse NOTAM data for airport closures/restrictions.
+- [ ] **SRC-09b:** Wire into flight delay triggers as additional signal.
 
 ---
 
