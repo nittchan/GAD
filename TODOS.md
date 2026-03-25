@@ -88,9 +88,9 @@
 - [x] **FE-01c:** `st.spinner` on Trigger Profile, Account, and Digest page loads.
 
 ### FE-02: Interactions
-- [ ] **FE-02a:** URL deep linking for triggers — pass `?trigger=flight-delay-del` as query param on Trigger Profile. Currently uses `st.session_state` which doesn't survive page refresh/share.
-- [ ] **FE-02b:** Mobile bottom nav — sticky footer with 4 key pages (Monitor, Build, Profile, Oracle) for mobile screens. CSS only, no Streamlit change.
-- [ ] **FE-02c:** Toast feedback — replace `st.success` with `st.toast()` (Streamlit 1.33+) for ephemeral actions. ⚠️ Requires bumping `streamlit>=1.31` to `>=1.33` in requirements.txt.
+- [x] **FE-02a:** URL deep linking for triggers — pass `?trigger=flight-delay-del` as query param on Trigger Profile. Currently uses `st.session_state` which doesn't survive page refresh/share.
+- [x] **FE-02b:** Mobile bottom nav — sticky footer with 4 key pages (Monitor, Build, Profile, Oracle) for mobile screens. CSS only, no Streamlit change.
+- [x] **FE-02c:** Toast feedback — replace `st.success` with `st.toast()` (Streamlit 1.33+) for ephemeral actions. ⚠️ Requires bumping `streamlit>=1.31` to `>=1.33` in requirements.txt.
 
 ---
 
@@ -126,8 +126,8 @@
 - [x] **API-01d:** Auto-generated OpenAPI docs at /v1/docs, ReDoc at /v1/redoc.
 
 ### API-02: MCP server
-- [ ] **API-02a:** `gad/mcp/server.py` — check_trigger_status, list_triggers_by_location, etc.
-- [ ] **API-02b:** Deploy as Cloudflare Worker or `/mcp` route
+- [x] **API-02a:** `gad/mcp/server.py` — check_trigger_status, list_triggers_by_location, etc.
+- [x] **API-02b:** Deploy as Cloudflare Worker or `/mcp` route
 
 ### INFRA-02: Process management (done — merged into API-01c)
 - [x] **INFRA-02a:** supervisord replaces `&` pattern. Auto-restart on failure.
@@ -206,10 +206,10 @@
 - [ ] **SL-07b:** Correlation clusters toggle on Global Monitor — use Kepler.gl (`streamlit-keplergl`) for advanced map with arcs, heatmaps, time playback. Keep PyDeck as default lightweight view.
 - [ ] **SL-07c:** "Correlated triggers" on Trigger Profile.
 - [ ] **SL-07d:** Lead-lag analysis for high-phi pairs.
-- [ ] **SL-08a:** `GET /v1/intelligence/peril-patterns`. **Blocked by:** API-01.
-- [ ] **SL-08b:** `GET /v1/intelligence/location/{lat}/{lon}`. **Blocked by:** API-01.
-- [ ] **SL-08c:** `GET /v1/intelligence/climate-zone/{zone}`. **Blocked by:** API-01.
-- [ ] **SL-08d:** Enhanced PREI using co-firing cluster data.
+- [x] **SL-08a:** `GET /v1/intelligence/peril-patterns`. **Blocked by:** API-01.
+- [x] **SL-08b:** `GET /v1/intelligence/location/{lat}/{lon}`. **Blocked by:** API-01.
+- [x] **SL-08c:** `GET /v1/intelligence/climate-zone/{zone}`. **Blocked by:** API-01.
+- [x] **SL-08d:** Enhanced PREI using co-firing cluster data.
 
 ### Phase 5: User Accounts + Saved Work
 **Depends on:** Phase 3 (model versioning).
