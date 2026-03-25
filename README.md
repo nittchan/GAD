@@ -113,6 +113,8 @@ GET /v1/docs                  — OpenAPI documentation
 
 Open by default. API key auth opt-in via `API_REQUIRE_AUTH=true` + `X-API-Key` header.
 
+Full API documentation: [docs/API_GUIDE.md](docs/API_GUIDE.md)
+
 ## Security
 
 The public dashboard makes **zero external API calls**. All data is pre-fetched by a background worker and served from a local cache. 10,000 concurrent users cost the same in API calls as zero users.

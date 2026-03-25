@@ -8,6 +8,7 @@ Routes:
   GET /v1/triggers/{id}/determinations — last 20 signed determinations
   GET /v1/status                      — data source health per peril
   GET /v1/ports                       — marine port list
+  GET /v1/perils                      — peril categories
 
 Auto-generated OpenAPI docs at /v1/docs.
 """
@@ -18,18 +19,31 @@ import json
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Security, Depends
+from fastapi import FastAPI, HTTPException, Security, Depends, Path, Query
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 
 from gad.monitor.triggers import GLOBAL_TRIGGERS, PERIL_LABELS, get_trigger_by_id, get_triggers_by_peril
 from gad.monitor.cache import read_cache_with_staleness
 from gad.monitor.ports import ALL_PORTS
+from gad.api.models import (
+    TriggerListResponse,
+    TriggerDetailResponse,
+    BasisRiskResponse,
+    DeterminationsResponse,
+    StatusResponse,
+    PortListResponse,
+    PerilListResponse,
+    ModelHistoryResponse,
+)
 
 app = FastAPI(
     title="Parametric Data API",
-    description="World's first open-source actuarial data platform for parametric insurance. "
-                "521 triggers, 12 perils, 15 data sources. All open. All free.",
+    description=(
+        f"World's first open-source actuarial data platform for parametric insurance. "
+        f"{len(GLOBAL_TRIGGERS)} triggers, {len(PERIL_LABELS)} perils, 15 data sources. "
+        f"All open. All free."
+    ),
     version="0.1.0",
     docs_url="/v1/docs",
     redoc_url="/v1/redoc",
@@ -80,12 +94,28 @@ _ORACLE_LOG_DIR = ORACLE_DIR
 
 # ── Routes ──
 
-@app.get("/v1/triggers", tags=["Triggers"])
+@app.get("/v1/triggers", tags=["Triggers"], response_model=TriggerListResponse)
 async def list_triggers(
-    peril: Optional[str] = None,
+    peril: Optional[str] = Query(
+        None,
+        description="Filter by peril type (e.g. 'earthquake', 'flood', 'flight_delay', 'air_quality')",
+    ),
     _key=Depends(verify_api_key),
 ):
-    """List all triggers with current cached status."""
+    """
+    List all parametric insurance triggers with their current cached status.
+
+    Optionally filter by peril type. Returns trigger metadata (id, name, peril,
+    location, threshold) and data availability status for each trigger.
+
+    Example response:
+    ```json
+    {
+      "triggers": [{"id": "flight-delay-del", "name": "Flight Delay — DEL", "peril": "flight_delay", ...}],
+      "count": 521
+    }
+    ```
+    """
     triggers = GLOBAL_TRIGGERS
     if peril:
         triggers = get_triggers_by_peril(peril)
@@ -112,9 +142,34 @@ async def list_triggers(
     return {"triggers": results, "count": len(results)}
 
 
-@app.get("/v1/triggers/{trigger_id}", tags=["Triggers"])
-async def get_trigger(trigger_id: str, _key=Depends(verify_api_key)):
-    """Get a single trigger with full profile and cached data."""
+@app.get("/v1/triggers/{trigger_id}", tags=["Triggers"], response_model=TriggerDetailResponse)
+async def get_trigger(
+    trigger_id: str = Path(
+        ...,
+        description="Trigger identifier, e.g. 'flight-delay-del' or 'earthquake-tokyo'",
+    ),
+    _key=Depends(verify_api_key),
+):
+    """
+    Get a single trigger with its full profile and most recent cached data.
+
+    Returns all trigger metadata including peril label, threshold direction,
+    description, and the latest cached observation value. Use this endpoint
+    to build detailed trigger profile views.
+
+    Example response:
+    ```json
+    {
+      "id": "flight-delay-del",
+      "peril": "flight_delay",
+      "peril_label": "Flight Delay",
+      "threshold": 30.0,
+      "fires_when_above": true,
+      "cached_data": {"value": 12.5},
+      "is_stale": false
+    }
+    ```
+    """
     trigger = get_trigger_by_id(trigger_id)
     if not trigger:
         raise HTTPException(status_code=404, detail=f"Trigger '{trigger_id}' not found")
@@ -140,9 +195,29 @@ async def get_trigger(trigger_id: str, _key=Depends(verify_api_key)):
     }
 
 
-@app.get("/v1/triggers/{trigger_id}/basis-risk", tags=["Triggers"])
-async def get_basis_risk(trigger_id: str, _key=Depends(verify_api_key)):
-    """Get precomputed basis risk report for a trigger."""
+@app.get("/v1/triggers/{trigger_id}/basis-risk", tags=["Triggers"], response_model=BasisRiskResponse)
+async def get_basis_risk(
+    trigger_id: str = Path(
+        ...,
+        description="Trigger identifier, e.g. 'weather-heat-del'",
+    ),
+    _key=Depends(verify_api_key),
+):
+    """
+    Get the precomputed basis risk report for a trigger.
+
+    The report includes Spearman correlation coefficient with confidence interval,
+    false positive/negative rates, Lloyd's alignment score, and the number of
+    observation periods analysed. Not all triggers have precomputed reports.
+
+    Example response:
+    ```json
+    {
+      "trigger_id": "weather-heat-del",
+      "report": {"spearman_rho": 0.87, "fpr": 0.05, "fnr": 0.08, "lloyds_score": 85}
+    }
+    ```
+    """
     report_path = BASIS_RISK_DIR / f"{trigger_id}.json"
     if not report_path.is_file():
         raise HTTPException(status_code=404, detail=f"No basis risk report for '{trigger_id}'")
@@ -154,9 +229,36 @@ async def get_basis_risk(trigger_id: str, _key=Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/v1/triggers/{trigger_id}/determinations", tags=["Oracle"])
-async def get_determinations(trigger_id: str, limit: int = 20, _key=Depends(verify_api_key)):
-    """Get recent oracle determinations for a trigger."""
+@app.get("/v1/triggers/{trigger_id}/determinations", tags=["Oracle"], response_model=DeterminationsResponse)
+async def get_determinations(
+    trigger_id: str = Path(
+        ...,
+        description="Trigger identifier, e.g. 'flight-delay-del'",
+    ),
+    limit: int = Query(
+        20,
+        ge=1,
+        le=100,
+        description="Maximum number of determinations to return (1-100, default 20)",
+    ),
+    _key=Depends(verify_api_key),
+):
+    """
+    Get recent cryptographically signed oracle determinations for a trigger.
+
+    Returns the most recent Ed25519-signed determinations in reverse chronological
+    order. Each determination includes a data snapshot hash and signature that can
+    be independently verified against the oracle public key.
+
+    Example response:
+    ```json
+    {
+      "trigger_id": "flight-delay-del",
+      "determinations": [{"fired": true, "timestamp": "2026-03-25T10:00:00Z", "signature": "ed25519:..."}],
+      "count": 1
+    }
+    ```
+    """
     jsonl_path = _ORACLE_LOG_DIR / "oracle_log.jsonl"
     if not jsonl_path.is_file():
         return {"trigger_id": trigger_id, "determinations": [], "count": 0}
@@ -179,9 +281,23 @@ async def get_determinations(trigger_id: str, limit: int = 20, _key=Depends(veri
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/v1/status", tags=["Status"])
+@app.get("/v1/status", tags=["Status"], response_model=StatusResponse)
 async def get_status(_key=Depends(verify_api_key)):
-    """Data source health per peril."""
+    """
+    Get data source health across all peril categories.
+
+    Returns per-peril statistics showing how many triggers have fresh cached data,
+    stale data, or no data at all. Use this endpoint to monitor overall platform
+    health and data freshness.
+
+    Example response:
+    ```json
+    {
+      "perils": {"flight_delay": {"label": "Flight Delay", "total": 144, "cached": 130, "stale": 10, "no_data": 4, "coverage_pct": 90}},
+      "total_triggers": 521
+    }
+    ```
+    """
     peril_status = {}
     for peril_key, label in PERIL_LABELS.items():
         triggers = get_triggers_by_peril(peril_key)
@@ -209,9 +325,23 @@ async def get_status(_key=Depends(verify_api_key)):
     return {"perils": peril_status, "total_triggers": len(GLOBAL_TRIGGERS)}
 
 
-@app.get("/v1/ports", tags=["Marine"])
+@app.get("/v1/ports", tags=["Marine"], response_model=PortListResponse)
 async def list_ports(_key=Depends(verify_api_key)):
-    """List all monitored ports."""
+    """
+    List all monitored marine ports with coordinates and identifiers.
+
+    Returns port metadata including UN/LOCODE, geographic coordinates, and tier
+    classification. Tier-1 ports are the 10 highest-volume global ports with
+    anchorage bounding boxes for vessel tracking.
+
+    Example response:
+    ```json
+    {
+      "ports": [{"id": "port-sgp-jurong", "name": "Port of Singapore (Jurong)", "un_locode": "SGSIN", "tier": "tier1"}],
+      "count": 10
+    }
+    ```
+    """
     return {
         "ports": [
             {
@@ -230,9 +360,36 @@ async def list_ports(_key=Depends(verify_api_key)):
     }
 
 
-@app.get("/v1/triggers/{trigger_id}/model-history", tags=["Learning"])
-async def get_model_history(trigger_id: str, limit: int = 20, _key=Depends(verify_api_key)):
-    """Get model version history for a trigger."""
+@app.get("/v1/triggers/{trigger_id}/model-history", tags=["Learning"], response_model=ModelHistoryResponse)
+async def get_model_history(
+    trigger_id: str = Path(
+        ...,
+        description="Trigger identifier, e.g. 'flight-delay-del'",
+    ),
+    limit: int = Query(
+        20,
+        ge=1,
+        le=100,
+        description="Maximum number of model versions to return (1-100, default 20)",
+    ),
+    _key=Depends(verify_api_key),
+):
+    """
+    Get machine learning model version history for a trigger.
+
+    Returns a chronological list of model versions trained for this trigger,
+    including accuracy metrics and training metadata. Model history is only
+    available for triggers that have sufficient historical data.
+
+    Example response:
+    ```json
+    {
+      "trigger_id": "flight-delay-del",
+      "versions": [{"version": 1, "accuracy": 0.92, "trained_at": "2026-03-20T12:00:00Z"}],
+      "count": 1
+    }
+    ```
+    """
     try:
         from gad.engine.db_read import get_model_versions
         rows = get_model_versions(trigger_id, limit=limit)
@@ -243,7 +400,21 @@ async def get_model_history(trigger_id: str, limit: int = 20, _key=Depends(verif
         return {"trigger_id": trigger_id, "versions": [], "count": 0, "error": str(e)}
 
 
-@app.get("/v1/perils", tags=["Status"])
+@app.get("/v1/perils", tags=["Status"], response_model=PerilListResponse)
 async def list_perils(_key=Depends(verify_api_key)):
-    """List all peril categories."""
+    """
+    List all peril categories with their display labels.
+
+    Returns a mapping of peril keys (used in API filters) to human-readable
+    labels. Use the keys from this endpoint as values for the `peril` query
+    parameter on other endpoints.
+
+    Example response:
+    ```json
+    {
+      "perils": {"flight_delay": "Flight Delay", "earthquake": "Earthquake"},
+      "count": 12
+    }
+    ```
+    """
     return {"perils": {k: v for k, v in PERIL_LABELS.items()}, "count": len(PERIL_LABELS)}
