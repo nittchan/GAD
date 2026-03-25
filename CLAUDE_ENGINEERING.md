@@ -129,7 +129,7 @@ determination_id, policy_id, trigger_id, fired, fired_at, data_snapshot_hash, co
 - tests/test_import_hygiene.py: no legacy imports (1 test)
 - tests/test_monitor_fetcher.py: evaluate_fired all 12 sources, FETCH_MAP, determination creation (32 tests)
 - tests/test_aqi_coordinates.py: all airports city coords, haversine sanity, AQI coord verification (~700 tests)
-- tests/test_triggers.py: 521 count, unique IDs, field validation, marine/flood/cyclone/crop/solar/health integrity (~1500 tests)
+- tests/test_triggers.py: 536 count, unique IDs, field validation, marine/flood/cyclone/crop/solar/health integrity (~1500 tests)
 - tests/test_risk_index.py: PREI formula, near-threshold, edge cases (17 tests)
 
 Remaining gaps:
