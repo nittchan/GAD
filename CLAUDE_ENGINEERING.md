@@ -106,7 +106,7 @@ Users NEVER trigger API calls. Cost is fixed regardless of traffic.
 
 ### Monitor triggers (gad/monitor/triggers.py)
 Data-driven triggers auto-generated from airport registry (`gad/monitor/airports.py`) and port registry (`gad/monitor/ports.py`): id, name, peril, lat/lon, threshold, unit, data_source, description.
-536 triggers across 14 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone + 10 crop/NDVI + 5 solar + 10 health). Add new airports/ports to the registries to expand coverage.
+536 triggers across 14 perils (144 flight delay + 125 AQI + 8 wildfire + 5 drought + 144 weather + 10 earthquake + 20 marine + 20 flood + 20 cyclone + 10 crop/NDVI + 5 solar + 10 health + 10 disaster/GDACS + 5 natural events/EONET). Add new airports/ports to the registries to expand coverage.
 **Coordinate split:** AQI triggers use city centre coordinates (where AQI monitors are); flight/weather triggers use airport runway coordinates. When adding an airport far from its city (>15km), set `city_lat`/`city_lon` on the Airport entry.
 **Flight delay dual metric:** Evaluation is source-aware. AviationStack (tier-1 airports) provides real delay in minutes — fires when avg delay exceeds threshold. OpenSky (all airports, fallback) provides departure count only — fires when 0 departures in 2h (airport disruption proxy). The `evaluate_trigger` result includes a `metric` field (`"avg_delay"` or `"departure_count"`) so the UI shows the correct label.
 
@@ -127,7 +127,7 @@ determination_id, policy_id, trigger_id, fired, fired_at, data_snapshot_hash, co
 - tests/test_oracle_chain.py: 5-entry chain, tamper detection, canonical hash (12 tests)
 - tests/test_reproducibility.py: deterministic outputs (1 test)
 - tests/test_import_hygiene.py: no legacy imports (1 test)
-- tests/test_monitor_fetcher.py: evaluate_fired all 12 sources, FETCH_MAP, determination creation (32 tests)
+- tests/test_monitor_fetcher.py: evaluate_fired all 14 sources, FETCH_MAP, determination creation, rate limiter, recovery cooldown (48 tests)
 - tests/test_aqi_coordinates.py: all airports city coords, haversine sanity, AQI coord verification (~700 tests)
 - tests/test_triggers.py: 536 count, unique IDs, field validation, marine/flood/cyclone/crop/solar/health integrity (~1500 tests)
 - tests/test_risk_index.py: PREI formula, near-threshold, edge cases (17 tests)

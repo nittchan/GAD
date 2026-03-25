@@ -8,7 +8,7 @@ Fast context file for agents and contributors who need the essentials in under a
 
 GAD is an open-source global parametric insurance platform — the "WorldMonitor for parametric insurance."
 
-1. **Global Monitor** — live risk map across 14 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone, crop/NDVI, solar/space weather, health/pandemic) using free open data.
+1. **Global Monitor** — live risk map across 14 peril categories (flights, AQI, wildfire, drought, weather, earthquake, marine/shipping, flood, cyclone, crop/NDVI, solar/space weather, health/pandemic, disaster/GDACS, natural events/EONET) using free open data.
 2. **Basis risk engine** — Spearman correlation scoring, Lloyd's checklist, PDF export.
 3. **Oracle infrastructure** — cryptographically signed, hash-chained trigger determinations (v0.2.2+).
 4. **Account layer** — user auth, saved triggers, activity events via Supabase.
@@ -17,7 +17,7 @@ GAD is an open-source global parametric insurance platform — the "WorldMonitor
 
 - v0.1 (2026-03-19): Basis risk dashboard with 3 sample triggers.
 - v0.2.1 (2026-03-23, CURRENT): Global Monitor live at parametricdata.io. 536 triggers, 144 airports + 10 ports, multi-source data (18 APIs), all pages unified.
-- v0.2.2 (next): Oracle signing layer under the visible dashboard.
+- v0.2.2 (2026-03-25, CURRENT): Oracle signing wired to live monitor, historical basis risk (81 triggers), auto-bootstrap on deploy.
 - v0.3: Self-Learning Actuary — DuckDB analytical datastore, distribution tracking, drift detection, threshold optimization, peer calibration, correlation matrix.
 - v0.4: Platform — API on CF Workers (community service), Redis for API cache, verification SDK.
 
@@ -56,8 +56,8 @@ Compute engine: gad/engine/ package
 
 - gad/engine/ — compute core (basis risk, lloyds, oracle, models)
 - gad/monitor/ — global monitor (triggers, cache, fetcher, security, data sources)
-- gad/monitor/sources/ — API fetchers (opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don)
-- dashboard/ — Streamlit app with 7 pages
+- gad/monitor/sources/ — 18 API fetchers (faa_atcscc, opensky, aviationstack, airnow, openaq, firms, openmeteo, gpm_imerg, usgs_earthquake, aisstream, noaa_flood, noaa_nhc, ndvi, noaa_swpc, who_don, gdacs, nasa_eonet)
+- dashboard/ — Streamlit app with 10 pages
 - oracle_ledger/ — Cloudflare Worker
 
 ## Data Sources (all free)
