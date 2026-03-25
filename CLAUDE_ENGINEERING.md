@@ -25,10 +25,16 @@ Engine canonicalized on gad/engine/. Legacy modules deleted (2026-03-23). Global
 ## Package Structure
 
 ### gad/api/ — REST API
-- main.py: FastAPI app with 7 routes (triggers, basis-risk, determinations, status, ports, perils). API key auth opt-in via API_REQUIRE_AUTH env var.
+- main.py: FastAPI app with 8 routes (triggers, basis-risk, determinations, model-history, status, ports, perils). API key auth opt-in via API_REQUIRE_AUTH env var.
 
 ### gad/engine/ — Compute core
-- models.py: TriggerDef, BasisRiskReport, TriggerDetermination, PolicyBinding, GadEvent
+- models.py: TriggerDef, BasisRiskReport, TriggerDetermination, TriggerObservation, ModelVersion, PolicyBinding, GadEvent
+- db.py: DuckDB schema (8 tables), singleton connection
+- db_write.py: Write helpers (8 functions, try/except wrapped)
+- db_read.py: Read helpers (7 query functions)
+- timeseries.py: Observation read abstraction (stats, series, threshold checks)
+- model_registry.py: Append-only model versioning with R2 backup
+- backup.py: DuckDB backup (CHECKPOINT + gzip + R2 upload + prune)
 - basis_risk.py: Spearman rho, bootstrap CI, confusion matrix, Lloyd's integration
 - lloyds.py: Lloyd's checklist scoring
 - oracle.py: Ed25519 sign/verify, hash chain, append-only log
