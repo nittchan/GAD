@@ -19,14 +19,14 @@ def write_observation(trigger_id, value, fired, data_source, raw_data=None):
         log.warning(f"Failed to write observation for {trigger_id}: {e}")
 
 
-def write_distribution(trigger_id, window, mean, std, median, p5, p25, p75, p95, firing_rate, observation_count):
+def write_distribution(trigger_id, time_window, mean, std, median, p5, p25, p75, p95, firing_rate, observation_count):
     """Insert or update a trigger distribution summary."""
     try:
         from gad.engine.db import get_connection
         conn = get_connection()
         conn.execute(
-            "INSERT INTO trigger_distributions (trigger_id, window, computed_at, mean, std, median, p5, p25, p75, p95, firing_rate, observation_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [trigger_id, window, datetime.now(timezone.utc), mean, std, median, p5, p25, p75, p95, firing_rate, observation_count]
+            "INSERT INTO trigger_distributions (trigger_id, time_window, computed_at, mean, std, median, p5, p25, p75, p95, firing_rate, observation_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [trigger_id, time_window, datetime.now(timezone.utc), mean, std, median, p5, p25, p75, p95, firing_rate, observation_count]
         )
     except Exception as e:
         log.warning(f"Failed to write distribution for {trigger_id}: {e}")

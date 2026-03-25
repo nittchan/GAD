@@ -594,7 +594,7 @@ def fetch_all(diagnostic: bool = False) -> dict:
             sources_failed_this_cycle.add(trigger.data_source)
             log.error(f"Error fetching {trigger.id}: {e}")
 
-        time.sleep(0.3)
+        time.sleep(1.0)  # 1s between triggers to avoid rate limiting (521 triggers)
 
     # CEO-04: Detect source recovery and manage cooldowns
     _update_recovery_cooldowns(sources_succeeded_this_cycle, sources_failed_this_cycle)

@@ -42,7 +42,7 @@ def init_db(conn: duckdb.DuckDBPyConnection) -> None:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS trigger_distributions (
             trigger_id VARCHAR NOT NULL,
-            window VARCHAR NOT NULL,
+            time_window VARCHAR NOT NULL,
             computed_at TIMESTAMP NOT NULL,
             mean DOUBLE, std DOUBLE, median DOUBLE,
             p5 DOUBLE, p25 DOUBLE, p75 DOUBLE, p95 DOUBLE,
