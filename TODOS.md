@@ -83,9 +83,9 @@
 ## Frontend Performance & UX
 
 ### FE-01: Speed + caching
-- [ ] **FE-01a:** Add `<link rel="preconnect">` for Google Fonts in theme.py — reduces DNS+TLS latency (~100ms saving).
-- [ ] **FE-01b:** Add `@st.cache_data` to expensive computations across pages: trigger list building, PREI computation, intelligence briefs, basis risk loading. ⚠️ Compatible with existing `_load_rho_map()` cache — same pattern.
-- [ ] **FE-01c:** Loading skeletons — add `st.spinner` or placeholder text during data loads on Global Monitor, Trigger Profile, and Digest pages.
+- [x] **FE-01a:** `<link rel="preconnect">` for fonts.googleapis.com + fonts.gstatic.com (~100ms saving).
+- [x] **FE-01b:** `@st.cache_data` on PREI (5min), basis risk JSON (1hr), digest (5min), account stats (5min).
+- [x] **FE-01c:** `st.spinner` on Trigger Profile, Account, and Digest page loads.
 
 ### FE-02: Interactions
 - [ ] **FE-02a:** URL deep linking for triggers — pass `?trigger=flight-delay-del` as query param on Trigger Profile. Currently uses `st.session_state` which doesn't survive page refresh/share.
@@ -99,10 +99,10 @@
 ### API-03: Developer documentation
 **Why:** Auto-generated Swagger at /v1/docs exists but has terse descriptions, no examples, no getting-started guide. Users can't onboard without reading source code.
 
-- [ ] **API-03a:** `docs/API_GUIDE.md` — standalone getting-started guide with: overview, base URL, auth (open by default, opt-in key), curl examples for every route, response schemas, error format, rate limits. Link from README.
-- [ ] **API-03b:** Enrich FastAPI route docstrings — add request/response examples, parameter descriptions, and error codes to each `@app.get()`. These auto-populate Swagger UI. ⚠️ No conflict with existing routes — additive only.
-- [ ] **API-03c:** Make API description dynamic — replace hardcoded "521 triggers" with `len(GLOBAL_TRIGGERS)` in FastAPI app description.
-- [ ] **API-03d:** Add response models (Pydantic) to API routes — enables auto-generated response schemas in OpenAPI. ⚠️ Depends on existing models in `gad/engine/models.py` — extend, don't duplicate.
+- [x] **API-03a:** `docs/API_GUIDE.md` — curl examples, SDK snippets, error table, linked from README.
+- [x] **API-03b:** Enriched docstrings with Query/Path descriptions for Swagger UI.
+- [x] **API-03c:** Dynamic `len(GLOBAL_TRIGGERS)` / `len(PERIL_LABELS)` in API description.
+- [x] **API-03d:** `gad/api/models.py` — Pydantic response models on all routes for auto-generated schemas.
 
 ### SRC-01/02/03: Additional data sources (standalone)
 - [ ] **SRC-01:** NOAA HRRR Smoke data — wildfire impact, GRIB format. Medium effort.
@@ -176,11 +176,11 @@
 ### Phase 2: Distribution Learning
 **Depends on:** Phase 1 complete.
 
-- [ ] **SL-02a:** Distribution tracker — rolling 90d + 365d. Min 10 observations.
-- [ ] **SL-02b:** Surface on Trigger Profile — histogram, threshold line, percentile.
-- [ ] **SL-03a:** Drift detector — CUSUM on mean shift, firing rate, variance.
-- [ ] **SL-03b:** "DRIFTING" status on Global Monitor. ⚠️ **Touches status logic** — same code as BUG-03 fix.
-- [ ] **SL-03c:** Drift alerts in daily digest.
+- [x] **SL-02a:** `distribution_tracker.py` — 90d/365d rolling stats, model versioning. Wired into daily_jobs().
+- [x] **SL-02b:** Histogram + stat cards on Trigger Profile (observations, mean, std, firing rate).
+- [x] **SL-03a:** `drift_detector.py` — CUSUM: mean shift (>1.5σ), firing rate (>3pp), variance (>50%). Wired into daily_jobs().
+- [x] **SL-03b:** "DRIFTING" status with pulsing amber badge on Global Monitor. try/except guarded.
+- [x] **SL-03c:** Drift alerts section in daily digest (last 24h alerts).
 - [ ] **SL-10a:** Seasonal decomposition (STL). Requires 730+ observations (~2yr of data).
 - [ ] **SL-10b:** Season-adjusted thresholds.
 - [ ] **SL-10c:** 12-month seasonal bar chart on Trigger Profile.
@@ -203,7 +203,7 @@
 **Depends on:** Phase 3 (peers). API endpoints **blocked by** API-01.
 
 - [ ] **SL-07a:** Co-firing correlation matrix — phi coefficient. Geographic bounding 2000km. *(eng review)*
-- [ ] **SL-07b:** Correlation clusters toggle on Global Monitor.
+- [ ] **SL-07b:** Correlation clusters toggle on Global Monitor — use Kepler.gl (`streamlit-keplergl`) for advanced map with arcs, heatmaps, time playback. Keep PyDeck as default lightweight view.
 - [ ] **SL-07c:** "Correlated triggers" on Trigger Profile.
 - [ ] **SL-07d:** Lead-lag analysis for high-phi pairs.
 - [ ] **SL-08a:** `GET /v1/intelligence/peril-patterns`. **Blocked by:** API-01.
