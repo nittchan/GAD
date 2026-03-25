@@ -138,3 +138,73 @@ class ModelHistoryResponse(BaseModel):
     versions: list[dict[str, Any]] = Field(default_factory=list)
     count: int
     error: Optional[str] = None
+
+
+# ── Intelligence models (SL-08a-d) ──
+
+class PerilPatternEntry(BaseModel):
+    """Firing pattern stats for a single peril."""
+
+    label: str = Field(..., description="Human-readable peril name")
+    total: int = Field(..., description="Total trigger count")
+    fired: int = Field(..., description="Currently triggered (value past threshold)")
+    normal: int = Field(..., description="Fresh data, within threshold")
+    stale: int = Field(..., description="Stale cached data")
+    no_data: int = Field(..., description="No cached data at all")
+    firing_rate: float = Field(..., description="Fraction of evaluable triggers currently fired (0.0–1.0)")
+
+
+class PerilPatternsResponse(BaseModel):
+    """Response for GET /v1/intelligence/peril-patterns."""
+
+    patterns: dict[str, PerilPatternEntry] = Field(..., description="Per-peril firing pattern stats")
+    total_triggers: int
+
+
+class LocationTriggerEntry(BaseModel):
+    """A trigger returned from a location-based query."""
+
+    id: str
+    name: str
+    peril: str
+    peril_label: str
+    lat: float
+    lon: float
+    location_label: str
+    distance_km: float = Field(..., description="Distance from search centre in km")
+    threshold: float
+    threshold_unit: str
+    data_source: str
+    has_data: bool
+    is_stale: bool
+
+
+class LocationIntelligenceResponse(BaseModel):
+    """Response for GET /v1/intelligence/location/{lat}/{lon}."""
+
+    lat: float
+    lon: float
+    radius_km: float
+    triggers: list[LocationTriggerEntry]
+    count: int
+
+
+class ClimateZoneResponse(BaseModel):
+    """Response for GET /v1/intelligence/climate-zone/{zone}."""
+
+    zone: str
+    message: str
+    triggers: list[dict[str, Any]] = Field(default_factory=list)
+    count: int = 0
+
+
+# ── Model drift (SL-09d) ──
+
+class ModelDriftResponse(BaseModel):
+    """Response for GET /v1/triggers/{trigger_id}/model-drift."""
+
+    trigger_id: str
+    drift_detected: bool = Field(..., description="True if accuracy dropped >5pp from baseline")
+    current_accuracy: Optional[float] = Field(None, description="Latest model accuracy")
+    baseline_accuracy: Optional[float] = Field(None, description="First model accuracy (baseline)")
+    message: str = Field(..., description="Human-readable drift status")

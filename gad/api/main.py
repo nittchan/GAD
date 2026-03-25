@@ -9,6 +9,10 @@ Routes:
   GET /v1/status                      — data source health per peril
   GET /v1/ports                       — marine port list
   GET /v1/perils                      — peril categories
+  GET /v1/intelligence/peril-patterns — firing rates and drift per peril
+  GET /v1/intelligence/location/{lat}/{lon} — triggers near a point
+  GET /v1/intelligence/climate-zone/{zone}  — triggers in a climate zone (Phase 3)
+  GET /v1/triggers/{id}/model-drift   — model drift status for a trigger
 
 Auto-generated OpenAPI docs at /v1/docs.
 """
@@ -16,6 +20,7 @@ Auto-generated OpenAPI docs at /v1/docs.
 from __future__ import annotations
 
 import json
+import math
 import os
 from typing import Optional
 
@@ -35,6 +40,12 @@ from gad.api.models import (
     PortListResponse,
     PerilListResponse,
     ModelHistoryResponse,
+    PerilPatternEntry,
+    PerilPatternsResponse,
+    LocationIntelligenceResponse,
+    LocationTriggerEntry,
+    ClimateZoneResponse,
+    ModelDriftResponse,
 )
 
 app = FastAPI(
@@ -418,3 +429,219 @@ async def list_perils(_key=Depends(verify_api_key)):
     ```
     """
     return {"perils": {k: v for k, v in PERIL_LABELS.items()}, "count": len(PERIL_LABELS)}
+
+
+# ── Geo helpers ──
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in km between two (lat, lon) points."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
+         * math.sin(dlon / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+# ── Intelligence endpoints (SL-08a-d) ──
+
+@app.get("/v1/intelligence/peril-patterns", tags=["Intelligence"], response_model=PerilPatternsResponse)
+async def get_peril_patterns(_key=Depends(verify_api_key)):
+    """
+    Peril-level pattern analysis across all triggers.
+
+    Aggregates firing rates and data freshness per peril category. For each
+    peril, returns the number of triggers that are currently triggered (fired),
+    normal, stale, or missing data, plus the overall firing rate.
+
+    Example response:
+    ```json
+    {
+      "patterns": {
+        "earthquake": {"label": "Earthquake", "total": 30, "fired": 2, "normal": 25, "stale": 2, "no_data": 1, "firing_rate": 0.067}
+      },
+      "total_triggers": 521
+    }
+    ```
+    """
+    patterns: dict[str, dict] = {}
+
+    for peril_key, label in PERIL_LABELS.items():
+        triggers = get_triggers_by_peril(peril_key)
+        fired = 0
+        normal = 0
+        stale = 0
+        no_data = 0
+
+        for t in triggers:
+            source_key = SOURCE_KEY_MAP.get(t.data_source, t.data_source)
+            data, is_stale = read_cache_with_staleness(source_key, t.id)
+
+            if data is None:
+                no_data += 1
+                continue
+
+            if is_stale:
+                stale += 1
+                continue
+
+            # Evaluate whether the trigger has fired
+            value = data.get("value") if isinstance(data, dict) else None
+            if value is not None:
+                trigger_fired = (value > t.threshold) if t.fires_when_above else (value < t.threshold)
+                if trigger_fired:
+                    fired += 1
+                else:
+                    normal += 1
+            else:
+                normal += 1
+
+        total = len(triggers)
+        evaluable = fired + normal
+        firing_rate = round(fired / evaluable, 4) if evaluable > 0 else 0.0
+
+        patterns[peril_key] = {
+            "label": label,
+            "total": total,
+            "fired": fired,
+            "normal": normal,
+            "stale": stale,
+            "no_data": no_data,
+            "firing_rate": firing_rate,
+        }
+
+    return {"patterns": patterns, "total_triggers": len(GLOBAL_TRIGGERS)}
+
+
+@app.get("/v1/intelligence/location/{lat}/{lon}", tags=["Intelligence"], response_model=LocationIntelligenceResponse)
+async def get_location_intelligence(
+    lat: float = Path(..., description="Latitude of search centre"),
+    lon: float = Path(..., description="Longitude of search centre"),
+    radius_km: float = Query(500, ge=1, le=20000, description="Search radius in kilometres (default 500)"),
+    _key=Depends(verify_api_key),
+):
+    """
+    All triggers within radius_km of a geographic point, with their current status.
+
+    Returns triggers sorted by distance from the search centre. Each entry includes
+    the trigger's cached data availability and distance in km.
+
+    Example response:
+    ```json
+    {
+      "lat": 28.56,
+      "lon": 77.10,
+      "radius_km": 200,
+      "triggers": [{"id": "flight-delay-del", "distance_km": 12.3, "peril": "flight_delay"}],
+      "count": 8
+    }
+    ```
+    """
+    matches = []
+    for t in GLOBAL_TRIGGERS:
+        dist = _haversine_km(lat, lon, t.lat, t.lon)
+        if dist <= radius_km:
+            source_key = SOURCE_KEY_MAP.get(t.data_source, t.data_source)
+            data, is_stale = read_cache_with_staleness(source_key, t.id)
+            matches.append({
+                "id": t.id,
+                "name": t.name,
+                "peril": t.peril,
+                "peril_label": PERIL_LABELS.get(t.peril, t.peril),
+                "lat": t.lat,
+                "lon": t.lon,
+                "location_label": t.location_label,
+                "distance_km": round(dist, 1),
+                "threshold": t.threshold,
+                "threshold_unit": t.threshold_unit,
+                "data_source": t.data_source,
+                "has_data": data is not None,
+                "is_stale": is_stale,
+            })
+
+    matches.sort(key=lambda m: m["distance_km"])
+    return {"lat": lat, "lon": lon, "radius_km": radius_km, "triggers": matches, "count": len(matches)}
+
+
+@app.get("/v1/intelligence/climate-zone/{zone}", tags=["Intelligence"], response_model=ClimateZoneResponse)
+async def get_climate_zone(
+    zone: str = Path(..., description="Climate zone identifier, e.g. 'Af' (Koppen)"),
+    _key=Depends(verify_api_key),
+):
+    """
+    Triggers in a Koppen climate zone (placeholder — needs Koppen data from Phase 3).
+
+    This endpoint will return triggers located in the specified Koppen climate
+    zone once the zone classification data is integrated in Phase 3.
+    Currently returns an empty trigger list with a status message.
+    """
+    return {
+        "zone": zone,
+        "message": "Climate zone lookup available after Phase 3 (Koppen zone classification)",
+        "triggers": [],
+        "count": 0,
+    }
+
+
+# ── Model drift endpoint (SL-09d) ──
+
+@app.get("/v1/triggers/{trigger_id}/model-drift", tags=["Learning"], response_model=ModelDriftResponse)
+async def get_model_drift(
+    trigger_id: str = Path(..., description="Trigger identifier, e.g. 'flight-delay-del'"),
+    _key=Depends(verify_api_key),
+):
+    """
+    Get model drift status for a trigger.
+
+    Checks whether the most recent model version for a trigger shows
+    performance degradation compared to earlier versions. Drift is flagged
+    when accuracy drops by more than 5 percentage points.
+
+    Example response:
+    ```json
+    {
+      "trigger_id": "flight-delay-del",
+      "drift_detected": false,
+      "current_accuracy": 0.92,
+      "baseline_accuracy": 0.94,
+      "message": "No significant drift detected"
+    }
+    ```
+    """
+    trigger = get_trigger_by_id(trigger_id)
+    if not trigger:
+        raise HTTPException(status_code=404, detail=f"Trigger '{trigger_id}' not found")
+
+    try:
+        from gad.engine.db_read import get_model_versions
+        rows = get_model_versions(trigger_id, limit=10)
+        if rows is None or rows.empty or len(rows) < 2:
+            return {
+                "trigger_id": trigger_id,
+                "drift_detected": False,
+                "current_accuracy": None,
+                "baseline_accuracy": None,
+                "message": "Insufficient model history for drift analysis",
+            }
+
+        # Compare latest version accuracy against the baseline (first version)
+        baseline_acc = float(rows.iloc[0].get("accuracy", 0))
+        current_acc = float(rows.iloc[-1].get("accuracy", 0))
+        drift = baseline_acc - current_acc > 0.05
+
+        return {
+            "trigger_id": trigger_id,
+            "drift_detected": drift,
+            "current_accuracy": round(current_acc, 4),
+            "baseline_accuracy": round(baseline_acc, 4),
+            "message": "Drift detected — accuracy dropped >5pp" if drift else "No significant drift detected",
+        }
+    except Exception:
+        return {
+            "trigger_id": trigger_id,
+            "drift_detected": False,
+            "current_accuracy": None,
+            "baseline_accuracy": None,
+            "message": "Model history not available",
+        }
